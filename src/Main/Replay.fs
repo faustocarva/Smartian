@@ -99,6 +99,7 @@ let runDefaultMode opt =
   log "Start replaying test cases in : %s" testcaseDir
   let mutable totalElapsed = 0.0
   for file in sortTCs testcaseDir do
+    incrExecutionCount ()  
     let tcStr = System.IO.File.ReadAllText file
     let tc = TestCase.fromJson tcStr
     let stopWatch = System.Diagnostics.Stopwatch.StartNew()
@@ -107,9 +108,12 @@ let runDefaultMode opt =
     stopWatch.Stop()
     totalElapsed <- totalElapsed + stopWatch.Elapsed.TotalMilliseconds
     TCManage.printBugInfo feedback.BugSet
-  log "Covered Edges : %d" accumEdges.Count
+  log "===== Statistics ====="    
+  log "Total Test Cases: %d" totalExecutions
+  log "Deployment failures: %d" deployFailCount
+  log "Covered Edges: %d" accumEdges.Count
   log "Covered Instructions: %d" accumInstrs.Count
-  log "Elapsed time (ms): %.4f" totalElapsed
+  log "Covered Def-Use Chains: %d" accumDUChains.Count
 
 /// Replay test cases in the given directory on target program.
 let run args =
