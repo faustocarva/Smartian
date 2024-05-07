@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "genai4fuzz"
+version = "0.1.0"
+description = ""
+authors = ["Fausto Carvalho <faustocarva@gmail.com>"]
+readme = "README.md"
+packages = [{include = "genai4fuzz"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fire = "^0.5.0"
+openai = "^1.26.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+genai4fuzz = "genai4fuzz:main"
