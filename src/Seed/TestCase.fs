@@ -206,7 +206,7 @@ module TXData =
       Timestamp = timestamp
       Blocknum = blocknum
       // Informative fields for debugging dosn't have to be filled.
-      Function = ""
+      Function = json.["Function"].AsString()
       OrigData = [| |]
       OrigValue = 0I }
 

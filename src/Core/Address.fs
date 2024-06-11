@@ -45,6 +45,13 @@ let contractOf = function
   | NormalUser2 -> USER_CONTR_2
   | NormalUser3 -> USER_CONTR_3
 
+let addrFromString input =
+    if input = OWNER_ACCOUNT then TargetOwner
+    elif input = USER_CONTR_1 then NormalUser1
+    elif input = USER_CONTR_2 then NormalUser2
+    elif input = USER_CONTR_3 then NormalUser3
+    else TargetOwner
+
 // Return an address that can be used as an Address type input.
 let pickInteresting () =
   pickFromList (ZERO :: OWNER_CONTRACT :: TARG_CONTRACT :: USER_CONTRACTS)

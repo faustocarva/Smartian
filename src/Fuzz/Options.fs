@@ -11,6 +11,7 @@ type FuzzerCLI =
   | [<AltCommandLine("-a")>] [<Unique>] ABIFile of path: string
   | [<Unique>] NoSDFA
   | [<Unique>] NoDDFA
+  | [<Unique>] UseLLLMSeeds
   | [<Unique>] CheckOptionalBugs
   | [<Unique>] UseOthersOracle
 with
@@ -24,6 +25,7 @@ with
       | ABIFile _ -> "ABI JSON file."
       | NoSDFA -> "Disable static data-flow analysis to guide fuzzing."
       | NoDDFA -> "Disable dynamic data-flow analysis during the fuzzing."
+      | UseLLLMSeeds -> "Enable the use of LLM inital seeds for fuzzing."      
       | CheckOptionalBugs ->
         "Detect optional bugs (e.g. requirement violation) disabled by default."
       | UseOthersOracle ->
@@ -38,6 +40,7 @@ type FuzzOption = {
   ABIPath           : string
   StaticDFA         : bool
   DynamicDFA        : bool
+  UseLLLMSeeds      : bool
   CheckOptionalBugs : bool
   UseOthersOracle   : bool
 }
@@ -54,5 +57,6 @@ let parseFuzzOption (args: string array) =
     ABIPath = r.GetResult(<@ ABIFile @>, defaultValue = "")
     StaticDFA = not (r.Contains(<@ NoSDFA @>))  // Enabled by default.
     DynamicDFA = not (r.Contains(<@ NoDDFA @>)) // Enabled by default.
+    UseLLLMSeeds = (r.Contains(<@ UseLLLMSeeds @>))
     CheckOptionalBugs = r.Contains(<@ CheckOptionalBugs @>)
     UseOthersOracle = r.Contains(<@ UseOthersOracle @>) }

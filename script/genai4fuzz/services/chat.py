@@ -53,7 +53,9 @@ class ChatService(metaclass=SingletonMeta):
 
         response = client.chat.completions.create(
             messages=messages,
-            model='meta-llama/Meta-Llama-3-70B-Instruct',
+            #model='meta-llama/Meta-Llama-3-70B-Instruct',
+            model='mistralai/Mixtral-8x22B-Instruct-v0.1',
+            #model='codellama/CodeLlama-70b-Instruct-hf',            
             temperature=temperature)
         
         g_time = time.time() - t_start

@@ -5,6 +5,12 @@ open Utils
 open Config
 open Options
 
+
+let private loadTcsToSeeds contSpec tc =
+  let constrSpec = contSpec.Constructor
+  let funcSpecs = contSpec.NormalFunctions |> Array.toList
+  (Seed.initFromTestCase constrSpec funcSpecs tc)
+
 let private makeSingletonSeeds contSpec =
   let constrSpec = contSpec.Constructor
   let funcSpecs = contSpec.NormalFunctions |> Array.toList
@@ -131,6 +137,23 @@ let private fuzzingTimer opt = async {
   exit (0)
 }
 
+let loadTestCases opt =
+  let contSpec = TopLevel.parseOnly opt.ProgPath opt.ABIPath
+
+  let testcaseDir = System.IO.Path.Combine(opt.OutDir, "testcase")  
+  let tcFiles = System.IO.Directory.EnumerateFiles(testcaseDir) |> Seq.toList
+  let mutable initSeeds = []
+  for file in tcFiles do
+    let tcStr = System.IO.File.ReadAllText file
+    //tcs <- tcs @ [TestCase.fromJson tcStr]
+    let tc = TestCase.fromJson tcStr
+    initSeeds <- initSeeds @ [(loadTcsToSeeds contSpec tc)]
+    printfn "Processing file: %s" file
+    //for seed in initSeeds do  
+    //printfn "LLM Seeds: %s" (Seed.toString initSeeds)
+
+  (contSpec, initSeeds)
+
 let run args =
   let opt = parseFuzzOption args
   assertFileExists opt.ProgPath
@@ -141,7 +164,9 @@ let run args =
   createDirectoryIfNotExists opt.OutDir
   TCManage.initialize opt.OutDir
   Executor.initialize opt.ProgPath
+
   let contSpec, initSeeds = if opt.StaticDFA then initializeWithDFA opt
+                            elif opt.UseLLLMSeeds then loadTestCases opt
                             else initializeWithoutDFA opt
   let concQ = List.fold ConcolicQueue.enqueue ConcolicQueue.empty initSeeds
   let randQ = List.fold RandFuzzQueue.enqueue (RandFuzzQueue.init ()) initSeeds

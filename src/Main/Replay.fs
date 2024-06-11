@@ -3,6 +3,9 @@ module Smartian.Replay
 open Argu
 open Utils
 open Executor
+open System
+open System.IO
+
 
 type ReplayerCLI =
   | [<AltCommandLine("-p")>] [<Mandatory>] [<Unique>] Program of path: string
@@ -16,7 +19,7 @@ with
     member s.Usage =
       match s with
       | Program _ -> "Target program for test case replaying"
-      | InputDir _ -> "Directory of testcases to replay"
+      | InputDir _ -> "Directory of testcases to replay or a single file"
       | Interval _ -> "Time interval (in minutes) for coverage report"
       | NoDDFA -> "Disable dynamic data-flow analysis during the fuzzing."
       | CheckOptionalBugs ->
@@ -52,8 +55,11 @@ let extractElapsedTime (tcFile: string) =
   float <| tokens.[Array.length tokens - 1]
 
 let sortTCs tcDir =
-  let sorter tcFile = try Some (extractElapsedTime tcFile) with _ -> None
-  System.IO.Directory.EnumerateFiles(tcDir) |> Seq.toList |> List.sortBy sorter
+  if File.Exists(tcDir) then
+    [ tcDir ]
+  else
+    let sorter tcFile = try Some (extractElapsedTime tcFile) with _ -> None
+    System.IO.Directory.EnumerateFiles(tcDir) |> Seq.toList |> List.sortBy sorter
 
 let getNumBuckets timeInterval elapsedTimes =
   let maxElapsed = elapsedTimes |> List.max

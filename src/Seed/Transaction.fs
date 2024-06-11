@@ -34,6 +34,18 @@ module Transaction =
       Timestamp = DEFAULT_TIMESTAMP
       Blocknum = DEFAULT_BLOCKNUM }
 
+  /// Initialize an input for the specified input source.
+  let initFromTXdData funcSpec (tx: TXData) =
+    { FuncSpec = funcSpec
+      Args = Array.map Arg.init funcSpec.ArgSpecs
+      ArgCursor = 0
+      Sender = Address.addrFromString tx.From
+      UseAgent = random.Next(100) < TRY_REENTRANCY_PROB
+      Timestamp = tx.Timestamp
+      Blocknum = tx.Blocknum }
+
+
+
   /// Postprocess to ensure that the transaction is valid for a constructor.
   let fixForConstructor tx =
     let args = Array.map Arg.fixForConstructor tx.Args

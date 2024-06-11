@@ -3,6 +3,8 @@ namespace Smartian
 open Nethermind.Core.Extensions
 open Config
 open Utils
+open TestCase
+open EVMAnalysis
 
 /// A collection of input, which corresponds to a transaction sequence.
 type Seed = {
@@ -25,6 +27,21 @@ module Seed =
     let txs = Array.append [| deployTx |] normalTxs
     let idx = try Array.findIndex (not << Transaction.isEmpty) txs with _ -> -1
     { Transactions = txs; TXCursor = idx }
+
+  let initFromTestCase cnstrFunc funcs tc =
+    let deployTx = Transaction.initFromTXdData cnstrFunc tc.DeployTx |> Transaction.fixForConstructor
+    let normalTxs = 
+        tc.Txs
+        |> List.map (fun tx -> 
+            let func = List.find (fun name -> FuncSpec.getName name = tx.Function) funcs
+            Transaction.initFromTXdData func tx
+        )
+        |> Array.ofList
+
+    let txs = Array.append [| deployTx |] normalTxs
+    let idx = try Array.findIndex (not << Transaction.isEmpty) txs with _ -> -1
+    { Transactions = txs; TXCursor = idx }
+
 
   /// Postprocess to ensure that the seed has a valid for deploying transaction.
   let fixDeployTransaction seed =
