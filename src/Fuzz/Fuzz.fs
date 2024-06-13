@@ -140,7 +140,7 @@ let private fuzzingTimer opt = async {
 let loadTestCases opt =
   let contSpec = TopLevel.parseOnly opt.ProgPath opt.ABIPath
 
-  let testcaseDir = System.IO.Path.Combine(opt.OutDir, "testcase")  
+  let testcaseDir = System.IO.Path.Combine(opt.OutDir, "seeds")  
   let tcFiles = System.IO.Directory.EnumerateFiles(testcaseDir) |> Seq.toList
   let mutable initSeeds = []
   for file in tcFiles do
@@ -149,8 +149,8 @@ let loadTestCases opt =
     let tc = TestCase.fromJson tcStr
     initSeeds <- initSeeds @ [(loadTcsToSeeds contSpec tc)]
     printfn "Processing file: %s" file
-    //for seed in initSeeds do  
-    //printfn "LLM Seeds: %s" (Seed.toString initSeeds)
+    for seed in initSeeds do  
+      printfn "LLM Seeds: %s" (Seed.toString seed)
 
   (contSpec, initSeeds)
 

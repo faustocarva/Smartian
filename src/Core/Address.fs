@@ -11,6 +11,10 @@ let toBytes endian (addr: Address) =
   toStr addr |> hexStrToBytes
   |> if endian = LE then Array.rev else identity
 
+let toBytesFromStr endian (addr: string) =
+  hexStrToBytes addr
+  |> if endian = LE then Array.rev else identity
+
 /// Converts a byte array into an Address.
 let fromBytes endian (bytes: byte[]) =
   if endian = LE then new Address(Array.rev bytes) else new Address(bytes)

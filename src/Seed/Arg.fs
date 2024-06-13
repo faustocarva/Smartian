@@ -36,6 +36,30 @@ module Arg =
       | t -> [| Element.init t |]
     { Spec = argSpec; Elems = elems; ElemCursor = 0 }
 
+
+  let initWithValues (argSpec: ArgSpec) value =
+    let elems =
+      match argSpec.Kind with
+      // Do not support dimension >= 4 for now.
+      | Array (_, Array (_, Array (_, Array _))) -> failwith "Unsupported array"
+      | Array (size1, Array (size2, Array (size3, elemTyp))) ->
+        let len1 = SizeType.decideLen size1
+        let len2 = SizeType.decideLen size2
+        let len3 = SizeType.decideLen size3
+        let len = len1 * len2 * len3
+        Array.init len (fun _ -> (Element.initWithValues elemTyp value))
+      // 2-dimensional arrays.
+      | Array (size1, Array (size2, elemTyp)) ->
+        let len = SizeType.decideLen size1 * SizeType.decideLen size2
+        Array.init len (fun _ -> (Element.initWithValues elemTyp value))
+      // 1-dimensional arrays.
+      | Array (size, elemTyp) ->
+        Array.init (SizeType.decideLen size) (fun _ -> Element.initWithValues elemTyp value)
+      // Singleton type.
+      | t -> [| (Element.initWithValues t value)|]
+    { Spec = argSpec; Elems = elems; ElemCursor = 0 }
+
+
   /// Postprocess to ensure that the value is valid for a constructor argument.
   let fixForConstructor arg =
     let newElems =

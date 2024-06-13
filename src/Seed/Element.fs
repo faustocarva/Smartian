@@ -4,6 +4,8 @@ open EVMAnalysis
 open Config
 open Utils
 open BytesUtils
+open Address
+open Nethermind.Dirichlet.Numerics
 
 /// A building block of program input, composed of ByteVal array.
 type Element = {
@@ -19,6 +21,14 @@ type Element = {
 }
 
 module Element =
+
+  let private buildBytes argKind (bytes:obj) =
+    match argKind with
+    | UInt width | Int width -> bigIntToBytes LE width (bytes :?> bigint) |> Array.map ByteVal.newByteVal
+    | Address ->  toBytesFromStr LE (bytes.ToString()) |> Array.map ByteVal.newByteVal
+    | Bool | Byte -> strToBytes (bytes :?> string) |> Array.map ByteVal.newByteVal
+    | String -> hexStrToBytes (bytes :?> string) |> Array.map ByteVal.newByteVal
+    | Array _ -> failwithf "Array type not allowed for an element"
 
   let private decideLen = function
     | UInt width | Int width -> width
@@ -36,6 +46,16 @@ module Element =
       ByteVals = byteVals
       MaxLength = len
       ByteCursor = 0 }
+
+  /// Initialize an element with the given specification.
+  let initWithValues argKind (bytes:obj) =
+    let len = decideLen argKind
+    let bytes = buildBytes argKind bytes
+    { ElemType = argKind
+      ByteVals = bytes
+      MaxLength = len
+      ByteCursor = 0 }
+
 
   let DEPLOYER_ADDR =
     let bytes = Address.toBytes LE Address.OWNER_CONTRACT

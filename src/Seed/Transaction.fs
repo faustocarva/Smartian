@@ -1,6 +1,7 @@
 namespace Smartian
 
 open Nethermind.Dirichlet.Numerics
+open Nethermind.Abi
 open Config
 open Utils
 open BytesUtils
@@ -23,6 +24,14 @@ type Transaction = {
 }
 
 module Transaction =
+  let private abiEncoder = AbiEncoder ()
+
+  let private getSignature name typeStrs =
+    abiEncoder.getSignature(name, toCsList typeStrs)
+
+  let private decodeData signature data =
+    abiEncoder.Decode(AbiEncodingStyle.None, signature, data)
+
 
   /// Initialize an input for the specified input source.
   let init funcSpec =
@@ -36,15 +45,21 @@ module Transaction =
 
   /// Initialize an input for the specified input source.
   let initFromTXdData funcSpec (tx: TXData) =
+    let args = Array.map Arg.init funcSpec.ArgSpecs |> Array.skip 1
+    let typeStrs = Array.map (fun arg -> arg.Spec.TypeStr) args
+    let signature = getSignature funcSpec.Name (Array.toList typeStrs)
+    let dataNoSig = tx.Data[4..]
+    let decoded = if funcSpec.Kind = Constructor then [||]
+                  else decodeData signature dataNoSig
+    let value = UInt256.op_Implicit(tx.Value) |> box
+    let argsData = Array.append [|value|] decoded
     { FuncSpec = funcSpec
-      Args = Array.map Arg.init funcSpec.ArgSpecs
+      Args = if funcSpec.Kind = Constructor then Array.map Arg.init funcSpec.ArgSpecs else Array.map2 Arg.initWithValues funcSpec.ArgSpecs argsData
       ArgCursor = 0
       Sender = Address.addrFromString tx.From
       UseAgent = random.Next(100) < TRY_REENTRANCY_PROB
       Timestamp = tx.Timestamp
       Blocknum = tx.Blocknum }
-
-
 
   /// Postprocess to ensure that the transaction is valid for a constructor.
   let fixForConstructor tx =
