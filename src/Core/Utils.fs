@@ -2,6 +2,7 @@
 module Smartian.Utils
 
 open System
+open System.IO
 open System.Collections.Immutable
 open System.Collections.Generic
 
@@ -114,6 +115,11 @@ let sampleInt min max (n : int) =
 let assertFileExists file =
   if not (System.IO.File.Exists(file)) then
     printfn "Target file ('%s') does not exist" file
+    exit 1
+
+let assertDirExists dir =
+  if not (Directory.Exists(dir)) then
+    printfn "Directory ('%s') does not exist" dir
     exit 1
 
 /// Remove a file, without throwing exception.

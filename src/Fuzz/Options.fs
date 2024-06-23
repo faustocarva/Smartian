@@ -8,6 +8,7 @@ type FuzzerCLI =
   | [<AltCommandLine("-v")>] [<Unique>] Verbose of int
   | [<AltCommandLine("-t")>] [<Mandatory>] [<Unique>] Timelimit of sec: int
   | [<AltCommandLine("-o")>] [<Mandatory>] [<Unique>] OutputDir of path: string
+  | [<AltCommandLine("-s")>] [<Unique>] SeedDir   of path: string  
   | [<AltCommandLine("-a")>] [<Unique>] ABIFile of path: string
   | [<Unique>] NoSDFA
   | [<Unique>] NoDDFA
@@ -22,6 +23,7 @@ with
       | Verbose _ -> "Verbosity level to control debug messages."
       | Timelimit _ -> "Timeout for fuzz testing (in seconds)."
       | OutputDir _ -> "Directory to store testcase outputs."
+      | SeedDir _ -> "Directory with LLM seeds."      
       | ABIFile _ -> "ABI JSON file."
       | NoSDFA -> "Disable static data-flow analysis to guide fuzzing."
       | NoDDFA -> "Disable dynamic data-flow analysis during the fuzzing."
@@ -35,8 +37,9 @@ with
 type FuzzOption = {
   Verbosity         : int
   OutDir            : string
+  SeedInDir         : string  
   Timelimit         : int
-  ProgPath          : string
+  ProgPath          : string  
   ABIPath           : string
   StaticDFA         : bool
   DynamicDFA        : bool
@@ -52,6 +55,7 @@ let parseFuzzOption (args: string array) =
           :? Argu.ArguParseException -> printLine (parser.PrintUsage()); exit 1
   { Verbosity = r.GetResult (<@ Verbose @>, defaultValue = 1)
     OutDir = r.GetResult (<@ OutputDir @>)
+    SeedInDir = r.GetResult (<@ SeedDir @>, defaultValue = "")    
     Timelimit = r.GetResult (<@ Timelimit @>)
     ProgPath = r.GetResult (<@ Program @>)
     ABIPath = r.GetResult(<@ ABIFile @>, defaultValue = "")
