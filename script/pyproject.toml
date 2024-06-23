@@ -11,10 +11,10 @@ python = "^3.10"
 fire = "^0.5.0"
 openai = "^1.26.0"
 slither-analyzer = "0.9.6"
-tiktoken = "^0.6.0"
 langchain-openai = "^0.1.6"
 loguru = "^0.7.2"
 web3 = "^6.19.0"
+tokencost = "^0.1.10"
 
 
 [build-system]

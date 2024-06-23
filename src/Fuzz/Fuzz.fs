@@ -25,6 +25,7 @@ let private sequenceToSeed contSpec seq =
 
 let private initializeWithDFA opt =
   let contSpec, seqs = TopLevel.parseAndAnalyze opt.ProgPath opt.ABIPath
+  printfn " Lenght SEQS %A" (List.length seqs)
   if List.isEmpty seqs // No DU chain at all.
   then (contSpec, makeSingletonSeeds contSpec)
   else (contSpec, List.map (sequenceToSeed contSpec) seqs)
@@ -147,7 +148,8 @@ let loadTestCases opt =
     let tcStr = System.IO.File.ReadAllText file
     //tcs <- tcs @ [TestCase.fromJson tcStr]
     let tc = TestCase.fromJson tcStr
-    initSeeds <- initSeeds @ [(loadTcsToSeeds contSpec tc)]
+    //initSeeds <- initSeeds @ [(loadTcsToSeeds contSpec tc)]
+    try initSeeds <- initSeeds @ [ (loadTcsToSeeds contSpec tc) ] with _ -> ()
     printfn "Processing file: %s" file
     for seed in initSeeds do  
       printfn "LLM Seeds: %s" (Seed.toString seed)
