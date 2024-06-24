@@ -54,15 +54,14 @@ class TestCaseService(metaclass=SingletonMeta):
         except Exception as e:
             #logger.debug(f"Invalid JSON: {e}")
             return False
-        
-        
+            
     def json_from_text(self, text: str):
         match = re.search(r'\[[\s\S]*\]', text)
         if not match:
             return None
 
         try:
-            return json.loads(match.group(0))
+            return match.group(0)
         except json.JSONDecodeError:
             return None
         
@@ -70,7 +69,7 @@ class TestCaseService(metaclass=SingletonMeta):
         abi = json.loads(abi)                
         functions = []
         for item in abi:
-            if item.get('type') == 'function':# or item.get('type') == 'fallback':
+            if item.get('type') == 'function':
                 func_signature = item['name'] + '(' + ','.join([input['type'] for input in item['inputs']]) + ')'
                 func_selector = eth_utils.function_signature_to_4byte_selector(func_signature)
             elif item.get('type') == 'fallback':
@@ -82,10 +81,23 @@ class TestCaseService(metaclass=SingletonMeta):
             if with_selector:
                 functions.append(f'{func_selector.hex()}, {func_signature}')
             else:
-                functions.append(f'{func_signature}')                
-            
-        return functions        
+                functions.append(f'{func_signature}')
+
+        return functions
                 
+    def getFunctionSelector(self, abi: str, function: str):
+        abi = json.loads(abi)
+        selector = None
+        for item in abi:
+            #Smartian has a bug with functions with same name and different args, loop til the end, as smartian to make same selector
+            if item.get('name') == function:
+                func_signature = item['name'] + '(' + ','.join([input['type'] for input in item['inputs']]) + ')'
+                selector = eth_utils.function_signature_to_4byte_selector(func_signature).hex()
+            elif item.get('type') == 'fallback' and (function == "fallback" or function == "fallback()"):
+                func_signature = 'fallback()'
+                selector = eth_utils.function_signature_to_4byte_selector(func_signature).hex()
+        return selector
+                    
     def _validateFunctionSelector(self, abi: list, calldata: str):
         function_selector = calldata[:8]        
         function_abi = None
@@ -112,28 +124,48 @@ class TestCaseService(metaclass=SingletonMeta):
     def injectAgents(self, json):
         json["Entities"] = self.ENTITIES
 
-    def validateTestCaseStruct(self, tc):
+    def _getDeployTx(self, tc):
+            if "TestCase" in tc:
+                return tc['TestCase'].get('DeployTx')
+            else:
+                return tc.get('DeployTx')
+            
+    def _getTxs(self, tc):
+            if "TestCase" in tc:
+                return tc['TestCase'].get('Txs')
+            else:
+                return tc.get('Txs')
+
+    def validateTestCaseStruct(self, tc):        
         if tc.get('TestCase') and tc['TestCase'].get('DeployTx') and tc['TestCase'].get('Txs'):
             return True
+        elif tc.get('DeployTx') and tc.get('Txs'):
+            return True
         else:
-            return False
+            return False                
         
-        
-    def processTestCase(self, tc: dict):
+    def processTestCase(self, tc: dict, contract_abi):
         tc_json = {}
         self.injectAgents(tc_json)
-        tc_json.update(self.processDeployElements(tc['TestCase']['DeployTx']))
+        tc_json.update(self.processDeployElements(tc))
         txs = []
-        for tx in tc['TestCase']['Txs']:
-            txs.append(self.processTransaction(tx))
+        for tx in self._getTxs(tc):
+            tx_parsed = self.processTransaction(tx, contract_abi)
+            if tx_parsed is not None:
+                txs.append(self.processTransaction(tx, contract_abi))
         tc_json['Txs'] = txs
         return tc_json
         
 
     def getAgent(self, agent: str):
-        return self.ENTITIES[int(agent[-1]) - 1]['Contract']
+        index = int(agent[-1])
+        if index < 1 or index > 4:
+            logger.warning("Invalid SmartianAgent id, defaulting to 1")
+            index = 1
+        return self.ENTITIES[index - 1]['Contract']
         
-    def processDeployElements(self, deployTx: dict):
+    def processDeployElements(self, tc):
+        deployTx = self._getDeployTx(tc)
         return json.loads(f'''{{
             "TargetDeployer":"{self.getAgent(deployTx['From'])}",
             "TargetContract":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
@@ -148,14 +180,25 @@ class TestCaseService(metaclass=SingletonMeta):
             }}}}
             ''')
         
-    def processTransaction(self, tx: dict):
+    def processTransaction(self, tx: dict, contract_abi):
+        function_name = tx['Function']
+        func_selector = self.getFunctionSelector(contract_abi, function_name)
+        if func_selector is None:
+            logger.warning("Invalid function name, skiping transaction")
+            return None
+        
+        if function_name == "fallback" or function_name == "fallback()":
+            function_name = f"{tx['Function']}"
+        else:
+            function_name = f"{tx['Function']}({func_selector})"
+            
         return json.loads((f'''{{
             "From":"{self.getAgent(tx['From'])}",
             "To":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
             "Value":"{tx['Value']}",
-            "Data":"",
+            "Data":"{func_selector}",
             "Timestamp":"{tx['Timestamp']}",
             "Blocknum":"{tx['Blocknum']}",
-            "Function":"{tx['Function']}"
+            "Function":"{function_name}"
             }}
             '''))

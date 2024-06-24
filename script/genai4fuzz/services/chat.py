@@ -61,12 +61,19 @@ class ChatService(metaclass=SingletonMeta):
             base_url='https://api.endpoints.anyscale.com/v1',
             api_key=os.environ["ANYSCALE_API_KEY"]
         )
-
-        response = client.chat.completions.create(
-            messages=prompt_msgs,
-            model=model_string,
-            max_tokens=max_tokens,
-            temperature=temperature)
+        if model == "Mixtral-8X7B":
+            response = client.chat.completions.create(
+                messages=prompt_msgs,
+                model=model_string,
+                response_format = {"type": "json_object"},         
+                max_tokens=max_tokens,
+                temperature=temperature)
+        else:
+            response = client.chat.completions.create(
+                messages=prompt_msgs,
+                model=model_string,
+                max_tokens=max_tokens,
+                temperature=temperature)
         
         g_time = time.time() - t_start
         logger.info(f"Anyscale response time: {g_time}")

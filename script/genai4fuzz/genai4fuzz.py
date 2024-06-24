@@ -1,7 +1,7 @@
 from openai import OpenAI
 import os
 import glob
-import random
+import shutil
 import json
 from datetime import datetime
 import subprocess
@@ -55,7 +55,7 @@ class Genai4fuzz():
     
     def _create_prompt(self, contract_abi: str, testcase: list) -> list: 
         
-        functions_descs = self._testCase_service.getFunctionsFromABI(contract_abi, False)       
+        functions_descs = self._testCase_service.getFunctionsFromABI(contract_abi, False)
         functions_descs_str = '\n'.join([function for function in functions_descs])
         
         prompt =  [
@@ -140,8 +140,7 @@ class Genai4fuzz():
             raise Exception("not found")
         
         _, contract_abi, _ = self._read_contract_files(contact_dir)
-        #testcase = open(os.path.join(contact_dir, 'example'), "r").read()    
-        testcase = open(os.path.join(os.getcwd(), 'example.json'), "r").read()
+        testcase = open('example.json', "r").read()
                 
         messages = self._create_prompt(contract_abi, [testcase])        
         print (self._chat_service.dump_prompt(messages))
@@ -158,7 +157,7 @@ class Genai4fuzz():
             raise Exception("not found")
         
         contract_bin_file_name, contract_abi, base_contract_name = self._read_contract_files(contact_dir)
-        testcase = open(os.path.join(contact_dir, 'example'), "r").read()
+        testcase = open('example.json', "r").read()        
         
         messages = self._create_prompt(contract_abi, [testcase]) 
 
@@ -170,8 +169,7 @@ class Genai4fuzz():
             
         logger.info(f"New {llm} test case generated!")
         logger.info(f"Is a valid JSON? {self._testCase_service.is_valid_json(chat_completion)}")
-        logger.info("Saving test case and prompt!")
-        
+                
         current_datetime = datetime.now()
         formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
         
@@ -183,15 +181,26 @@ class Genai4fuzz():
         prompt_file_name = os.path.join(contact_dir, f"{base_contract_name}_{llm}_{model}_{temperature}T_prompt_{formatted_datetime}")        
         self._chat_service.dump_save_prompt(messages, prompt_file_name)
         
-        #self.run_smartian(testcase_file_name, contract_bin_file_name)
+        logger.info(f"Saving test case {testcase_file_name} and prompt {prompt_file_name}!")
     
-    def convert_to_smartian(self, contract_dir: str):
+    def convert_to_smartian(self, contract_dir: str, output_dir: str, model=""):
         if not os.path.isdir(contract_dir):
-            return None
-        file_list = [file for file in glob.glob(os.path.join(contract_dir, '')+"*_testcase_*")]
+            return
+        if (model is None):
+            model = ""
+        if (output_dir is None):
+            output_dir = contract_dir
+            
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir, ignore_errors=True)
+        os.makedirs(output_dir)
+                        
+        _, contract_abi, base_contract_name = self._read_contract_files(contract_dir)
+        
+        file_list = [file for file in glob.glob(os.path.join(contract_dir, '')+f"*{model}*_testcase_*")]
         file_index = 0
         for file_path in file_list:
-            try:
+            # try:
                 with open(file_path, 'r') as file:
                     content = file.read()
                     if not self._testCase_service.is_valid_json(content):
@@ -203,14 +212,14 @@ class Genai4fuzz():
                     for tc in tcs:
                         if not self._testCase_service.validateTestCaseStruct(tc):
                             raise ValueError("TestCase struct does not respect JSON format")
-                        tc_json = self._testCase_service.processTestCase(tc)
+                        tc_json = self._testCase_service.processTestCase(tc, contract_abi)
                         testcase_file_name = f"id-{file_index:05}_{tc_index:05}"
-                        f = open(os.path.join(contract_dir, testcase_file_name), "w")
+                        f = open(os.path.join(output_dir, testcase_file_name), "w")
                         f.write(json.dumps(tc_json, indent=4))
                         f.close()
                         tc_index += 1        
                         #print(json.dumps(tc_json, indent=4))
                 file_index += 1                        
-            except Exception as e:
-                logger.info(f"Exeption {e}, file {file_path}")
-                continue
+            # except Exception as e:
+            #     logger.error(f"Exeption {e}, file {file_path}")
+            #     continue

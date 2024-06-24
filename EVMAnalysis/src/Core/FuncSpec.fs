@@ -84,6 +84,7 @@ module FuncSpec =
 
   let DEFAULT_FALLBACK = initFallback false
 
+  //TODO: bug here, or somewhere here -> functions with same name and different args are going to the same selector
   let init name sign kind payable entry args =
     { Name = name
       Signature = sign
