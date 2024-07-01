@@ -22,12 +22,18 @@ type Element = {
 
 module Element =
 
-  let private buildBytes argKind (bytes:obj) =
+  let private convertBoolToObjectArray (bytes: obj) =
+      let boolValue = bytes :?> bool
+      let byteVal = if boolValue then ByteVal.newByteVal 1uy else ByteVal.newByteVal 0uy
+      [| byteVal |]
+
+  let private buildBytes argKind (bytes: obj) =
     match argKind with
     | UInt width | Int width -> bigIntToBytes LE width (bytes :?> bigint) |> Array.map ByteVal.newByteVal
     | Address ->  toBytesFromStr LE (bytes.ToString()) |> Array.map ByteVal.newByteVal
-    | Bool | Byte -> strToBytes (bytes :?> string) |> Array.map ByteVal.newByteVal
-    | String -> hexStrToBytes (bytes :?> string) |> Array.map ByteVal.newByteVal
+    | Byte -> (bytes :?> byte[]) |> Array.map ByteVal.newByteVal    
+    | Bool -> convertBoolToObjectArray bytes
+    | String -> strToBytes (bytes :?> string) |> Array.map ByteVal.newByteVal
     | Array _ -> failwithf "Array type not allowed for an element"
 
   let private decideLen = function
@@ -50,9 +56,10 @@ module Element =
   /// Initialize an element with the given specification.
   let initWithValues argKind (bytes:obj) =
     let len = decideLen argKind
-    let bytes = buildBytes argKind bytes
+    let byteVals = buildBytes argKind bytes
+    //printfn "bytes %A len %A kind %A" byteVals len argKind
     { ElemType = argKind
-      ByteVals = bytes
+      ByteVals = byteVals
       MaxLength = len
       ByteCursor = 0 }
 

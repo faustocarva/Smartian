@@ -16,6 +16,7 @@ loguru = "^0.7.2"
 web3 = "^6.19.0"
 tokencost = "^0.1.10"
 pydantic = "^2.7.4"
+eth-abi = "^5.1.0"
 
 
 [build-system]

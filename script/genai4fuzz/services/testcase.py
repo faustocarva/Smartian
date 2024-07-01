@@ -1,12 +1,11 @@
-from loguru import logger
 import os
 import time
 import json
 import re
-import eth_abi
-import eth_utils
 import copy
-
+from eth_abi import encode
+from eth_utils import function_signature_to_4byte_selector, to_checksum_address, to_bytes, to_int, to_hex
+from loguru import logger
 
 from genai4fuzz.utils.singleton import SingletonMeta
 from genai4fuzz.config import Config
@@ -42,10 +41,41 @@ class TestCaseService(metaclass=SingletonMeta):
 
     @property
     def ENTITIES(self):
-        return copy.deepcopy(self._ENTITIES)
-    
+        return copy.deepcopy(self._ENTITIES)        
+
     def __init__(self) -> None:
         self._config = Config()
+        
+    def get_interface_from_abi(self, abi):
+        abi = json.loads(abi)        
+        interface = {}      
+        for field in abi:
+            if field['type'] == 'function':
+                function_name = field['name']
+                function_inputs = []
+                signature = function_name + '('
+                for i in range(len(field['inputs'])):
+                    input_type = field['inputs'][i]['type']
+                    function_inputs.append(input_type)
+                    signature += input_type
+                    if i < len(field['inputs']) - 1:
+                        signature += ','
+                signature += ')'
+                hash = function_signature_to_4byte_selector(signature).hex()
+                interface[hash] = function_name, function_inputs
+            elif field['type'] == 'constructor':
+                function_inputs = []
+                for i in range(len(field['inputs'])):
+                    input_type = field['inputs'][i]['type']
+                    function_inputs.append(input_type)
+                interface['constructor'] = 'constructor', function_inputs, 
+            elif field['type'] == 'fallback':
+                func_signature = 'fallback()'
+                hash = function_signature_to_4byte_selector(func_signature).hex()
+                interface[hash] = "fallback",[]
+
+        return interface
+        
 
     def is_valid_json(self, json_string: str) -> bool:
         try:
@@ -59,24 +89,23 @@ class TestCaseService(metaclass=SingletonMeta):
         match = re.search(r'\[[\s\S]*\]', text)
         if not match:
             return None
-
         try:
             return match.group(0)
         except json.JSONDecodeError:
             return None
         
     def getFunctionsFromABI(self, abi: str, with_selector: bool):
-        abi = json.loads(abi)                
+        abi = json.loads(abi)
         functions = []
         for item in abi:
             if item.get('type') == 'function':
                 func_signature = item['name'] + '(' + ','.join([input['type'] for input in item['inputs']]) + ')'
-                func_selector = eth_utils.function_signature_to_4byte_selector(func_signature)
+                func_selector = function_signature_to_4byte_selector(func_signature)
             elif item.get('type') == 'fallback':
-                func_signature = 'fallback()'
-                func_selector = eth_utils.function_signature_to_4byte_selector(func_signature)
+                func_signature = 'fallback()'                
+                func_selector = function_signature_to_4byte_selector(func_signature)
             else:
-                break
+                continue
             
             if with_selector:
                 functions.append(f'{func_selector.hex()}, {func_signature}')
@@ -92,35 +121,72 @@ class TestCaseService(metaclass=SingletonMeta):
             #Smartian has a bug with functions with same name and different args, loop til the end, as smartian to make same selector
             if item.get('name') == function:
                 func_signature = item['name'] + '(' + ','.join([input['type'] for input in item['inputs']]) + ')'
-                selector = eth_utils.function_signature_to_4byte_selector(func_signature).hex()
+                selector = function_signature_to_4byte_selector(func_signature).hex()
             elif item.get('type') == 'fallback' and (function == "fallback" or function == "fallback()"):
                 func_signature = 'fallback()'
-                selector = eth_utils.function_signature_to_4byte_selector(func_signature).hex()
+                selector = function_signature_to_4byte_selector(func_signature).hex()
         return selector
-                    
-    def _validateFunctionSelector(self, abi: list, calldata: str):
-        function_selector = calldata[:8]        
-        function_abi = None
-        for item in abi:
-            if item.get('type') == 'function':
-                func_signature = item['name'] + '(' + ','.join([input['type'] for input in item['inputs']]) + ')'
-                func_selector = eth_utils.function_signature_to_4byte_selector(func_signature)
-                if function_selector.lower() == func_selector.hex().lower():
-                    function_abi = item
-                    return func_signature
+               
 
-        if function_abi is None:
-            raise Exception("Function selector not found in ABI")
+    # Mapping from Solidity types to conversion functions
+    def _convert_bytes(self, value):
+        if value.startswith("0x"):
+            padded_string = value[2:].ljust(32, '0')[:32]
+            return to_bytes(hexstr=padded_string)
+        return bytes(value, 'utf-8')
+
+                
+    def encodeArgs(self, function_selector, tx):
+        try:
+            intTypes = [ "uint8", "uint16", "uint32", "uint64", "uint128", "uint256", "int8", "int16", "int32", "int64", "int128", "int256"]
+            intArraysTypes = [ "uint8[]", "uint16[]", "uint32[]", "uint64[]", "uint128[]", "uint256[]", "int8[]", "int16[]", "int32[]", "int64[]", "int128[]", "int256[]"]
+            strTypes = ['address', 'string']
+                        
+            _args = []
+            func, types = self.interfaces[function_selector]
+            print(f"func {func}, types {types} args {tx}")
+            args = tx
+            if not any(s.endswith('[]') for s in types) and any(isinstance(i, list) for i in tx):
+                args = [item for sublist in tx for item in sublist]
+
+            i = 0
+            for type in types:
+                if type in intTypes:
+                    #print(args[i])
+                    _args.append(int(args[i]))
+                elif type in strTypes:
+                    if type == "address":
+                        agent = self.isAgent(args[i])
+                        # print(agent)
+                        if agent is not None:
+                            _args.append(str(agent))
+                        else:
+                            _args.append(str(args[i]))                            
+                    else:
+                        _args.append(str(args[i]))
+                elif type == 'bool':
+                    _args.append(str(args[i]).lower() in ['true', 'false'])
+                elif type == 'bytes32' or type == 'bytes':
+                    _args.append(self._convert_bytes(args[i]))
+                elif type == 'address[]':
+                    if isinstance(args[i], list):
+                        _args.append(args[i])
+                    else:
+                        _args.append(args)
+                elif type in intArraysTypes:
+                    _args.append([int(item) for item in args[i]])
+                    
+                i += 1
+            #_args = [type_conversion[solidity_type](args[i]) for i, solidity_type in enumerate(types)]
+            # print(_args)
+            
+            encoded_args = encode(types, _args)
+            return encoded_args.hex()               
+        except Exception as e:
+            logger.error(f"Exeption {e}, missing tx parameters")
+            return None
         
-    def validateTestCaseTxs(self, test_case: str, contract_abi: str):
-        # 1. Validate From (must be from entities) and To (must the target)
-        # 2. Data must be function selector and arguments
-        test_case_file = open(test_case, "r").read()
-        test_case = json.loads(test_case_file)
-        abi = json.loads(contract_abi)        
-        for tx in test_case['Txs']:
-            logger.info(f"Validating function : {self._validateFunctionSelector(abi, tx['Data'])}")
-        
+                                    
     def injectAgents(self, json):
         json["Entities"] = self.ENTITIES
 
@@ -145,6 +211,7 @@ class TestCaseService(metaclass=SingletonMeta):
             return False                
         
     def processTestCase(self, tc: dict, contract_abi):
+        self.interfaces = self.get_interface_from_abi(contract_abi)
         tc_json = {}
         self.injectAgents(tc_json)
         tc_json.update(self.processDeployElements(tc))
@@ -156,6 +223,12 @@ class TestCaseService(metaclass=SingletonMeta):
         tc_json['Txs'] = txs
         return tc_json
         
+    def isAgent(self, agent: str):
+        index = int(agent[-1])
+        if index < 1 or index > 4:
+            return None
+        return self.ENTITIES[index - 1]['Contract']
+
 
     def getAgent(self, agent: str):
         index = int(agent[-1])
@@ -191,12 +264,17 @@ class TestCaseService(metaclass=SingletonMeta):
             function_name = f"{tx['Function']}"
         else:
             function_name = f"{tx['Function']}({func_selector})"
-            
+
+        data = func_selector
+        if tx.get('Params') is not None and len(tx.get('Params')) > 0:
+            encoded = self.encodeArgs(func_selector, tx['Params'])
+            if encoded is not None:
+                data += encoded
         return json.loads((f'''{{
             "From":"{self.getAgent(tx['From'])}",
             "To":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
             "Value":"{tx['Value']}",
-            "Data":"{func_selector}",
+            "Data":"{data}",
             "Timestamp":"{tx['Timestamp']}",
             "Blocknum":"{tx['Blocknum']}",
             "Function":"{function_name}"

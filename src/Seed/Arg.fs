@@ -37,6 +37,7 @@ module Arg =
     { Spec = argSpec; Elems = elems; ElemCursor = 0 }
 
 
+  //TODO: only singleton elements for now, Arrays next
   let initWithValues (argSpec: ArgSpec) value =
     let elems =
       match argSpec.Kind with
@@ -47,14 +48,14 @@ module Arg =
         let len2 = SizeType.decideLen size2
         let len3 = SizeType.decideLen size3
         let len = len1 * len2 * len3
-        Array.init len (fun _ -> (Element.initWithValues elemTyp value))
+        Array.init len (fun _ -> Element.init elemTyp)
       // 2-dimensional arrays.
       | Array (size1, Array (size2, elemTyp)) ->
         let len = SizeType.decideLen size1 * SizeType.decideLen size2
-        Array.init len (fun _ -> (Element.initWithValues elemTyp value))
+        Array.init len (fun _ -> Element.init elemTyp)
       // 1-dimensional arrays.
       | Array (size, elemTyp) ->
-        Array.init (SizeType.decideLen size) (fun _ -> Element.initWithValues elemTyp value)
+        Array.init (SizeType.decideLen size) (fun _ -> Element.init elemTyp)
       // Singleton type.
       | t -> [| (Element.initWithValues t value)|]
     { Spec = argSpec; Elems = elems; ElemCursor = 0 }

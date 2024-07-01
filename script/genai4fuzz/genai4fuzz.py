@@ -180,7 +180,8 @@ class Genai4fuzz():
         
         prompt_file_name = os.path.join(contact_dir, f"{base_contract_name}_{llm}_{model}_{temperature}T_prompt_{formatted_datetime}")        
         self._chat_service.dump_save_prompt(messages, prompt_file_name)
-        
+
+        logger.info(f"Prompt tokens: {chat_completion.usage.prompt_tokens}, Completition tokens {chat_completion.usage.completion_tokens}")
         logger.info(f"Saving test case {testcase_file_name} and prompt {prompt_file_name}!")
     
     def convert_to_smartian(self, contract_dir: str, output_dir: str, model=""):
@@ -214,9 +215,8 @@ class Genai4fuzz():
                             raise ValueError("TestCase struct does not respect JSON format")
                         tc_json = self._testCase_service.processTestCase(tc, contract_abi)
                         testcase_file_name = f"id-{file_index:05}_{tc_index:05}"
-                        f = open(os.path.join(output_dir, testcase_file_name), "w")
-                        f.write(json.dumps(tc_json, indent=4))
-                        f.close()
+                        with open(os.path.join(output_dir, testcase_file_name), "w") as f:
+                            f.write(json.dumps(tc_json, indent=4))                        
                         tc_index += 1        
                         #print(json.dumps(tc_json, indent=4))
                 file_index += 1                        

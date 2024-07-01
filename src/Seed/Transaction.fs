@@ -49,12 +49,16 @@ module Transaction =
     let typeStrs = Array.map (fun arg -> arg.Spec.TypeStr) args
     let signature = getSignature funcSpec.Name (Array.toList typeStrs)
     let dataNoSig = tx.Data[4..]
+    // printfn "%A" funcSpec
+    // printfn "%A" dataNoSig
+    // printfn "%A" signature.Types
     let decoded = 
         if funcSpec.Kind = Constructor || dataNoSig.Length = 0 then 
             [||]
         else 
             decodeData signature dataNoSig                  
     let value = UInt256.op_Implicit(tx.Value) |> box
+    // printfn "%A" decoded
     let argsData = Array.append [|value|] decoded
     { FuncSpec = funcSpec
       //Args = if funcSpec.Kind = Constructor then Array.map Arg.init funcSpec.ArgSpecs else Array.map2 Arg.initWithValues funcSpec.ArgSpecs argsData
