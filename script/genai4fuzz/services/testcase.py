@@ -210,16 +210,16 @@ class TestCaseService(metaclass=SingletonMeta):
         else:
             return False                
         
-    def processTestCase(self, tc: dict, contract_abi):
+    def processTestCase(self, tc: dict, contract_abi, with_args):
         self.interfaces = self.get_interface_from_abi(contract_abi)
         tc_json = {}
         self.injectAgents(tc_json)
         tc_json.update(self.processDeployElements(tc))
         txs = []
         for tx in self._getTxs(tc):
-            tx_parsed = self.processTransaction(tx, contract_abi)
+            tx_parsed = self.processTransaction(tx, contract_abi, with_args)
             if tx_parsed is not None:
-                txs.append(self.processTransaction(tx, contract_abi))
+                txs.append(self.processTransaction(tx, contract_abi, with_args))
         tc_json['Txs'] = txs
         return tc_json
         
@@ -253,7 +253,7 @@ class TestCaseService(metaclass=SingletonMeta):
             }}}}
             ''')
         
-    def processTransaction(self, tx: dict, contract_abi):
+    def processTransaction(self, tx: dict, contract_abi, with_args):
         function_name = tx['Function']
         func_selector = self.getFunctionSelector(contract_abi, function_name)
         if func_selector is None:
@@ -266,7 +266,7 @@ class TestCaseService(metaclass=SingletonMeta):
             function_name = f"{tx['Function']}({func_selector})"
 
         data = func_selector
-        if tx.get('Params') is not None and len(tx.get('Params')) > 0:
+        if with_args and tx.get('Params') is not None and len(tx.get('Params')) > 0:
             encoded = self.encodeArgs(func_selector, tx['Params'])
             if encoded is not None:
                 data += encoded

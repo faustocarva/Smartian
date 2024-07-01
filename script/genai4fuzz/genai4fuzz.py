@@ -184,7 +184,7 @@ class Genai4fuzz():
         logger.info(f"Prompt tokens: {chat_completion.usage.prompt_tokens}, Completition tokens {chat_completion.usage.completion_tokens}")
         logger.info(f"Saving test case {testcase_file_name} and prompt {prompt_file_name}!")
     
-    def convert_to_smartian(self, contract_dir: str, output_dir: str, model=""):
+    def convert_to_smartian(self, contract_dir: str, output_dir: str, model="", with_args=True):
         if not os.path.isdir(contract_dir):
             return
         if (model is None):
@@ -201,7 +201,7 @@ class Genai4fuzz():
         file_list = [file for file in glob.glob(os.path.join(contract_dir, '')+f"*{model}*_testcase_*")]
         file_index = 0
         for file_path in file_list:
-            # try:
+            try:
                 with open(file_path, 'r') as file:
                     content = file.read()
                     if not self._testCase_service.is_valid_json(content):
@@ -213,13 +213,13 @@ class Genai4fuzz():
                     for tc in tcs:
                         if not self._testCase_service.validateTestCaseStruct(tc):
                             raise ValueError("TestCase struct does not respect JSON format")
-                        tc_json = self._testCase_service.processTestCase(tc, contract_abi)
+                        tc_json = self._testCase_service.processTestCase(tc, contract_abi, with_args)
                         testcase_file_name = f"id-{file_index:05}_{tc_index:05}"
                         with open(os.path.join(output_dir, testcase_file_name), "w") as f:
                             f.write(json.dumps(tc_json, indent=4))                        
                         tc_index += 1        
                         #print(json.dumps(tc_json, indent=4))
                 file_index += 1                        
-            # except Exception as e:
-            #     logger.error(f"Exeption {e}, file {file_path}")
-            #     continue
+            except Exception as e:
+                logger.error(f"Exeption {e}, file {file_path}")
+                continue
