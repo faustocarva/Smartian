@@ -143,17 +143,18 @@ let loadTestCases opt =
   assertDirExists opt.SeedInDir
   let contSpec = TopLevel.parseOnly opt.ProgPath opt.ABIPath
 
+  //let testcaseDir = System.IO.Path.Combine(opt.OutDir, "seeds")  
   let testcaseDir = opt.SeedInDir
   let tcFiles = System.IO.Directory.EnumerateFiles(testcaseDir) |> Seq.toList
   let mutable initSeeds = []
   for file in tcFiles do
     let tcStr = System.IO.File.ReadAllText file
     let tc = TestCase.fromJson tcStr
-    printfn "Processing file: %s" file
+    //printfn "Processing file: %s" file
     initSeeds <- initSeeds @ [(loadTcsToSeeds contSpec tc)]
     //try initSeeds <- initSeeds @ [ (loadTcsToSeeds contSpec tc) ] with _ -> ()
-    for seed in initSeeds do  
-      printfn "LLM Seeds: %s" (Seed.toString seed)
+    // for seed in initSeeds do  
+    //   printfn "LLM Seeds: %s" (Seed.toString seed)
 
   log "Loaded %d LLM test cases " (List.length initSeeds)
   (contSpec, initSeeds)
@@ -169,10 +170,23 @@ let run args =
   TCManage.initialize opt.OutDir
   Executor.initialize opt.ProgPath
 
-  let contSpec, initSeeds = if opt.StaticDFA then initializeWithDFA opt
-                            elif opt.UseLLLMSeeds then loadTestCases opt
-                            else initializeWithoutDFA opt
-  log "Loaded %d test cases " (List.length initSeeds)
+  let contSpec, initSeeds =
+      if opt.StaticDFA && opt.UseLLLMSeeds then
+        log "Static DFA and LLM seeds"
+        let contSpec, initSeedsDFA = initializeWithDFA opt  
+        let _, initSeedsLLM = loadTestCases opt
+        (contSpec, initSeedsDFA @ initSeedsLLM)
+      elif opt.StaticDFA && not opt.UseLLLMSeeds then
+        log "Static DFA seeds"      
+        initializeWithDFA opt
+      elif not opt.StaticDFA && opt.UseLLLMSeeds then
+        log "LLM seeds"            
+        loadTestCases opt
+      else
+        log "Random seeds"                  
+        initializeWithoutDFA opt
+
+  log "Total n. of test cases: %d  " (List.length initSeeds)
   let concQ = List.fold ConcolicQueue.enqueue ConcolicQueue.empty initSeeds
   let randQ = List.fold RandFuzzQueue.enqueue (RandFuzzQueue.init ()) initSeeds
   log "Start main fuzzing phase"
