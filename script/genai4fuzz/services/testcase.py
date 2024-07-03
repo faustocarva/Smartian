@@ -99,10 +99,11 @@ class TestCaseService(metaclass=SingletonMeta):
         functions = []
         for item in abi:
             if item.get('type') == 'function':
-                func_signature = item['name'] + '(' + ','.join([input['type'] for input in item['inputs']]) + ')'
+                payable = " payable " if item.get('payable', False) or item.get('stateMutability') == 'payable' else ""
+                func_signature = item['name'] + '(' + ','.join([input['type'] for input in item['inputs']]) + ')' + payable                
                 func_selector = function_signature_to_4byte_selector(func_signature)
             elif item.get('type') == 'fallback':
-                func_signature = 'fallback()'                
+                func_signature = 'fallback()'
                 func_selector = function_signature_to_4byte_selector(func_signature)
             else:
                 continue

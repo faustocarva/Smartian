@@ -53,7 +53,7 @@ class Genai4fuzz():
         print(result.stdout)
         print(result.stderr)
     
-    def _create_prompt(self, contract_abi: str, testcase: list) -> list: 
+    def _create_prompt(self, contract_abi: str, testcase: list, total_tests=10) -> list: 
         
         functions_descs = self._testCase_service.getFunctionsFromABI(contract_abi, False)
         functions_descs_str = '\n'.join([function for function in functions_descs])
@@ -68,11 +68,11 @@ class Genai4fuzz():
             },
             {
                 'role': 'user',            
-                'content': '\nYou have four sender contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. Use their names in the From fields as needed.'
+                'content': '\n### You have four sender contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. Use their names in the From fields as needed.'
             },
             {
                 'role': 'user',
-                'content':'\n**Solidity Contract Functions for Test Case Generation:** \n' + functions_descs_str
+                'content':'\n### You have the following Solidity Contract Functions for Test Case Generation: \n' + functions_descs_str
             },            
             {
                 'role': 'user',
@@ -88,13 +88,13 @@ class Genai4fuzz():
 
                     #### DeployTx
                     - **From**: A string representing the sender's name.
-                    - **Value**: A string representing the amount of Ether sent with the transaction.
+                    - **Value**: A string representing the amount of Ether sent with the transaction, if function is payable.
                     - **Timestamp**: A string representing the timestamp of the transaction.
                     - **Blocknum**: A string representing the block number when the transaction was included.
 
                     #### Tx (Transaction)
                     - **From**: A string representing the sender's name.
-                    - **Value**: A string representing the amount of Ether sent with the transaction.
+                    - **Value**: A string representing the amount of Ether sent with the transaction, if function is payable.
                     - **Function**: A string representing the function name being called.
                     - **Params** (optional): An array representing the parameters passed to the function.
                     - Parameters can be nested arrays.
@@ -110,16 +110,16 @@ class Genai4fuzz():
             },
             {
                 'role': 'user',
-                'content': """
+                'content': f'''
                     ### Notes
                     - Each `TestCase` contains a `DeployTx` object and an array of `Tx` objects.
                     - Each transaction (`Tx`) includes details such as sender (`From`), value (`Value`), function name (`Function`), optional parameters (`Params`), timestamp (`Timestamp`), and block number (`Blocknum`).
                     - Parameters (`Params`) can be nested arrays to accommodate functions requiring multiple lists of parameters.
                 
-                    **Objective:** Create 10 new test case objects, each containing more than 4 transactions that might uncover bugs in the contract. 
+                    ### Objective: Create {total_tests} new test case objects, each containing more than 4 transactions that might uncover bugs in the contract. 
                     Ensure the transactions use raw values and respect the data types in the function signatures. 
                     Provide the response as RFC8259 compliant JSON without explanations.
-                """
+                '''
             }
         ]
         
@@ -135,14 +135,14 @@ class Genai4fuzz():
         messages = self._create_prompt(contract_abi, [testcase])
         print (f"Total tokens from prompt: {self._chat_service.count_tokens(messages, model)}")
    
-    def dump_prompt(self, contact_dir: str):
+    def dump_prompt(self, contact_dir: str, total_tests=10):
         if not os.path.exists(contact_dir):
             raise Exception("not found")
         
         _, contract_abi, _ = self._read_contract_files(contact_dir)
         testcase = open('example.json', "r").read()
                 
-        messages = self._create_prompt(contract_abi, [testcase])        
+        messages = self._create_prompt(contract_abi, [testcase], total_tests)
         print (self._chat_service.dump_prompt(messages))
 
     def run_gpt(self, contact_dir: str, model: str, temperature: float):
@@ -151,7 +151,7 @@ class Genai4fuzz():
     def run_anyscale(self, contact_dir: str, model: str, temperature: float):        
         self.run_llm(contact_dir, "anyscale", model, temperature)
         
-    def run_llm(self, contact_dir: str, llm: str, model: str, temperature: float):
+    def run_llm(self, contact_dir: str, llm: str, model: str, temperature: float, total_tests=10):
         
         if not os.path.exists(contact_dir):
             raise Exception("not found")
@@ -159,13 +159,15 @@ class Genai4fuzz():
         contract_bin_file_name, contract_abi, base_contract_name = self._read_contract_files(contact_dir)
         testcase = open('example.json', "r").read()        
         
-        messages = self._create_prompt(contract_abi, [testcase]) 
+        messages = self._create_prompt(contract_abi, [testcase], total_tests) 
 
         if llm == "gpt":
             logger.info(f"Requesting test cases for contract {base_contract_name}")            
             chat_completion = self._chat_service.query_gpt4(messages, model, temperature)
         elif llm == "anyscale": 
             chat_completion = self._chat_service.query_anyscale(messages, model, temperature)
+        elif llm == "deepinfra":
+            chat_completion = self._chat_service.query_deepinfra(messages, model, temperature)            
             
         logger.info(f"New {llm} test case generated!")
         logger.info(f"Is a valid JSON? {self._testCase_service.is_valid_json(chat_completion)}")
@@ -181,7 +183,6 @@ class Genai4fuzz():
         prompt_file_name = os.path.join(contact_dir, f"{base_contract_name}_{llm}_{model}_{temperature}T_prompt_{formatted_datetime}")        
         self._chat_service.dump_save_prompt(messages, prompt_file_name)
 
-        logger.info(f"Prompt tokens: {chat_completion.usage.prompt_tokens}, Completition tokens {chat_completion.usage.completion_tokens}")
         logger.info(f"Saving test case {testcase_file_name} and prompt {prompt_file_name}!")
     
     def convert_to_smartian(self, contract_dir: str, output_dir: str, model="", with_args=True):
@@ -216,8 +217,8 @@ class Genai4fuzz():
                         tc_json = self._testCase_service.processTestCase(tc, contract_abi, with_args)
                         testcase_file_name = f"id-{file_index:05}_{tc_index:05}"
                         with open(os.path.join(output_dir, testcase_file_name), "w") as f:
-                            f.write(json.dumps(tc_json, indent=4))                        
-                        tc_index += 1        
+                            f.write(json.dumps(tc_json, indent=4))
+                        tc_index += 1
                         #print(json.dumps(tc_json, indent=4))
                 file_index += 1                        
             except Exception as e:
