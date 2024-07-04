@@ -158,7 +158,6 @@ class TestCaseService(metaclass=SingletonMeta):
                 elif type in strTypes:
                     if type == "address":
                         agent = self.isAgent(args[i])
-                        # print(agent)
                         if agent is not None:
                             _args.append(str(agent))
                         else:

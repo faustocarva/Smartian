@@ -150,9 +150,9 @@ let loadTestCases opt =
   for file in tcFiles do
     let tcStr = System.IO.File.ReadAllText file
     let tc = TestCase.fromJson tcStr
-    //printfn "Processing file: %s" file
     initSeeds <- initSeeds @ [(loadTcsToSeeds contSpec tc)]
-    //try initSeeds <- initSeeds @ [ (loadTcsToSeeds contSpec tc) ] with _ -> ()
+    // printfn "Processing file: %s" file
+    // try initSeeds <- initSeeds @ [ (loadTcsToSeeds contSpec tc) ] with _ -> ()
     // for seed in initSeeds do  
     //   printfn "LLM Seeds: %s" (Seed.toString seed)
 

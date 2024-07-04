@@ -1,6 +1,7 @@
 namespace Smartian
 
 open EVMAnalysis
+open Nethermind.Core
 
 /// Represents a single argument value, composed of Element array.
 type Arg = {
@@ -36,8 +37,17 @@ module Arg =
       | t -> [| Element.init t |]
     { Spec = argSpec; Elems = elems; ElemCursor = 0 }
 
+  //TODO: arrays of bools and bytes
+  let private buildArgs len argKind (bytes: obj) =
+    match argKind with
+    | UInt width | Int width ->  (bytes :?> bigint[]) |> Array.mapi (fun _ v -> Element.initWithValues argKind v)
+    | Address -> (bytes :?> Address[]) |>  Array.mapi (fun _ v -> Element.initWithValues argKind v)
+    | Byte -> Array.init len (fun _ -> Element.init argKind)
+    | Bool -> Array.init len (fun _ -> Element.init argKind)
+    | String -> (bytes :?> string[]) |>  Array.mapi (fun _ v -> Element.initWithValues argKind v)
+    | Array _ -> failwithf "Array type not allowed for an element"
 
-  //TODO: only singleton elements for now, Arrays next
+  //TODO: only singleton elements and 1-Arrays.
   let initWithValues (argSpec: ArgSpec) value =
     let elems =
       match argSpec.Kind with
@@ -55,9 +65,12 @@ module Arg =
         Array.init len (fun _ -> Element.init elemTyp)
       // 1-dimensional arrays.
       | Array (size, elemTyp) ->
-        Array.init (SizeType.decideLen size) (fun _ -> Element.init elemTyp)
+        // let typeInfo = value.GetType()
+        // printfn "Type Name INTERNO ARRAY: %s" typeInfo.Name
+        buildArgs (SizeType.decideLen size) elemTyp value
       // Singleton type.
-      | t -> [| (Element.initWithValues t value)|]
+      | t -> 
+        [| (Element.initWithValues t value)|]
     { Spec = argSpec; Elems = elems; ElemCursor = 0 }
 
 

@@ -55,10 +55,15 @@ class ChatService(metaclass=SingletonMeta):
             logger.error(f"Model {model} not found.")
             exit(0)
 
+        provider_url = self._query_providers(f"deepinfra.url")
+        if provider_url is None:
+            logger.error(f"Provider url not found.")
+            exit(0)
+
         logger.info(f"Invoke Deepinfra with max_tokens={max_tokens} and model {model_string}")
         t_start = time.time()
         client = OpenAI(
-            base_url='https://api.deepinfra.com/v1/openai',
+            base_url=provider_url,
             api_key=os.environ["DEEPINFRA_API_KEY"]
         )
         
@@ -68,10 +73,9 @@ class ChatService(metaclass=SingletonMeta):
             response_format = {"type": "json_object"},
             max_tokens=max_tokens,
             temperature=temperature)
+
         g_time = time.time() - t_start
         logger.info(f"Deepinfra response time: {g_time}")
-        #print(json.dumps(response, indent=4))
-        #print(response)
         
         logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
         return response.choices[0].message.content
@@ -89,13 +93,19 @@ class ChatService(metaclass=SingletonMeta):
             logger.error(f"Model {model} not found.")
             exit(0)
 
+        provider_url = self._query_providers(f"anyscale.url")
+        if provider_url is None:
+            logger.error(f"Provider url not found.")
+            exit(0)
+
         logger.info(f"Invoke Anyscale with max_tokens={max_tokens} and model {model_string}")
         t_start = time.time()
         
         client = OpenAI(
-            base_url='https://api.endpoints.anyscale.com/v1',
+            base_url=provider_url,
             api_key=os.environ["ANYSCALE_API_KEY"]
         )
+        
         if model == "Mixtral-8X7B":
             response = client.chat.completions.create(
                 messages=prompt_msgs,

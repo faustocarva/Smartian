@@ -58,10 +58,10 @@ module Transaction =
         else 
             decodeData signature dataNoSig                  
     let value = UInt256.op_Implicit(tx.Value) |> box
-    // printfn "%A" decoded
-    let argsData = Array.append [|value|] decoded
+    let decodedArray = decoded |> Array.map box
+    //printfn "%A" decoded
+    let argsData = Array.append [|value|] decodedArray
     { FuncSpec = funcSpec
-      //Args = if funcSpec.Kind = Constructor then Array.map Arg.init funcSpec.ArgSpecs else Array.map2 Arg.initWithValues funcSpec.ArgSpecs argsData
       Args = if decoded.Length = 0 then Array.map Arg.init funcSpec.ArgSpecs else Array.map2 Arg.initWithValues funcSpec.ArgSpecs argsData
       ArgCursor = 0
       Sender = Address.addrFromString tx.From
