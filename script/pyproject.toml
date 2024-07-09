@@ -17,6 +17,8 @@ web3 = "^6.19.0"
 tokencost = "^0.1.10"
 pydantic = "^2.7.4"
 eth-abi = "^5.1.0"
+solc-select = "^1.0.4"
+py-solc-x = "^2.0.3"
 
 
 [build-system]
