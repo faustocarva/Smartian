@@ -49,10 +49,7 @@ module Transaction =
     let typeStrs = Array.map (fun arg -> arg.Spec.TypeStr) args
     let signature = getSignature funcSpec.Name (Array.toList typeStrs)
     let dataNoSig = if funcSpec.Kind = Constructor || tx.Data.Length = 0 then tx.Data else tx.Data[4..]
-    // printfn "%A" funcSpec.Name
-    //printfn "%A" tx.Data
-    // printfn "%A" typeStrs
-    let decoded = 
+    let decoded =  
         if dataNoSig.Length = 0 then
             [||]
         else
@@ -60,8 +57,19 @@ module Transaction =
     let value = UInt256.op_Implicit(tx.Value) |> box
     let decodedArray = decoded |> Array.map box
     let argsData = Array.append [|value|] decodedArray
+    let args =
+        if decoded.Length = 0 then
+            if funcSpec.Payable then
+              let firstArg = [| Arg.initWithValues funcSpec.ArgSpecs.[0] argsData.[0] |]
+              let remainingArgs = funcSpec.ArgSpecs |> Array.skip 1 |> Array.map Arg.init
+              Array.append firstArg remainingArgs
+            else
+              Array.map Arg.init funcSpec.ArgSpecs
+        else
+            Array.map2 Arg.initWithValues funcSpec.ArgSpecs argsData
+
     { FuncSpec = funcSpec
-      Args = if decoded.Length = 0 then Array.map Arg.init funcSpec.ArgSpecs else Array.map2 Arg.initWithValues funcSpec.ArgSpecs argsData
+      Args = args
       ArgCursor = 0
       Sender = Address.addrFromString tx.From
       UseAgent = random.Next(100) < TRY_REENTRANCY_PROB

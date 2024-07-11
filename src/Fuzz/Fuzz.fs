@@ -151,8 +151,8 @@ let loadTestCases opt =
     let tcStr = System.IO.File.ReadAllText file
     let tc = TestCase.fromJson tcStr
     log "Processing file: %s" file
-    //initSeeds <- initSeeds @ [(loadTcsToSeeds contSpec tc)]
     try initSeeds <- initSeeds @ [ (loadTcsToSeeds contSpec tc) ] with _ -> (log "Skiping file %s, malformed seed" file)
+    //initSeeds <- initSeeds @ [ (loadTcsToSeeds contSpec tc) ]
     // for seed in initSeeds do  
     //   printfn "LLM Seeds: %s" (Seed.toString seed)
 

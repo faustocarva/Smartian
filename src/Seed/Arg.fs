@@ -42,7 +42,11 @@ module Arg =
     match argKind with
     | UInt width | Int width ->  (bytes :?> bigint[]) |> Array.mapi (fun _ v -> Element.initWithValues argKind v)
     | Address -> (bytes :?> Address[]) |>  Array.mapi (fun _ v -> Element.initWithValues argKind v)
-    | Byte -> Array.init len (fun _ -> Element.init argKind)
+    | Byte -> 
+          // printfn "%A" bytes;  
+          // let typeInfo = bytes.GetType();
+          // printfn "Type Name INTERNO ARRAY: %s" typeInfo.Name;
+          Array.init len (fun _ -> Element.init argKind)
     | Bool -> Array.init len (fun _ -> Element.init argKind)
     | String -> (bytes :?> string[]) |>  Array.mapi (fun _ v -> Element.initWithValues argKind v)
     | Array _ -> failwithf "Array type not allowed for an element"
