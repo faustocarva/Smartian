@@ -187,6 +187,9 @@ let run args =
         initializeWithoutDFA opt
 
   log "Total n. of test cases: %d  " (List.length initSeeds)
+  //for seed in initSeeds do  
+  //  printfn "Seeds: %s" (Seed.toString seed)
+
   let concQ = List.fold ConcolicQueue.enqueue ConcolicQueue.empty initSeeds
   let randQ = List.fold RandFuzzQueue.enqueue (RandFuzzQueue.init ()) initSeeds
   log "Start main fuzzing phase"
