@@ -47,7 +47,6 @@ class TestCaseService(metaclass=SingletonMeta):
 
     def __init__(self) -> None:
         self._config = Config()
-        #self._slither = Slither()
 
     def _get_deploy_tx(self, tc):
             if "TestCase" in tc:
@@ -68,23 +67,27 @@ class TestCaseService(metaclass=SingletonMeta):
         return bytes(value, 'utf-8')
 
     def get_function_modifiers(self, contract_file, target_functions):
-        slither = Slither(contract_file)
-        modifiers = {}
-        
-        for contract in slither.contracts_derived:
-            for function in contract.functions:
-                param_types = [param.type.__str__() for param in function.parameters]
-                signature = f"{function.name}({','.join(param_types)})"
-                if function.visibility == 'public' and signature in target_functions:
-                    for modifier in function.modifiers:
-                        modifiers[signature] = [modifier.name] + modifiers.get(signature, [])
-                                           
-        for key in modifiers.keys():
-            i = target_functions.index(key)
-            modifiers_str = ' '.join([modifier_str for modifier_str in modifiers[key]])
-            target_functions[i] = f"{target_functions[i]} {modifiers_str}"
-
-        return target_functions
+        try:
+            slither = Slither(contract_file)
+            modifiers = {}
+            
+            for contract in slither.contracts_derived:
+                for function in contract.functions:
+                    param_types = [param.type.__str__() for param in function.parameters]
+                    signature = f"{function.name}({','.join(param_types)})"
+                    if function.visibility == 'public' and signature in target_functions:
+                        for modifier in function.modifiers:
+                            modifiers[signature] = [modifier.name] + modifiers.get(signature, [])
+                                            
+            for key in modifiers.keys():
+                i = target_functions.index(key)
+                modifiers_str = ' '.join([modifier_str for modifier_str in modifiers[key]])
+                target_functions[i] = f"{target_functions[i]} {modifiers_str}"
+            
+            return target_functions
+        except Exception as e:
+            logger.error(f"Slither Exeption in file {contract_file}")
+            return None
 
     def get_interface_from_abi(self, abi):
         abi = json.loads(abi)        
@@ -197,6 +200,14 @@ class TestCaseService(metaclass=SingletonMeta):
                         _args.append(str(args[i]))
                 elif type == 'bool':
                     _args.append(str(args[i]).lower() in ['true', 'false'])
+                elif type == 'bytes32[]':
+                    if isinstance(args[i], list):
+                        bytelist = []                        
+                        for b in args[i]:
+                            bytelist(self._convert_bytes(b))
+                        _args.append(bytelist)
+                    else:
+                        raise ValueError("Not a list of bytes")
                 elif type == 'bytes32' or type == 'bytes':
                     if isinstance(args[i], list):
                         if len(args[i]) > 1:
@@ -212,7 +223,7 @@ class TestCaseService(metaclass=SingletonMeta):
                             if agent is not None:
                                 tmp_args.append(str(agent))
                             else:
-                                _args.append(str(p))                        
+                                tmp_args.append(str(p))
                         _args.append(tmp_args)
                     else:
                         _args.append(args)
@@ -289,7 +300,7 @@ class TestCaseService(metaclass=SingletonMeta):
         function_name = tx['Function']
         func_selector = self.get_function_selector(contract_abi, function_name)
         if func_selector is None:
-            logger.warning("Invalid function name, skiping transaction")
+            logger.warning(f"Invalid function name ({function_name}), skiping transaction")
             return None
         
         if function_name == "fallback" or function_name == "fallback()":

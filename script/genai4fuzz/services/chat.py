@@ -43,6 +43,113 @@ class ChatService(metaclass=SingletonMeta):
         f.write(final_prompt)
         f.close()
 
+
+    def query_ollama(self, prompt_msgs: list, model: str, temperature=1) -> str:
+        max_tokens = 8192
+    
+        model_string = self._query_providers(f"ollama.model.{model}")
+        if model_string is None:
+            logger.error(f"Model {model} not found.")
+            exit(0)
+
+        provider_url = self._query_providers(f"ollama.url")
+        if provider_url is None:
+            logger.error(f"Provider url not found.")
+            exit(0)
+
+        logger.info(f"Invoke Ollama with max_tokens={max_tokens} and model {model_string}")
+        t_start = time.time()
+        client = OpenAI(
+            base_url = provider_url,
+            api_key = "ollama"
+        )
+        
+        response = client.chat.completions.create(
+            messages = prompt_msgs,
+            model = model_string,
+            max_tokens = max_tokens,
+            temperature = temperature)
+
+        g_time = time.time() - t_start
+        logger.info(f"Ollama response time: {g_time}")
+        
+        logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+        return response.choices[0].message.content
+
+    def query_fireworks(self, prompt_msgs: list, model: str, temperature=1) -> str:
+        max_tokens = 8192
+
+        if "FIREWORKS_API_KEY" not in os.environ:
+            logger.error("FIREWORKS_API_KEY is not set.")
+            exit(0)
+    
+        model_string = self._query_providers(f"fireworks.model.{model}")
+        if model_string is None:
+            logger.error(f"Model {model} not found.")
+            exit(0)
+
+        provider_url = self._query_providers(f"fireworks.url")
+        if provider_url is None:
+            logger.error(f"Provider url not found.")
+            exit(0)
+
+        logger.info(f"Invoke Fireworks with max_tokens={max_tokens} and model {model_string}")
+        t_start = time.time()
+        client = OpenAI(
+            base_url = provider_url,
+            api_key = os.environ["FIREWORKS_API_KEY"]
+        )
+        
+        response = client.chat.completions.create(
+            messages = prompt_msgs,
+            model = model_string,
+            max_tokens = max_tokens,
+            temperature = temperature)
+
+        g_time = time.time() - t_start
+        logger.info(f"fireworks response time: {g_time}")
+        
+        logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+        return response.choices[0].message.content
+
+
+    def query_together(self, prompt_msgs: list, model: str, temperature=1) -> str:
+        max_tokens = 8192
+
+        if "TOGETHER_API_KEY" not in os.environ:
+            logger.error("TOGETHER_API_KEY is not set.")
+            exit(0)
+    
+        model_string = self._query_providers(f"together.model.{model}")
+        if model_string is None:
+            logger.error(f"Model {model} not found.")
+            exit(0)
+
+        provider_url = self._query_providers(f"together.url")
+        if provider_url is None:
+            logger.error(f"Provider url not found.")
+            exit(0)
+
+        logger.info(f"Invoke together with max_tokens={max_tokens} and model {model_string}")
+        t_start = time.time()
+        client = OpenAI(
+            base_url = provider_url,
+            api_key = os.environ["TOGETHER_API_KEY"]
+        )
+        
+        response = client.chat.completions.create(
+            messages = prompt_msgs,
+            model = model_string,
+            max_tokens = max_tokens,
+            temperature = temperature)
+
+        g_time = time.time() - t_start
+        logger.info(f"fireworks response time: {g_time}")
+        
+        logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+        return response.choices[0].message.content
+
+
     def query_deepinfra(self, prompt_msgs: list, model: str, temperature=1) -> str:
         max_tokens = 8192
 
@@ -79,7 +186,6 @@ class ChatService(metaclass=SingletonMeta):
         
         logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
         return response.choices[0].message.content
-
     
     def query_anyscale(self, prompt_msgs: list, model: str, temperature=1) -> str:
         max_tokens = 8192

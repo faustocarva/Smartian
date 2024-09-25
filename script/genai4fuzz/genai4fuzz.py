@@ -1,15 +1,15 @@
-from openai import OpenAI
 import os
 import glob
 import shutil
 import json
-from datetime import datetime
 import subprocess
 from loguru import logger
+from datetime import datetime
+
+from genai4fuzz.utils.general import get_pcs_and_jumpis
 
 from genai4fuzz.services.chat import ChatService
 from genai4fuzz.services.testcase import TestCaseService
-
 class Genai4fuzz():
 
     def __init__(self) -> None:
@@ -58,7 +58,10 @@ class Genai4fuzz():
         
         functions_descs = self._testCase_service.get_functions_from_ABI(contract_abi)
         functions_with_modifiers = self._testCase_service.get_function_modifiers(contract_sol, functions_descs)
-        functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
+        if functions_with_modifiers is not None:
+            functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
+        else:
+            functions_descs_str = '\n'.join([function for function in functions_descs])
         
         prompt =  [
             {
@@ -138,7 +141,13 @@ class Genai4fuzz():
         
         messages = self._create_prompt(contract_abi, contract_sol, [testcase])
         print (f"Total tokens from prompt: {self._chat_service.count_tokens(messages, model)}")
-   
+ 
+    def count_total_ins(self, contact_dir: str): 
+        contract_bin_file_name, _, base_contract_name, _ = self._read_contract_files(contact_dir)
+        bytecode = open(contract_bin_file_name, "r").read()
+        overall_pcs, overall_jumpis = get_pcs_and_jumpis(bytecode)
+        print(f"{base_contract_name},{len(overall_pcs)},{len(overall_jumpis)}")
+        
     def dump_prompt(self, contact_dir: str, total_tests=10, total_txs=4):
         if not os.path.exists(contact_dir):
             raise Exception("not found")
@@ -152,7 +161,7 @@ class Genai4fuzz():
     def run_gpt(self, contact_dir: str, model: str, temperature: float):
         self.run_llm(contact_dir, "gpt", model, temperature)
 
-    def run_anyscale(self, contact_dir: str, model: str, temperature: float):        
+    def run_anyscale(self, contact_dir: str, model: str, temperature: float):
         self.run_llm(contact_dir, "anyscale", model, temperature)
         
     def run_llm(self, contact_dir: str, llm: str, model: str, temperature: float, total_tests=10, total_txs=4):
@@ -165,13 +174,20 @@ class Genai4fuzz():
         
         messages = self._create_prompt(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
 
+        logger.info(f"Requesting test cases for contract {base_contract_name}")
         if llm == "gpt":
-            logger.info(f"Requesting test cases for contract {base_contract_name}")            
             chat_completion = self._chat_service.query_gpt4(messages, model, temperature)
         elif llm == "anyscale": 
             chat_completion = self._chat_service.query_anyscale(messages, model, temperature)
         elif llm == "deepinfra":
-            chat_completion = self._chat_service.query_deepinfra(messages, model, temperature)            
+            chat_completion = self._chat_service.query_deepinfra(messages, model, temperature)
+        elif llm == "ollama":
+            chat_completion = self._chat_service.query_ollama(messages, model, temperature)
+        elif llm == "fireworks":
+            chat_completion = self._chat_service.query_fireworks(messages, model, temperature)
+        elif llm == "together":
+            chat_completion = self._chat_service.query_together(messages, model, temperature)
+            
             
         logger.info(f"New {llm} test case generated!")
         logger.info(f"Is a valid JSON? {self._testCase_service.is_valid_json(chat_completion)}")
@@ -197,16 +213,18 @@ class Genai4fuzz():
         if (output_dir is None):
             output_dir = contract_dir
         if (date is None):
-            datel = ""
-            
-        if os.path.exists(output_dir):
-            shutil.rmtree(output_dir, ignore_errors=True)
-        os.makedirs(output_dir)
-                        
+            date = ""
+                                    
         _, contract_abi, base_contract_name,_ = self._read_contract_files(contract_dir)
         
         print(f"*{model}*_testcase_{date}*")
+
         file_list = [file for file in glob.glob(os.path.join(contract_dir, '')+f"*{model}*_testcase_{date}*")]
+        if len(file_list) > 0:
+            if os.path.exists(output_dir):
+                shutil.rmtree(output_dir, ignore_errors=True)
+            os.makedirs(output_dir)
+            
         file_index = 0
         for file_path in file_list:
             try:
