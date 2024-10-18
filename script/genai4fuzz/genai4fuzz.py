@@ -6,22 +6,19 @@ import subprocess
 from loguru import logger
 from datetime import datetime
 
-from genai4fuzz.utils.general import get_pcs_and_jumpis
+from genai4fuzz.utils.general import flatten_list, is_valid_json, json_from_text, get_pcs_and_jumpis
 
 from genai4fuzz.services.chat import ChatService
-from genai4fuzz.services.testcase import TestCaseService
+from genai4fuzz.services.testcase import TestCase
+from genai4fuzz.services.sast import SastService
+
 class Genai4fuzz():
 
     def __init__(self) -> None:
         self._chat_service = ChatService()
-        self._testCase_service = TestCaseService()
-
-    def _load_testcase(self):
-        return
-    
-    def _load_abi(self):
-        return        
-        
+        self._sast_service = SastService()        
+        #self._testCase_service = TestCaseService()
+            
     def _read_contract_files(self, contact_dir):
         base_contract_name = (os.path.basename(contact_dir.rstrip("/")))
         contract_abi_file_name = os.path.join(contact_dir, base_contract_name)  + '.abi'
@@ -32,17 +29,17 @@ class Genai4fuzz():
         contract_abi = contract_abi_file.read()
         return contract_bin_file_name, contract_abi, base_contract_name, contract_sol_file_name
         
-    def validate_testcase(self, contact_dir: str, testcase: str):
-        if not os.path.exists(contact_dir):
-            raise Exception("not found")
+    # def validate_testcase(self, contact_dir: str, testcase: str):
+    #     if not os.path.exists(contact_dir):
+    #         raise Exception("not found")
         
-        base_contract_name = (os.path.basename(contact_dir.rstrip("/")))
-        contract_abi_file_name = os.path.join(contact_dir, base_contract_name)  + '.abi'
-        contract_abi_file = open(contract_abi_file_name, "r")
-        contract_abi = contract_abi_file.read()
+    #     base_contract_name = (os.path.basename(contact_dir.rstrip("/")))
+    #     contract_abi_file_name = os.path.join(contact_dir, base_contract_name)  + '.abi'
+    #     contract_abi_file = open(contract_abi_file_name, "r")
+    #     contract_abi = contract_abi_file.read()
         
-        self._testCase_service.validateTestCaseTxs(testcase, contract_abi)
-        return
+    #     self._testCase_service.validateTestCaseTxs(testcase, contract_abi)
+    #     return
         
     def run_smartian(self, testcase: str, program: str):
         fsharp_executable = '../build/Smartian.dll'
@@ -56,8 +53,8 @@ class Genai4fuzz():
     
     def _create_prompt(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
         
-        functions_descs = self._testCase_service.get_functions_from_ABI(contract_abi)
-        functions_with_modifiers = self._testCase_service.get_function_modifiers(contract_sol, functions_descs)
+        functions_descs = self._sast_service.get_functions_from_ABI(contract_abi)
+        functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
         if functions_with_modifiers is not None:
             functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
         else:
@@ -190,7 +187,7 @@ class Genai4fuzz():
             
             
         logger.info(f"New {llm} test case generated!")
-        logger.info(f"Is a valid JSON? {self._testCase_service.is_valid_json(chat_completion)}")
+        logger.info(f"Is a valid JSON? {is_valid_json(chat_completion)}")
                 
         current_datetime = datetime.now()
         formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
@@ -225,27 +222,82 @@ class Genai4fuzz():
                 shutil.rmtree(output_dir, ignore_errors=True)
             os.makedirs(output_dir)
             
+        #print(file_list)            
         file_index = 0
         for file_path in file_list:
             try:
                 with open(file_path, 'r') as file:
                     content = file.read()
-                    if not self._testCase_service.is_valid_json(content):
-                        content = self._testCase_service.json_from_text(content)
-                        if not self._testCase_service.is_valid_json(content):
+                    if not is_valid_json(content):
+                        content = json_from_text(content)
+                        if not is_valid_json(content):
                             raise ValueError("TestCase cant be loaded as JSON")
-                    tcs = json.loads(content)
-                    tc_index = 0
-                    for tc in tcs:
-                        if not self._testCase_service.validate_testcase_struct(tc):
+                    testcases_json = json.loads(content)
+                    testcases = {}
+                    if type(testcases_json) is dict:
+                        testcases = testcases_json.get('TestCases') if testcases_json.get('TestCases') is not None else testcases_json.get('TestCase')
+                    else:
+                        testcases = testcases_json
+                    testcase_index = 0
+                    for testecase_element in testcases:
+                        tc = TestCase(testecase_element)
+                        if not tc.validate_testcase_struct():
                             raise ValueError("TestCase struct does not respect JSON format")
-                        tc_json = self._testCase_service.process_testcase(tc, contract_abi, with_args)
-                        testcase_file_name = f"id-{file_index:05}_{tc_index:05}"
+                        tc_json = tc.process_testcase(contract_abi, with_args)
+                        testcase_file_name = f"id-{file_index:05}_{testcase_index:05}"
                         with open(os.path.join(output_dir, testcase_file_name), "w") as f:
                             f.write(json.dumps(tc_json, indent=4))
-                        tc_index += 1
-                        #print(json.dumps(tc_json, indent=4))
+                        testcase_index += 1
                 file_index += 1                        
             except Exception as e:
                 logger.error(f"Exeption {e}, file {file_path}")
                 continue
+
+    def seed_valid_ratio(self, root_contract_dir: str, model="", date= ""):
+        if not os.path.isdir(root_contract_dir):
+            return
+    
+        total_seeds = 0
+        total_invalid_json = 0
+        total_invalid_struct = 0
+        total_invalid_data = 0
+        
+        for contract_dir in os.listdir(root_contract_dir):            
+            full_path = os.path.join(root_contract_dir, contract_dir)
+                                    
+            _, contract_abi, _,_ = self._read_contract_files(full_path)        
+        
+            file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]
+        
+            for file_path in file_list:
+                try:
+                    with open(file_path, 'r') as file:
+                        total_seeds += 1
+                        content = file.read()
+                        if not is_valid_json(content):
+                            content = json_from_text(content)
+                            if not is_valid_json(content):
+                                #logger.error(f"Invalid JSON file {file_path}")                            
+                                total_invalid_json += 1                                
+                                continue
+                        testcases_json = json.loads(content)
+                        testcases = {}
+                        if type(testcases_json) is dict:
+                            testcases = testcases_json.get('TestCases') if testcases_json.get('TestCases') is not None else testcases_json.get('TestCase')
+                        else:
+                            testcases = testcases_json
+                        
+                        for testecase_element in testcases:
+                            tc = TestCase(testecase_element)
+                            if not tc.validate_testcase_struct():
+                                logger.error(f"Invalid Test Case struct {file_path}")
+                                total_invalid_struct += 1
+                            tc.process_testcase(contract_abi, True)
+                except Exception as e:
+                    logger.error(f"Exception somewhere {e} {file_path}")                    
+                    total_invalid_data += 1
+                    continue
+            
+            
+        print(f"model,date,total_seeds,total_invalid_json,total_invalid_struct,total_invalid_data")
+        print(f"{model},{date},{total_seeds},{total_invalid_json},{total_invalid_struct},{total_invalid_data}")

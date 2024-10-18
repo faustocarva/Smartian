@@ -1,4 +1,5 @@
 import re
+import json
 
 def flatten_list(nested_list):
     result = []
@@ -9,6 +10,21 @@ def flatten_list(nested_list):
             result.append(item)
     return result
 
+def json_from_text(text: str):
+    match = re.search(r'\[[\s\S]*\]', text)
+    if not match:
+        return None
+    try:
+        return match.group(0)
+    except json.JSONDecodeError:
+        return None
+
+def is_valid_json(json_string: str) -> bool:
+    try:
+        json.loads(json_string)
+        return True
+    except Exception as e:
+        return False
 
 def remove_swarm_hash(bytecode):
     if isinstance(bytecode, str):

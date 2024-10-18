@@ -177,7 +177,7 @@ class ChatService(metaclass=SingletonMeta):
         response = client.chat.completions.create(
             messages=prompt_msgs,
             model=model_string,
-            response_format = {"type": "json_object"},
+            #response_format = {"type": "json_object"},
             max_tokens=max_tokens,
             temperature=temperature)
 
