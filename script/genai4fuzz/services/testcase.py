@@ -1,18 +1,16 @@
 import json
-import re
 import copy
+import hashlib
 from eth_abi import encode
-from eth_utils import function_signature_to_4byte_selector, to_bytes
+from eth_utils import to_bytes
 from loguru import logger
-from slither import Slither
 
 from genai4fuzz.utils.general import flatten_list, is_valid_json, json_from_text
 from genai4fuzz.utils.singleton import SingletonMeta
 from genai4fuzz.config import Config
 from genai4fuzz.services.sast import SastService
 
-#class TestCaseService(metaclass=SingletonMeta):
-class TestCase:
+class TestCase(object):
     
     _ENTITIES = [
             {
@@ -41,6 +39,15 @@ class TestCase:
             }
         ]
 
+    @staticmethod
+    def try_to_adapt_json_testcase(json: list):
+        testcases = {}
+        if type(json) is dict:
+            testcases = json.get('TestCases') if testcases_json.get('TestCases') is not None else testcases_json.get('TestCase')
+        else:
+            testcases = json
+        return testcases
+
     @property
     def ENTITIES(self):
         return copy.deepcopy(self._ENTITIES)        
@@ -48,11 +55,17 @@ class TestCase:
     def __init__(self, tc: dict) -> None:
         self._config = Config()
         self._sast_service = SastService()
+
         self.testcase = tc
-        self.total_invalid_json = 0
-        self.total_invalid_struct = 0
-        self.total_invalid_function = 0
-        self.total_invalid_args = 0
+        self._is_valid_struct = True
+        if not self.is_valid_testcase_struct():
+            self._is_valid_struct = False
+            logger.error("TestCase struct does not respect JSON format")
+            
+        self._total_invalid_functions = 0
+        self._total_invalid_args = 0
+        self._total_args = 0
+        self._total_functions = 0
         
     def _get_deploy_tx(self, tc):
             if "TestCase" in tc:
@@ -72,7 +85,7 @@ class TestCase:
             return to_bytes(hexstr=padded_string)
         return bytes(value, 'utf-8')
                                                     
-    def encode_args(self, function_selector, tx):
+    def _encode_args(self, function_selector, tx):
         try:
             intTypes = [ "uint8", "uint16", "uint32", "uint64", "uint128", "uint256", "int8", "int16", "int32", "int64", "int128", "int256"]
             intArraysTypes = [ "uint8[]", "uint16[]", "uint32[]", "uint64[]", "uint128[]", "uint256[]", "int8[]", "int16[]", "int32[]", "int64[]", "int128[]", "int256[]"]
@@ -92,7 +105,7 @@ class TestCase:
                     _args.append(int(args[i]))
                 elif type in strTypes:
                     if type == "address":
-                        agent = self.is_agent(args[i])
+                        agent = self._is_agent(args[i])
                         if agent is not None:
                             _args.append(str(agent))
                         else:
@@ -120,7 +133,7 @@ class TestCase:
                     if isinstance(args[i], list):
                         tmp_args = []
                         for p in args[i]:
-                            agent = self.is_agent(p)
+                            agent = self._is_agent(p)
                             if agent is not None:
                                 tmp_args.append(str(agent))
                             else:
@@ -133,61 +146,49 @@ class TestCase:
                     
                 i += 1
             encoded_args = encode(types, _args)
+            self._total_args += 1
             return encoded_args.hex()               
         except Exception as e:
             logger.error(f"Exeption {e}")
+            self._total_invalid_args += 1
             return None
 
-    def inject_agents(self, json):
+    def get_testcase_hash(self):
+        # Convert the object to a canonical string representation (sorted keys)
+        obj_str = json.dumps(self.testcase, sort_keys=True)
+        
+        # Create a SHA256 hash of the string
+        return hashlib.sha256(obj_str.encode('utf-8')).hexdigest()
+
+    def _inject_agents(self, json):
         json["Entities"] = self.ENTITIES
 
-    def validate_testcase_struct(self):
-        if self.testcase.get('TestCase') and self.testcase['TestCase'].get('DeployTx') and self.testcase['TestCase'].get('Txs'):
-            return True
-        elif self.testcase.get('DeployTx') and self.testcase.get('Txs'):
-            return True
-        else:
-            return False                
-        
-    def process_testcase(self, contract_abi, with_args):
-        self.interfaces = self._sast_service.get_interface_from_abi(contract_abi)
-        tc_json = {}
-        self.inject_agents(tc_json)
-        tc_json.update(self.process_deploy_elements(self.testcase, contract_abi, with_args))
-        txs = []
-        for tx in self._get_txs(self.testcase):
-            tx_parsed = self.process_transaction(tx, contract_abi, with_args)
-            if tx_parsed is not None:
-                txs.append(self.process_transaction(tx, contract_abi, with_args))
-        tc_json['Txs'] = txs
-        return tc_json
-        
-    def is_agent(self, agent: str):
+    def _is_agent(self, agent: str):
         index = int(agent[-1])
         if index < 1 or index > 4:
             return None
         return self.ENTITIES[index - 1]['Contract']
 
-    def get_agent(self, agent: str):
+    def _get_agent(self, agent: str):
         index = int(agent[-1])
         if index < 1 or index > 4:
             logger.warning("Invalid SmartianAgent id, defaulting to 1")
             index = 1
         return self.ENTITIES[index - 1]['Contract']
         
-    def process_deploy_elements(self, tc, contract_abi, with_args):
+    def _process_deploy_elements(self, tc, with_args):
         deployTx = self._get_deploy_tx(tc)
         data = ""
         if with_args and deployTx.get('Params') is not None and len(deployTx.get('Params')) > 0:
-            encoded = self.encode_args("constructor", deployTx['Params'])
+            encoded = self._encode_args("constructor", deployTx['Params'])
             if encoded is not None:
                 data = encoded
         
         return json.loads(f'''{{
-            "TargetDeployer":"{self.get_agent(deployTx['From'])}",
+            "TargetDeployer":"{self._get_agent(deployTx['From'])}",
             "TargetContract":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
             "DeployTx": {{
-                "From":"{self.get_agent(deployTx['From'])}",
+                "From":"{self._get_agent(deployTx['From'])}",
                 "To":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
                 "Value":"{deployTx['Value']}",
                 "Data":"{data}",
@@ -197,12 +198,14 @@ class TestCase:
             }}}}
             ''')
         
-    def process_transaction(self, tx: dict, contract_abi, with_args):
+    def _process_transaction(self, tx: dict, contract_abi, with_args):
         function_name = tx['Function']
         func_selector = self._sast_service.get_function_selector(contract_abi, function_name)
         if func_selector is None:
             logger.warning(f"Invalid function name ({function_name}), skiping transaction")
+            self._total_invalid_functions += 1
             return None
+        self._total_functions += 1        
         
         if function_name == "fallback" or function_name == "fallback()":
             function_name = f"{tx['Function']}"
@@ -211,11 +214,11 @@ class TestCase:
 
         data = func_selector
         if with_args and tx.get('Params') is not None and len(tx.get('Params')) > 0:
-            encoded = self.encode_args(func_selector, tx['Params'])
+            encoded = self._encode_args(func_selector, tx['Params'])
             if encoded is not None:
                 data += encoded
         return json.loads((f'''{{
-            "From":"{self.get_agent(tx['From'])}",
+            "From":"{self._get_agent(tx['From'])}",
             "To":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
             "Value":"{tx['Value']}",
             "Data":"{data}",
@@ -224,3 +227,30 @@ class TestCase:
             "Function":"{function_name}"
             }}
             '''))
+
+    def is_valid_testcase_struct(self):
+        if self.testcase.get('TestCase') and self.testcase['TestCase'].get('DeployTx') and self.testcase['TestCase'].get('Txs'):
+            return True
+        elif self.testcase.get('DeployTx') and self.testcase.get('Txs'):
+            return True
+        else:
+            return False                
+                        
+    def process_testcase(self, contract_abi, with_args):
+        if not self._is_valid_struct:
+            return None
+        self.interfaces = self._sast_service.get_interface_from_abi(contract_abi)
+        tc_json = {}
+        self._inject_agents(tc_json)
+        tc_json.update(self._process_deploy_elements(self.testcase, with_args))
+        txs = []
+        for tx in self._get_txs(self.testcase):
+            tx_parsed = self._process_transaction(tx, contract_abi, with_args)
+            if tx_parsed is not None:
+                txs.append(self._process_transaction(tx, contract_abi, with_args))
+        tc_json['Txs'] = txs
+        return tc_json
+
+    def get_validation_totals(self):
+        return [(self._total_args, self._total_invalid_args),
+                 (self._total_functions, self._total_invalid_functions)]

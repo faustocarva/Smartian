@@ -43,7 +43,6 @@ class ChatService(metaclass=SingletonMeta):
         f.write(final_prompt)
         f.close()
 
-
     def query_ollama(self, prompt_msgs: list, model: str, temperature=1) -> str:
         max_tokens = 8192
     
@@ -112,7 +111,6 @@ class ChatService(metaclass=SingletonMeta):
         logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
         return response.choices[0].message.content
 
-
     def query_together(self, prompt_msgs: list, model: str, temperature=1) -> str:
         max_tokens = 8192
 
@@ -148,7 +146,6 @@ class ChatService(metaclass=SingletonMeta):
         
         logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
         return response.choices[0].message.content
-
 
     def query_deepinfra(self, prompt_msgs: list, model: str, temperature=1) -> str:
         max_tokens = 8192
