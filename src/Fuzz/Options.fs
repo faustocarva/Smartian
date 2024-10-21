@@ -10,7 +10,8 @@ type FuzzerCLI =
   | [<AltCommandLine("-o")>] [<Mandatory>] [<Unique>] OutputDir of path: string
   | [<AltCommandLine("-s")>] [<Unique>] SeedDir   of path: string  
   | [<AltCommandLine("-a")>] [<Unique>] ABIFile of path: string
-  | [<Unique>] NoSDFA
+  | [<Unique>] WithBugGain
+  | [<Unique>] NoSDFA  
   | [<Unique>] NoDDFA
   | [<Unique>] UseLLLMSeeds
   | [<Unique>] CheckOptionalBugs
@@ -26,6 +27,7 @@ with
       | SeedDir _ -> "Directory with LLM seeds."      
       | ABIFile _ -> "ABI JSON file."
       | NoSDFA -> "Disable static data-flow analysis to guide fuzzing."
+      | WithBugGain -> "Enable the feedback from bugs found."
       | NoDDFA -> "Disable dynamic data-flow analysis during the fuzzing."
       | UseLLLMSeeds -> "Enable the use of LLM inital seeds for fuzzing."      
       | CheckOptionalBugs ->
@@ -41,6 +43,7 @@ type FuzzOption = {
   Timelimit         : int
   ProgPath          : string  
   ABIPath           : string
+  WithBugGain       : bool  
   StaticDFA         : bool
   DynamicDFA        : bool
   UseLLLMSeeds      : bool
@@ -62,5 +65,6 @@ let parseFuzzOption (args: string array) =
     StaticDFA = not (r.Contains(<@ NoSDFA @>))  // Enabled by default.
     DynamicDFA = not (r.Contains(<@ NoDDFA @>)) // Enabled by default.
     UseLLLMSeeds = (r.Contains(<@ UseLLLMSeeds @>))
+    WithBugGain = (r.Contains(<@ WithBugGain @>))    
     CheckOptionalBugs = r.Contains(<@ CheckOptionalBugs @>)
     UseOthersOracle = r.Contains(<@ UseOthersOracle @>) }

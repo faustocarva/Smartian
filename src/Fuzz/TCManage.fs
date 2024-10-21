@@ -121,8 +121,12 @@ let private dumpTestCase opt seed =
 
 let evalAndSave opt seed =
   let covGain, duGain, bugSet = Executor.getCoverage opt seed
+  let bugGain = if Set.count bugSet > 0 then true else false
   if Set.count bugSet > 0 then dumpBug opt seed bugSet
   if covGain then dumpTestCase opt seed
   if not covGain && duGain && opt.Verbosity >= 2 then
     log "[*] Internal new seed: %s" (Seed.toString seed)
-  covGain || duGain // Returns whether this seed is meaningful.
+  if opt.WithBugGain then
+    bugGain || covGain || duGain // Returns whether this seed is meaningful.
+  else
+    covGain || duGain // Returns whether this seed is meaningful.  
