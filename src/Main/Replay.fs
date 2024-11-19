@@ -12,6 +12,7 @@ type ReplayerCLI =
   | [<AltCommandLine("-i")>] [<Mandatory>] [<Unique>] InputDir of path: string
   | [<AltCommandLine("-t")>] [<Unique>] Interval of time: int
   | [<Unique>] NoDDFA
+  | [<Unique>] CsvOut
   | [<Unique>] CheckOptionalBugs
   | [<Unique>] UseOthersOracle
 with
@@ -22,6 +23,7 @@ with
       | InputDir _ -> "Directory of testcases to replay or a single file"
       | Interval _ -> "Time interval (in minutes) for coverage report"
       | NoDDFA -> "Disable dynamic data-flow analysis during the fuzzing."
+      | CsvOut -> "Output values in csv format"      
       | CheckOptionalBugs ->
         "Detect optional bugs (e.g. requirement violation) disabled by default."
       | UseOthersOracle ->
@@ -33,6 +35,7 @@ type ReplayOption = {
   TestcaseDir       : string
   TimeInterval      : int
   DynamicDFA        : bool
+  CsvOut            : bool  
   CheckOptionalBugs : bool
   UseOthersOracle   : bool
 }
@@ -47,6 +50,7 @@ let parseReplayOption args =
     TimeInterval = r.GetResult (<@ Interval @>, defaultValue = 0)
     DynamicDFA = not (r.Contains(<@ NoDDFA @>)) // Enabled by default.
     CheckOptionalBugs = r.Contains(<@ CheckOptionalBugs @>)
+    CsvOut = r.Contains(<@ CsvOut @>)    
     UseOthersOracle = r.Contains(<@ UseOthersOracle @>) }
 
 let extractElapsedTime (tcFile: string) =
@@ -102,24 +106,27 @@ let runDefaultMode opt =
   let traceDU = opt.DynamicDFA
   let checkOptionalBugs = opt.CheckOptionalBugs
   let useOthersOracle = opt.UseOthersOracle
-  log "Start replaying test cases in : %s" testcaseDir
+  if not opt.CsvOut then log "Start replaying test cases in : %s" testcaseDir
   let mutable totalElapsed = 0.0
   for file in sortTCs testcaseDir do
     incrExecutionCount ()  
     let tcStr = System.IO.File.ReadAllText file
     let tc = TestCase.fromJson tcStr
     let stopWatch = System.Diagnostics.Stopwatch.StartNew()
-    log "Replaying test case: %s" file
+    if not opt.CsvOut then log "Replaying test case: %s" file
     let feedback = execute tc true traceDU checkOptionalBugs useOthersOracle
     stopWatch.Stop()
     totalElapsed <- totalElapsed + stopWatch.Elapsed.TotalMilliseconds
     TCManage.printBugInfo feedback.BugSet
-  log "===== Statistics ====="    
-  log "Total Test Cases: %d" totalExecutions
-  log "Deployment failures: %d" deployFailCount
-  log "Covered Edges: %d" accumEdges.Count
-  log "Covered Instructions: %d" accumInstrs.Count
-  log "Covered Def-Use Chains: %d" accumDUChains.Count
+  if not opt.CsvOut then
+    log "===== Statistics ====="    
+    log "Total Test Cases: %d" totalExecutions
+    log "Deployment failures: %d" deployFailCount
+    log "Covered Edges: %d" accumEdges.Count
+    log "Covered Instructions: %d" accumInstrs.Count
+    log "Covered Def-Use Chains: %d" accumDUChains.Count
+  else 
+    printfn "%d,%d,%d,%d,%d" totalExecutions deployFailCount accumEdges.Count accumInstrs.Count accumDUChains.Count
 
 /// Replay test cases in the given directory on target program.
 let run args =

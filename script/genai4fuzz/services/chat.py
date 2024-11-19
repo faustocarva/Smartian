@@ -112,7 +112,6 @@ class ChatService(metaclass=SingletonMeta):
         return response.choices[0].message.content
 
     def query_together(self, prompt_msgs: list, model: str, temperature=1) -> str:
-        max_tokens = 8192
 
         if "TOGETHER_API_KEY" not in os.environ:
             logger.error("TOGETHER_API_KEY is not set.")
@@ -128,13 +127,14 @@ class ChatService(metaclass=SingletonMeta):
             logger.error(f"Provider url not found.")
             exit(0)
 
+        max_tokens = int(8192 - int(self.count_tokens(prompt_msgs, model))*1.3)
         logger.info(f"Invoke together with max_tokens={max_tokens} and model {model_string}")
         t_start = time.time()
         client = OpenAI(
             base_url = provider_url,
             api_key = os.environ["TOGETHER_API_KEY"]
         )
-        
+                
         response = client.chat.completions.create(
             messages = prompt_msgs,
             model = model_string,

@@ -259,9 +259,11 @@ class Genai4fuzz():
                         testcases = TestCase.try_to_adapt_json_testcase(testcases_json)
                         for testecase_element in testcases:
                             tc = TestCase(testecase_element)
+                            print(testecase_element)
                             obj_hash = tc.get_testcase_hash()
+                            print(obj_hash)
                             if obj_hash in hash_set:
-                                #print(f"Duplicate found: {testecase_element}")
+                                print(f"Duplicate found: {testecase_element}")
                                 total_duplicate_testcases += 1
                             else:
                                 hash_set.add(obj_hash)
