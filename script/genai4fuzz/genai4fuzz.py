@@ -3,6 +3,10 @@ import glob
 import shutil
 import json
 import subprocess
+import tempfile
+import csv
+import sys
+from collections import defaultdict
 from loguru import logger
 from datetime import datetime
 
@@ -17,6 +21,10 @@ class Genai4fuzz():
     def __init__(self) -> None:
         self._chat_service = ChatService()
         self._sast_service = SastService()
+        #logger.add(sys.stderr, level="INFO") 
+        # log_level = os.getenv("LOGURU_LEVEL", "INFO").upper()
+        # logger.remove()
+        # logger.add(lambda msg: print(msg), level=log_level)
             
     def _read_contract_files(self, contact_dir):
         base_contract_name = (os.path.basename(contact_dir.rstrip("/")))
@@ -28,15 +36,13 @@ class Genai4fuzz():
         contract_abi = contract_abi_file.read()
         return contract_bin_file_name, contract_abi, base_contract_name, contract_sol_file_name
         
-    def run_smartian(self, testcase: str, program: str):
+    def run_smartian(self, program: str, testcase: str):
         fsharp_executable = '../build/Smartian.dll'
-        parameters = [f'replay -p {program} -i {testcase}']
+        parameters = [f'replay --csvout  -p {program} -i {testcase}']
         cmd = " ".join(['dotnet', fsharp_executable] + parameters)
-        
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-        print(result.stdout)
-        print(result.stderr)
+        return result.stdout
     
     def _create_prompt(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
         
@@ -209,7 +215,6 @@ class Genai4fuzz():
                 shutil.rmtree(output_dir, ignore_errors=True)
             os.makedirs(output_dir)
             
-        #print(file_list)            
         file_index = 0
         for file_path in file_list:
             try:
@@ -239,15 +244,16 @@ class Genai4fuzz():
     def seed_uniqueness_ratio(self, root_contract_dir: str, model="", date= ""):
         if not os.path.isdir(root_contract_dir):
             return
-        total_testcases = 0
-        total_duplicate_testcases = 0
+        total_seeds = 0
+        total_duplicate_seeds = 0
         
         for contract_dir in os.listdir(root_contract_dir):            
             full_path = os.path.join(root_contract_dir, contract_dir)
             file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]
 
-            hash_set = set()
             for file_path in file_list:
+                hash_set = set()
+                #print(file_path)
                 try:
                     with open(file_path, 'r') as file:
                         content = file.read()
@@ -259,26 +265,27 @@ class Genai4fuzz():
                         testcases = TestCase.try_to_adapt_json_testcase(testcases_json)
                         for testecase_element in testcases:
                             tc = TestCase(testecase_element)
-                            print(testecase_element)
-                            obj_hash = tc.get_testcase_hash()
-                            print(obj_hash)
+                            obj_hash = tc.get_testcase_hash(["Blocknum", "Timestamp"])
+                            #print(obj_hash)
                             if obj_hash in hash_set:
-                                print(f"Duplicate found: {testecase_element}")
-                                total_duplicate_testcases += 1
+                                #print(f"Duplicate found")
+                                total_duplicate_seeds += 1
                             else:
                                 hash_set.add(obj_hash)
+                            total_seeds += 1
                 except Exception as e:
                     logger.error(f"Exception somewhere {e} {file_path}")
                     continue
-            total_testcases += len(hash_set)
-        print(f"{total_testcases},{total_duplicate_testcases}")
+
+        print(f"{model},{total_seeds},{total_duplicate_seeds}")
             
     def seed_valid_ratio(self, root_contract_dir: str, model="", date= ""):
         if not os.path.isdir(root_contract_dir):
             return
     
         total_seeds = 0
-        total_seeds_with_invalid_json = 0
+        total_files_with_invalid_json = 0
+        total_files = 0
         total_seeds_with_invalid_struct = 0
         total_args_in_seeds = 0
         total_functions_in_seeds = 0
@@ -291,7 +298,53 @@ class Genai4fuzz():
             _, contract_abi, _,_ = self._read_contract_files(full_path)
         
             file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]
+
+            for file_path in file_list:
+                print(file_path)
+                try:
+                    with open(file_path, 'r') as file:
+                        total_files += 1
+                        content = file.read()
+                        if not is_valid_json(content):
+                            content = json_from_text(content)
+                            if not is_valid_json(content):
+                                #logger.error(f"Invalid JSON file {file_path}")                            
+                                total_files_with_invalid_json += 1
+                                continue
+                        testcases_json = json.loads(content)
+                        testcases = TestCase.try_to_adapt_json_testcase(testcases_json)
+                        for testecase_element in testcases:
+                            total_seeds += 1                            
+                            tc = TestCase(testecase_element)
+                            if not tc.is_valid_testcase_struct():
+                                total_seeds_with_invalid_struct += 1
+                            tc.process_testcase(contract_abi, True)
+                            totals = tc.get_validation_totals()
+                            total_args_in_seeds += totals[0][0]
+                            total_invalid_args_in_seeds += totals[0][1]                            
+                            total_functions_in_seeds += totals[1][0]
+                            total_invalid_function_in_seeds += totals[1][1]
+                except Exception as e:
+                    logger.error(f"Exception somewhere {e} {file_path}")
+                    continue
+
+        #print("model,date,total_seeds,total_seeds_with_invalid_json,total_seeds_with_invalid_struct,total_args_in_seeds,total_invalid_args_in_seeds,total_functions_in_seeds, total_invalid_function_in_seeds")        
+        print(f"{model},{os.path.basename(os.path.dirname(root_contract_dir))},{total_files},{total_files_with_invalid_json},{total_seeds},{total_seeds_with_invalid_struct},{total_args_in_seeds},{total_invalid_args_in_seeds},{total_functions_in_seeds},{total_invalid_function_in_seeds}")
         
+    def seed_coverage_ratio(self, root_contract_dir: str, model="", date= ""):
+        if not os.path.isdir(root_contract_dir):
+            return
+    
+        total_seeds = 0
+        coverage_map = defaultdict(list)
+        
+        for contract_dir in os.listdir(root_contract_dir):
+            full_path = os.path.join(root_contract_dir, contract_dir)
+                                    
+            contract_bin, contract_abi, _,_ = self._read_contract_files(full_path)
+        
+            file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]        
+
             for file_path in file_list:
                 try:
                     with open(file_path, 'r') as file:
@@ -300,25 +353,23 @@ class Genai4fuzz():
                         if not is_valid_json(content):
                             content = json_from_text(content)
                             if not is_valid_json(content):
-                                #logger.error(f"Invalid JSON file {file_path}")                            
-                                total_seeds_with_invalid_json += 1
                                 continue
                         testcases_json = json.loads(content)
                         testcases = TestCase.try_to_adapt_json_testcase(testcases_json)
                         for testecase_element in testcases:
-                            tc = TestCase(testecase_element)
-                            if not tc.is_valid_testcase_struct():
-                                total_seeds_with_invalid_struct += 1
-                            tc.process_testcase(contract_abi, True)
-                            totals = tc.get_validation_totals()
-                            total_args_in_seeds += totals[0][0]
-                            total_invalid_args_in_seeds += totals[0][1]
-                            
-                            total_functions_in_seeds += totals[1][0]
-                            total_invalid_function_in_seeds += totals[1][1]
+                            tc = TestCase(testecase_element)                            
+                            testdata = json.dumps(tc.process_testcase(contract_abi, True))
+                            tmp_test_file = tempfile.NamedTemporaryFile(delete=True, mode='w')
+                            tmp_test_file.write(testdata)
+                            tmp_test_file.flush()
+                            coverage = self.run_smartian(contract_bin, tmp_test_file.name)
+                            tmp_test_file.close()      
+                            coverage_map[os.path.basename(file_path)].append(coverage.strip())
                 except Exception as e:
                     logger.error(f"Exception somewhere {e} {file_path}")
                     continue
 
-        #print("model,date,total_seeds,total_seeds_with_invalid_json,total_seeds_with_invalid_struct,total_args_in_seeds,total_invalid_args_in_seeds,total_functions_in_seeds, total_invalid_function_in_seeds")        
-        print(f"{model},{date},{total_seeds},{total_seeds_with_invalid_json},{total_seeds_with_invalid_struct},{total_args_in_seeds},{total_invalid_args_in_seeds},{total_functions_in_seeds},{total_invalid_function_in_seeds}")
+        for key, values in coverage_map.items():
+            for index, value in enumerate(values, start=1):
+                contract = key.split("_", 1)[0]
+                print(f"{contract},{index},{model},{key},{value}")

@@ -117,7 +117,7 @@ let runDefaultMode opt =
     let feedback = execute tc true traceDU checkOptionalBugs useOthersOracle
     stopWatch.Stop()
     totalElapsed <- totalElapsed + stopWatch.Elapsed.TotalMilliseconds
-    TCManage.printBugInfo feedback.BugSet
+    if not opt.CsvOut then TCManage.printBugInfo feedback.BugSet
   if not opt.CsvOut then
     log "===== Statistics ====="    
     log "Total Test Cases: %d" totalExecutions

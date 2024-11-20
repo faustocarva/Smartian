@@ -51,3 +51,15 @@ def get_pcs_and_jumpis(bytecode):
     if len(pcs) == 0:
         pcs = [0]
     return (pcs, jumpis)
+
+def discard_fields(data, fields_to_discard):
+    if isinstance(data, dict):
+        return {
+            key: discard_fields(value, fields_to_discard)
+            for key, value in data.items()
+            if key not in fields_to_discard
+        }
+    elif isinstance(data, list):
+        return [discard_fields(item, fields_to_discard) for item in data]
+    else:
+        return data

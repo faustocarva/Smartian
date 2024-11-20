@@ -5,8 +5,7 @@ from eth_abi import encode
 from eth_utils import to_bytes
 from loguru import logger
 
-from genai4fuzz.utils.general import flatten_list, is_valid_json, json_from_text
-from genai4fuzz.utils.singleton import SingletonMeta
+from genai4fuzz.utils.general import flatten_list, discard_fields
 from genai4fuzz.config import Config
 from genai4fuzz.services.sast import SastService
 
@@ -153,11 +152,10 @@ class TestCase(object):
             self._total_invalid_args += 1
             return None
 
-    def get_testcase_hash(self):
-        # Convert the object to a canonical string representation (sorted keys)
+    def get_testcase_hash(self, fields_to_discard = []):
         obj_str = json.dumps(self.testcase, sort_keys=True)
-        
-        # Create a SHA256 hash of the string
+        filtered_data = discard_fields(self.testcase, fields_to_discard)
+        obj_str = json.dumps(filtered_data, sort_keys=True)
         return hashlib.sha256(obj_str.encode('utf-8')).hexdigest()
 
     def _inject_agents(self, json):
