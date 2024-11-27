@@ -4,14 +4,12 @@ import shutil
 import json
 import subprocess
 import tempfile
-import csv
-import sys
+import re
 from collections import defaultdict
 from loguru import logger
 from datetime import datetime
 
-from genai4fuzz.utils.general import flatten_list, is_valid_json, json_from_text, get_pcs_and_jumpis
-
+from genai4fuzz.utils.general import is_valid_json, json_from_text, get_pcs_and_jumpis
 from genai4fuzz.services.chat import ChatService
 from genai4fuzz.services.testcase import TestCase
 from genai4fuzz.services.sast import SastService
@@ -21,10 +19,6 @@ class Genai4fuzz():
     def __init__(self) -> None:
         self._chat_service = ChatService()
         self._sast_service = SastService()
-        #logger.add(sys.stderr, level="INFO") 
-        # log_level = os.getenv("LOGURU_LEVEL", "INFO").upper()
-        # logger.remove()
-        # logger.add(lambda msg: print(msg), level=log_level)
             
     def _read_contract_files(self, contact_dir):
         base_contract_name = (os.path.basename(contact_dir.rstrip("/")))
@@ -36,6 +30,13 @@ class Genai4fuzz():
         contract_abi = contract_abi_file.read()
         return contract_bin_file_name, contract_abi, base_contract_name, contract_sol_file_name
         
+    def _extract_deepest_name(self, path):
+        deepest_name = os.path.basename(path)
+        if not deepest_name:
+            return os.path.basename(os.path.dirname(path))
+    
+        return deepest_name
+    
     def run_smartian(self, program: str, testcase: str):
         fsharp_executable = '../build/Smartian.dll'
         parameters = [f'replay --csvout  -p {program} -i {testcase}']
@@ -147,12 +148,6 @@ class Genai4fuzz():
                 
         messages = self._create_prompt(contract_abi, contract_sol, [testcase], total_tests, total_txs)
         print (self._chat_service.dump_prompt(messages))
-
-    def run_gpt(self, contact_dir: str, model: str, temperature: float):
-        self.run_llm(contact_dir, "gpt", model, temperature)
-
-    def run_anyscale(self, contact_dir: str, model: str, temperature: float):
-        self.run_llm(contact_dir, "anyscale", model, temperature)
         
     def run_llm(self, contact_dir: str, llm: str, model: str, temperature: float, total_tests=10, total_txs=4):
         
@@ -160,10 +155,10 @@ class Genai4fuzz():
             raise Exception("not found")
         
         _, contract_abi, base_contract_name, contract_sol  = self._read_contract_files(contact_dir)
-        testcase = open('example.json', "r").read()        
         
+        testcase = open('example.json', "r").read()        
         messages = self._create_prompt(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
-
+        
         logger.info(f"Requesting test cases for contract {base_contract_name}")
         if llm == "gpt":
             chat_completion = self._chat_service.query_gpt4(messages, model, temperature)
@@ -177,23 +172,29 @@ class Genai4fuzz():
             chat_completion = self._chat_service.query_fireworks(messages, model, temperature)
         elif llm == "together":
             chat_completion = self._chat_service.query_together(messages, model, temperature)
-            
-            
-        logger.info(f"New {llm} test case generated!")
-        logger.info(f"Is a valid JSON? {is_valid_json(chat_completion)}")
-                
-        current_datetime = datetime.now()
-        formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
-        
-        testcase_file_name = f"{base_contract_name}_{llm}_{model}_{temperature}T_testcase_{formatted_datetime}"
-        f = open(os.path.join(contact_dir, testcase_file_name), "w")
-        f.write(chat_completion)
-        f.close()
-        
-        prompt_file_name = os.path.join(contact_dir, f"{base_contract_name}_{llm}_{model}_{temperature}T_prompt_{formatted_datetime}")        
-        self._chat_service.dump_save_prompt(messages, prompt_file_name)
+        elif llm == "grok":
+            chat_completion = self._chat_service.query_grok(messages, model, temperature)
+        elif llm == "google":
+            chat_completion = self._chat_service.query_google(messages, model, temperature)
 
-        logger.info(f"Saving test case {testcase_file_name} and prompt {prompt_file_name}!")
+        if (chat_completion is not None):
+            logger.info(f"New {llm} test case generated!")
+            logger.info(f"Is a valid JSON? {is_valid_json(chat_completion)}")
+                    
+            current_datetime = datetime.now()
+            formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
+            
+            testcase_file_name = f"{base_contract_name}_{llm}_{model}_{temperature}T_testcase_{formatted_datetime}"
+            f = open(os.path.join(contact_dir, testcase_file_name), "w")
+            f.write(chat_completion)
+            f.close()
+            
+            prompt_file_name = os.path.join(contact_dir, f"{base_contract_name}_{llm}_{model}_{temperature}T_prompt_{formatted_datetime}")        
+            self._chat_service.dump_save_prompt(messages, prompt_file_name)
+
+            logger.info(f"Saving test case {testcase_file_name} and prompt {prompt_file_name}!")
+        else: 
+            logger.error(f"Error generating seed !")
     
     def convert_to_smartian(self, contract_dir: str, output_dir: str, model="", date= "", with_args=True):
         if not os.path.isdir(contract_dir):
@@ -277,7 +278,9 @@ class Genai4fuzz():
                     logger.error(f"Exception somewhere {e} {file_path}")
                     continue
 
-        print(f"{model},{total_seeds},{total_duplicate_seeds}")
+        seed_dir = self._extract_deepest_name(root_contract_dir) or root_contract_dir
+        temperature = re.search(r'(\d+\.\d+)', seed_dir).group(1)
+        print(f"{model},{temperature},{seed_dir},{total_seeds},{total_duplicate_seeds}")
             
     def seed_valid_ratio(self, root_contract_dir: str, model="", date= ""):
         if not os.path.isdir(root_contract_dir):
@@ -291,16 +294,14 @@ class Genai4fuzz():
         total_functions_in_seeds = 0
         total_invalid_function_in_seeds = 0
         total_invalid_args_in_seeds = 0
-        
+
         for contract_dir in os.listdir(root_contract_dir):
             full_path = os.path.join(root_contract_dir, contract_dir)
                                     
             _, contract_abi, _,_ = self._read_contract_files(full_path)
         
             file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]
-
             for file_path in file_list:
-                print(file_path)
                 try:
                     with open(file_path, 'r') as file:
                         total_files += 1
@@ -328,8 +329,9 @@ class Genai4fuzz():
                     logger.error(f"Exception somewhere {e} {file_path}")
                     continue
 
-        #print("model,date,total_seeds,total_seeds_with_invalid_json,total_seeds_with_invalid_struct,total_args_in_seeds,total_invalid_args_in_seeds,total_functions_in_seeds, total_invalid_function_in_seeds")        
-        print(f"{model},{os.path.basename(os.path.dirname(root_contract_dir))},{total_files},{total_files_with_invalid_json},{total_seeds},{total_seeds_with_invalid_struct},{total_args_in_seeds},{total_invalid_args_in_seeds},{total_functions_in_seeds},{total_invalid_function_in_seeds}")
+        seed_dir = self._extract_deepest_name(root_contract_dir) or root_contract_dir
+        temperature = re.search(r'(\d+\.\d+)', seed_dir).group(1)
+        print(f"{model},{temperature},{seed_dir},{total_files},{total_files_with_invalid_json},{total_seeds},{total_seeds_with_invalid_struct},{total_args_in_seeds},{total_invalid_args_in_seeds},{total_functions_in_seeds},{total_invalid_function_in_seeds}")
         
     def seed_coverage_ratio(self, root_contract_dir: str, model="", date= ""):
         if not os.path.isdir(root_contract_dir):
@@ -369,7 +371,10 @@ class Genai4fuzz():
                     logger.error(f"Exception somewhere {e} {file_path}")
                     continue
 
+        seed_dir = self._extract_deepest_name(root_contract_dir) or root_contract_dir
+        temperature = re.search(r'(\d+\.\d+)', seed_dir).group(1)
+
         for key, values in coverage_map.items():
             for index, value in enumerate(values, start=1):
                 contract = key.split("_", 1)[0]
-                print(f"{contract},{index},{model},{key},{value}")
+                print(f"{contract},{temperature},{index},{model},{key},{value}")

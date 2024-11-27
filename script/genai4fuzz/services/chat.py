@@ -29,7 +29,7 @@ class ChatService(metaclass=SingletonMeta):
     
     def count_tokens(self, prompt_msgs: list, model: str):
         final_prompt = '\n'.join([message["content"].strip() for message in prompt_msgs])
-        return tokencost.count_string_tokens(final_prompt, model)
+        return int(tokencost.count_string_tokens(final_prompt, model))
 
     def dump_save_prompt(self, prompt_msgs: list, prompt_filename: str):
         final_prompt = self.dump_prompt(prompt_msgs)
@@ -42,6 +42,29 @@ class ChatService(metaclass=SingletonMeta):
         f = open(prompt_filename, "w")
         f.write(final_prompt)
         f.close()
+
+    def fetch_chat_completion(self, client, prompt_msgs, model_string, max_tokens, temperature, max_retries=5, backoff_factor=2):
+        retries = 0
+        
+        while retries < max_retries:
+            try:
+                response = client.chat.completions.create(
+                    messages=prompt_msgs,
+                    model=model_string,
+                    #response_format = {"type": "json_object"},
+                    max_tokens=max_tokens,
+                    temperature=temperature)
+                return response
+            
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+            
+            retries += 1
+            wait_time = backoff_factor ** retries
+            logger.info(f"Retrying in {wait_time} seconds...")
+            time.sleep(wait_time)
+        
+        return None
 
     def query_ollama(self, prompt_msgs: list, model: str, temperature=1) -> str:
         max_tokens = 8192
@@ -76,8 +99,6 @@ class ChatService(metaclass=SingletonMeta):
         return response.choices[0].message.content
 
     def query_fireworks(self, prompt_msgs: list, model: str, temperature=1) -> str:
-        max_tokens = 8192
-
         if "FIREWORKS_API_KEY" not in os.environ:
             logger.error("FIREWORKS_API_KEY is not set.")
             exit(0)
@@ -92,24 +113,27 @@ class ChatService(metaclass=SingletonMeta):
             logger.error(f"Provider url not found.")
             exit(0)
 
-        logger.info(f"Invoke Fireworks with max_tokens={max_tokens} and model {model_string}")
-        t_start = time.time()
+        limit = self._query_providers(f"grok.model.{model}.limit")
+        if limit is None:
+            limit = 8192
+            logger.info(f"Model limit  not found.")
+
+        max_tokens = int(int(limit) - int(self.count_tokens(prompt_msgs, model))*1.3)
+        logger.info(f"Invoke fireworks with max_tokens={max_tokens} and model {model_string}")
+
         client = OpenAI(
             base_url = provider_url,
             api_key = os.environ["FIREWORKS_API_KEY"]
         )
         
-        response = client.chat.completions.create(
-            messages = prompt_msgs,
-            model = model_string,
-            max_tokens = max_tokens,
-            temperature = temperature)
-
+        t_start = time.time()
+        response = self.fetch_chat_completion(client, prompt_msgs, model_string, max_tokens, temperature)
         g_time = time.time() - t_start
         logger.info(f"fireworks response time: {g_time}")
-        
-        logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
-        return response.choices[0].message.content
+        if (response is not None):
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+            return response.choices[0].message.content
+        return None
 
     def query_together(self, prompt_msgs: list, model: str, temperature=1) -> str:
 
@@ -127,29 +151,30 @@ class ChatService(metaclass=SingletonMeta):
             logger.error(f"Provider url not found.")
             exit(0)
 
-        max_tokens = int(8192 - int(self.count_tokens(prompt_msgs, model))*1.3)
+        limit = self._query_providers(f"together.model.{model}.limit")
+        if limit is None:
+            limit = 8192
+            logger.info(f"Model limit  not found.")
+
+        max_tokens = int(int(limit) - (self.count_tokens(prompt_msgs, model)*1.5))
+        #max_tokens = limit
         logger.info(f"Invoke together with max_tokens={max_tokens} and model {model_string}")
-        t_start = time.time()
+
         client = OpenAI(
             base_url = provider_url,
             api_key = os.environ["TOGETHER_API_KEY"]
         )
-                
-        response = client.chat.completions.create(
-            messages = prompt_msgs,
-            model = model_string,
-            max_tokens = max_tokens,
-            temperature = temperature)
-
-        g_time = time.time() - t_start
-        logger.info(f"fireworks response time: {g_time}")
         
-        logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
-        return response.choices[0].message.content
+        t_start = time.time()
+        response = self.fetch_chat_completion(client, prompt_msgs, model_string, max_tokens, temperature)
+        g_time = time.time() - t_start
+        logger.info(f"together response time: {g_time}")
+        if (response is not None):
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+            return response.choices[0].message.content
+        return None
 
     def query_deepinfra(self, prompt_msgs: list, model: str, temperature=1) -> str:
-        max_tokens = 8192
-
         if "DEEPINFRA_API_KEY" not in os.environ:
             logger.error("DEEPINFRA_API_KEY is not set.")
             exit(0)
@@ -164,29 +189,67 @@ class ChatService(metaclass=SingletonMeta):
             logger.error(f"Provider url not found.")
             exit(0)
 
+        limit = self._query_providers(f"grok.model.{model}.limit")
+        if limit is None:
+            limit = 8192
+            logger.info(f"Model limit  not found.")
+
+        max_tokens = int(int(limit) - int(self.count_tokens(prompt_msgs, model))*1.3)
         logger.info(f"Invoke Deepinfra with max_tokens={max_tokens} and model {model_string}")
-        t_start = time.time()
+
         client = OpenAI(
-            base_url=provider_url,
-            api_key=os.environ["DEEPINFRA_API_KEY"]
+            base_url = provider_url,
+            api_key = os.environ["DEEPINFRA_API_KEY"]            
         )
         
-        response = client.chat.completions.create(
-            messages=prompt_msgs,
-            model=model_string,
-            #response_format = {"type": "json_object"},
-            max_tokens=max_tokens,
-            temperature=temperature)
-
+        t_start = time.time()
+        response = self.fetch_chat_completion(client, prompt_msgs, model_string, max_tokens, temperature)
         g_time = time.time() - t_start
         logger.info(f"Deepinfra response time: {g_time}")
-        
-        logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
-        return response.choices[0].message.content
-    
-    def query_anyscale(self, prompt_msgs: list, model: str, temperature=1) -> str:
-        max_tokens = 8192
+        if (response is not None):
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+            return response.choices[0].message.content
+        return None
 
+    def query_grok(self, prompt_msgs: list, model: str, temperature=1) -> str:
+        if "GROK_API_KEY" not in os.environ:
+            logger.error("GROK_API_KEY is not set.")
+            exit(0)
+    
+        model_string = self._query_providers(f"grok.model.{model}")
+        if model_string is None:
+            logger.error(f"Model {model} not found.")
+            exit(0)
+
+        provider_url = self._query_providers(f"grok.url")
+        if provider_url is None:
+            logger.error(f"Provider url not found.")
+            exit(0)
+
+        limit = self._query_providers(f"grok.model.{model}.limit")
+        if limit is None:
+            limit = 8192
+            logger.info(f"Model limit  not found.")
+
+        #max_tokens = int(int(limit) - int(self.count_tokens(prompt_msgs, model))*1.3)
+        max_tokens = int(limit)
+        logger.info(f"Invoke grok with max_tokens={max_tokens} and model {model_string}")
+
+        client = OpenAI(
+            base_url = provider_url,
+            api_key = os.environ["GROK_API_KEY"]            
+        )
+        
+        t_start = time.time()
+        response = self.fetch_chat_completion(client, prompt_msgs, model_string, max_tokens, temperature)
+        g_time = time.time() - t_start
+        logger.info(f"Grok response time: {g_time}")
+        if (response is not None):
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+            return response.choices[0].message.content
+        return None
+
+    def query_anyscale(self, prompt_msgs: list, model: str, temperature=1) -> str:
         if "ANYSCALE_API_KEY" not in os.environ:
             logger.error("ANYSCALE_API_KEY is not set.")
             exit(0)
@@ -201,7 +264,14 @@ class ChatService(metaclass=SingletonMeta):
             logger.error(f"Provider url not found.")
             exit(0)
 
-        logger.info(f"Invoke Anyscale with max_tokens={max_tokens} and model {model_string}")
+        limit = self._query_providers(f"grok.model.{model}.limit")
+        if limit is None:
+            limit = 8192
+            logger.info(f"Model limit  not found.")
+
+        max_tokens = int(int(limit) - int(self.count_tokens(prompt_msgs, model))*1.3)
+        logger.info(f"Invoke grok with max_tokens={max_tokens} and model {model_string}")
+
         t_start = time.time()
         
         client = OpenAI(
@@ -259,3 +329,42 @@ class ChatService(metaclass=SingletonMeta):
         logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")
 
         return response.choices[0].message.content
+    
+    def query_google(self, prompt_msgs: list, model: str, temperature=1) -> str:
+        if "GOOGLE_API_KEY" not in os.environ:
+            logger.error("GOOGLE_API_KEY is not set.")
+            exit(0)
+    
+        model_string = self._query_providers(f"gemini.model.{model}")
+        if model_string is None:
+            logger.error(f"Model {model} not found.")
+            exit(0)
+
+        provider_url = self._query_providers(f"gemini.url")
+        if provider_url is None:
+            logger.error(f"Provider url not found.")
+            exit(0)
+
+        limit = self._query_providers(f"gemini.model.{model}.limit")
+        if limit is None:
+            limit = 8192
+            logger.info(f"Model limit  not found.")
+
+        max_tokens = int(int(limit) - int(self.count_tokens(prompt_msgs, model))*1.3)
+        #max_tokens = int(limit)
+        logger.info(f"Invoke gemini with max_tokens={max_tokens} and model {model_string}")
+
+        client = OpenAI(
+            base_url = provider_url,
+            api_key = os.environ["GOOGLE_API_KEY"]            
+        )
+        
+        t_start = time.time()
+        response = self.fetch_chat_completion(client, prompt_msgs, model_string, max_tokens, temperature)
+        g_time = time.time() - t_start
+        logger.info(f"gemini response time: {g_time}")
+        if (response is not None):
+            logger.info(f"Prompt tokens: {response.usage}")        
+            return response.choices[0].message.content
+        return None
+    

@@ -108,6 +108,7 @@ let runDefaultMode opt =
   let useOthersOracle = opt.UseOthersOracle
   if not opt.CsvOut then log "Start replaying test cases in : %s" testcaseDir
   let mutable totalElapsed = 0.0
+  let mutable totalBugs = 0
   for file in sortTCs testcaseDir do
     incrExecutionCount ()  
     let tcStr = System.IO.File.ReadAllText file
@@ -117,6 +118,7 @@ let runDefaultMode opt =
     let feedback = execute tc true traceDU checkOptionalBugs useOthersOracle
     stopWatch.Stop()
     totalElapsed <- totalElapsed + stopWatch.Elapsed.TotalMilliseconds
+    totalBugs <- totalBugs + Set.count feedback.BugSet
     if not opt.CsvOut then TCManage.printBugInfo feedback.BugSet
   if not opt.CsvOut then
     log "===== Statistics ====="    
@@ -124,9 +126,9 @@ let runDefaultMode opt =
     log "Deployment failures: %d" deployFailCount
     log "Covered Edges: %d" accumEdges.Count
     log "Covered Instructions: %d" accumInstrs.Count
-    log "Covered Def-Use Chains: %d" accumDUChains.Count
-  else 
-    printfn "%d,%d,%d,%d,%d" totalExecutions deployFailCount accumEdges.Count accumInstrs.Count accumDUChains.Count
+    log "Covered Def-Use Chains: %d" accumDUChains.Count    
+  else
+    printfn "%d,%d,%d,%d,%d,%d" totalExecutions deployFailCount accumEdges.Count accumInstrs.Count accumDUChains.Count totalBugs
 
 /// Replay test cases in the given directory on target program.
 let run args =
