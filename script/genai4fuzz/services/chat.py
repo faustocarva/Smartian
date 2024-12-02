@@ -300,7 +300,7 @@ class ChatService(metaclass=SingletonMeta):
         return response.choices[0].message.content
 
     def query_gpt4(self, prompt_msgs: list, model: str, temperature=1) -> str:
-        max_tokens = 4096
+        max_tokens = 8192
 
         if "OPENAI_API_KEY" not in os.environ:
             logger.error("OPENAI_API_KEY is not set.")
@@ -318,17 +318,14 @@ class ChatService(metaclass=SingletonMeta):
             api_key=os.environ["OPENAI_API_KEY"]
         )
 
-        response = client.chat.completions.create(
-            messages=prompt_msgs,
-            model=model_string,
-            max_tokens=max_tokens,
-            temperature=temperature)
-
+        t_start = time.time()
+        response = self.fetch_chat_completion(client, prompt_msgs, model_string, max_tokens, temperature)
         g_time = time.time() - t_start
-        logger.info(f"GPT {model} response time: {g_time}")
-        logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")
-
-        return response.choices[0].message.content
+        logger.info(f"GPT {model} response time: {g_time}")        
+        if (response is not None):
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+            return response.choices[0].message.content
+        return None
     
     def query_google(self, prompt_msgs: list, model: str, temperature=1) -> str:
         if "GOOGLE_API_KEY" not in os.environ:

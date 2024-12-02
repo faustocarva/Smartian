@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Fausto Carvalho <faustocarva@gmail.com>"]
 readme = "README.md"
-packages = [{include = "genai4fuzz"}]
+packages = [{ include = "genai4fuzz" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -19,7 +19,9 @@ pydantic = "^2.7.4"
 eth-abi = "^5.1.0"
 solc-select = "^1.0.4"
 py-solc-x = "^2.0.3"
-
+pandas = "^2.2.3"
+seaborn = "^0.13.2"
+matplotlib = "^3.9.3"
 
 [build-system]
 requires = ["poetry-core"]
@@ -27,3 +29,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 genai4fuzz = "genai4fuzz:main"
+datacollect = "datacollect:main"
