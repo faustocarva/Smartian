@@ -282,7 +282,7 @@ class Genai4fuzz():
         temperature = re.search(r'(\d+\.\d+)', seed_dir).group(1)
         print(f"{model},{temperature},{seed_dir},{total_seeds},{total_duplicate_seeds}")
             
-    def seed_valid_ratio(self, root_contract_dir: str, model="", date= ""):
+    def seed_metrics(self, root_contract_dir: str, model="", date= ""):
         if not os.path.isdir(root_contract_dir):
             return
     
@@ -294,6 +294,7 @@ class Genai4fuzz():
         total_functions_in_seeds = 0
         total_invalid_function_in_seeds = 0
         total_invalid_args_in_seeds = 0
+        total_duplicate_seeds = 0
 
         for contract_dir in os.listdir(root_contract_dir):
             full_path = os.path.join(root_contract_dir, contract_dir)
@@ -302,6 +303,7 @@ class Genai4fuzz():
         
             file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]
             for file_path in file_list:
+                uniqueseeds_set = set()                
                 try:
                     with open(file_path, 'r') as file:
                         total_files += 1
@@ -316,9 +318,16 @@ class Genai4fuzz():
                         testcases = TestCase.try_to_adapt_json_testcase(testcases_json)
                         for testecase_element in testcases:
                             total_seeds += 1                            
-                            tc = TestCase(testecase_element)
+                            tc = TestCase(testecase_element)                            
                             if not tc.is_valid_testcase_struct():
                                 total_seeds_with_invalid_struct += 1
+                                continue
+                            obj_hash = tc.get_testcase_hash(["Blocknum", "Timestamp"])
+                            if obj_hash in uniqueseeds_set:
+                                total_duplicate_seeds += 1
+                            else:
+                                uniqueseeds_set.add(obj_hash)
+                                
                             tc.process_testcase(contract_abi, True)
                             totals = tc.get_validation_totals()
                             total_args_in_seeds += totals[0][0]
@@ -331,7 +340,7 @@ class Genai4fuzz():
 
         seed_dir = self._extract_deepest_name(root_contract_dir) or root_contract_dir
         temperature = re.search(r'(\d+\.\d+)', seed_dir).group(1)
-        print(f"{model},{temperature},{seed_dir},{total_files},{total_files_with_invalid_json},{total_seeds},{total_seeds_with_invalid_struct},{total_args_in_seeds},{total_invalid_args_in_seeds},{total_functions_in_seeds},{total_invalid_function_in_seeds}")
+        print(f"{model},{temperature},{seed_dir},{total_files},{total_files_with_invalid_json},{total_seeds},{total_duplicate_seeds},{total_seeds_with_invalid_struct},{total_args_in_seeds},{total_invalid_args_in_seeds},{total_functions_in_seeds},{total_invalid_function_in_seeds}")
         
     def seed_coverage_ratio(self, root_contract_dir: str, model="", date= ""):
         if not os.path.isdir(root_contract_dir):

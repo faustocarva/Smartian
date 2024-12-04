@@ -1,0 +1,195 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "initTokenBank",
+                "Params": [],
+                "Timestamp": "10500000",
+                "Blocknum": "20500000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "MinDeposit",
+                    "Timestamp": "10500110",
+                    "Blocknum": "20500125"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "Holders",
+                    "Timestamp": "10500120",
+                    "Blocknum": "20500130"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "WitdrawTokenToHolder",
+                    "Params": [
+                        "SmartianAgent1",
+                        "10000"
+                    ],
+                    "Timestamp": "10500135",
+                    "Blocknum": "20500140"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "changeOwner",
+                    "Params": [
+                        "SmartianAgent2"
+                    ],
+                    "Timestamp": "10500145",
+                    "Blocknum": "20500155"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "confirmOwner",
+                    "Timestamp": "10500150",
+                    "Blocknum": "20500150"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "WithdrawToken",
+                    "Params": [
+                        "SmartianAgent1",
+                        "20000"
+                    ],
+                    "Timestamp": "10500160",
+                    "Blocknum": "20500173"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "Bal",
+                    "Timestamp": "10500170",
+                    "Blocknum": "20500182"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "Fallback",
+                    "Timestamp": "10500180",
+                    "Blocknum": "20500190"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "3",
+                    "Function": "TransferToHolder",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000004"
+                        ],
+                        [
+                            "4"
+                        ]
+                    ],
+                    "Timestamp": "10500191",
+                    "Blocknum": "20500202"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "initTokenBank",
+                "Params": [],
+                "Timestamp": "10600000",
+                "Blocknum": "20600000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "MinDeposit",
+                    "Timestamp": "10600100",
+                    "Blocknum": "20600115"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "Holders",
+                    "Timestamp": "10600110",
+                    "Blocknum": "20600128"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "WitdrawTokenToHolder",
+                    "Params": [
+                        "SmartianAgent2",
+                        "15000"
+                    ],
+                    "Timestamp": "10600135",
+                    "Blocknum": "20600145"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "changeOwner",
+                    "Params": [
+                        "SmartianAgent3"
+                    ],
+                    "Timestamp": "10600140",
+                    "Blocknum": "20600160"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "confirmOwner",
+                    "Timestamp": "10600150",
+                    "Blocknum": "20600165"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "WithdrawToken",
+                    "Params": [
+                        "SmartianAgent2",
+                        "25000"
+                    ],
+                    "Timestamp": "10600165",
+                    "Blocknum": "20600302"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "Bal",
+                    "Timestamp": "10600170",
+                    "Blocknum": "20600315"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "Fallback",
+                    "Timestamp": "10600180",
+                    "Blocknum": "20600325"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "3",
+                    "Function": "TransferToHolder",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000005"
+                        ],
+                        [
+                            "5"
+                        ]
+                    ],
+                    "Timestamp": "10600190",
+                    "Blocknum": "20600402"
+                }
+            ]
+        }
+    },
+    // ... 6 more similar TestCases
+]

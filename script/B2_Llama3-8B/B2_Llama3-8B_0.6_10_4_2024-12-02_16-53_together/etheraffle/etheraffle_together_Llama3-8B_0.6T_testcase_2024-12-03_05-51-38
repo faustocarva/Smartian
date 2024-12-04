@@ -1,0 +1,503 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000000",
+                "Blocknum": "20000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "kill",
+                    "Timestamp": "10000101",
+                    "Blocknum": "20000105"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "buyTickets",
+                    "Params": ["100"],
+                    "Timestamp": "10000111",
+                    "Blocknum": "20000112"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "paused",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "totalTickets",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000134"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "endRaffle",
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000144"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000010",
+                "Blocknum": "20000010"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "raffleId",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000156"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "pricePerTicket",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000166"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "prize",
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000176"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getRefund",
+                    "Params": ["100"],
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000190"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "togglePause",
+                    "Timestamp": "10000191",
+                    "Blocknum": "20000200"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000020",
+                "Blocknum": "20000020"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "blockNumber",
+                    "Timestamp": "10000101",
+                    "Blocknum": "20000110"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "fee",
+                    "Timestamp": "10000111",
+                    "Blocknum": "20000118"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "fallback",
+                    "Params": ["100"],
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000124"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "totalTickets",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000134"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "buyTickets",
+                    "Params": ["100"],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000146"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000030",
+                "Blocknum": "20000030"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "paused",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000154"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "raffleId",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000168"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "prize",
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000180"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getRefund",
+                    "Params": ["100"],
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000192"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "endRaffle",
+                    "Timestamp": "10000191",
+                    "Blocknum": "20000202"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000040",
+                "Blocknum": "20000040"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "kill",
+                    "Timestamp": "10000101",
+                    "Blocknum": "20000110"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "buyTickets",
+                    "Params": ["100"],
+                    "Timestamp": "10000111",
+                    "Blocknum": "20000118"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "paused",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000124"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "totalTickets",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000134"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "endRaffle",
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000146"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000050",
+                "Blocknum": "20000050"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "raffleId",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000156"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "pricePerTicket",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000166"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "prize",
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000176"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getRefund",
+                    "Params": ["100"],
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000190"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "togglePause",
+                    "Timestamp": "10000191",
+                    "Blocknum": "20000200"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000060",
+                "Blocknum": "20000060"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "blockNumber",
+                    "Timestamp": "10000101",
+                    "Blocknum": "20000110"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "fee",
+                    "Timestamp": "10000111",
+                    "Blocknum": "20000118"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "fallback",
+                    "Params": ["100"],
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000124"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "totalTickets",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000134"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "buyTickets",
+                    "Params": ["100"],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000146"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000070",
+                "Blocknum": "20000070"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "paused",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000154"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "raffleId",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000168"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "prize",
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000180"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getRefund",
+                    "Params": ["100"],
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000192"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "endRaffle",
+                    "Timestamp": "10000191",
+                    "Blocknum": "20000202"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000080",
+                "Blocknum": "20000080"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "kill",
+                    "Timestamp": "10000101",
+                    "Blocknum": "20000110"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "buyTickets",
+                    "Params": ["100"],
+                    "Timestamp": "10000111",
+                    "Blocknum": "20000118"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "paused",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000124"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "totalTickets",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000134"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "endRaffle",
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000146"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000090",
+                "Blocknum": "20000090"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "raffleId",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000156"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "pricePerTicket",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000166"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "prize",
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000176"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getRefund",
+                    "Params": ["100"],
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000190"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "togglePause",
+                    "Timestamp": "10000191",
+                    "Blocknum": "20000200"
+                }
+            ]
+        }
+    }

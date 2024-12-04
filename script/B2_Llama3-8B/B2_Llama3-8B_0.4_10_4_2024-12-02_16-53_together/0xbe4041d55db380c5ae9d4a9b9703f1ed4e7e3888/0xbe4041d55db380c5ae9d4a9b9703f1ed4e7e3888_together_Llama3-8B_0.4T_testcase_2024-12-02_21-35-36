@@ -1,0 +1,578 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000000",
+                "Blocknum": "20000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "SetLogFile",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000003"
+                    ],
+                    "Timestamp": "10000101",
+                    "Blocknum": "20000102"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "SetMinSum",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000004"
+                    ],
+                    "Timestamp": "10000111",
+                    "Blocknum": "20000112"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "Put",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000005"
+                    ],
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "Acc",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000006"
+                    ],
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000132"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "2",
+                    "Function": "fallback",
+                    "Params": [],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000142"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "Collect",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000007"
+                    ],
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000152"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10001000",
+                "Blocknum": "20001000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "SetLogFile",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000008"
+                    ],
+                    "Timestamp": "10001010",
+                    "Blocknum": "20001012"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "SetMinSum",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000009"
+                    ],
+                    "Timestamp": "10001020",
+                    "Blocknum": "20001022"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "Put",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000010"
+                    ],
+                    "Timestamp": "10001030",
+                    "Blocknum": "20001032"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "Acc",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000011"
+                    ],
+                    "Timestamp": "10001040",
+                    "Blocknum": "20001042"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "fallback",
+                    "Params": [],
+                    "Timestamp": "10001050",
+                    "Blocknum": "20001052"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "Collect",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000012"
+                    ],
+                    "Timestamp": "10001060",
+                    "Blocknum": "20001062"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10002000",
+                "Blocknum": "20002000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "SetLogFile",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000013"
+                    ],
+                    "Timestamp": "10002010",
+                    "Blocknum": "20002012"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "SetMinSum",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000014"
+                    ],
+                    "Timestamp": "10002020",
+                    "Blocknum": "20002022"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "Put",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000015"
+                    ],
+                    "Timestamp": "10002030",
+                    "Blocknum": "20002032"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "Acc",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000016"
+                    ],
+                    "Timestamp": "10002040",
+                    "Blocknum": "20002042"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "fallback",
+                    "Params": [],
+                    "Timestamp": "10002050",
+                    "Blocknum": "20002052"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "Collect",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000017"
+                    ],
+                    "Timestamp": "10002060",
+                    "Blocknum": "20002062"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10003000",
+                "Blocknum": "20003000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "SetLogFile",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000018"
+                    ],
+                    "Timestamp": "10003010",
+                    "Blocknum": "20003012"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "SetMinSum",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000019"
+                    ],
+                    "Timestamp": "10003020",
+                    "Blocknum": "20003022"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "Put",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000020"
+                    ],
+                    "Timestamp": "10003030",
+                    "Blocknum": "20003032"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "Acc",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000021"
+                    ],
+                    "Timestamp": "10003040",
+                    "Blocknum": "20003042"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "2",
+                    "Function": "fallback",
+                    "Params": [],
+                    "Timestamp": "10003050",
+                    "Blocknum": "20003052"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "Collect",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000022"
+                    ],
+                    "Timestamp": "10003060",
+                    "Blocknum": "20003062"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10004000",
+                "Blocknum": "20004000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "SetLogFile",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000023"
+                    ],
+                    "Timestamp": "10004010",
+                    "Blocknum": "20004012"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "SetMinSum",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000024"
+                    ],
+                    "Timestamp": "10004020",
+                    "Blocknum": "20004022"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "Put",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000025"
+                    ],
+                    "Timestamp": "10004030",
+                    "Blocknum": "20004032"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "Acc",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000026"
+                    ],
+                    "Timestamp": "10004040",
+                    "Blocknum": "20004042"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "fallback",
+                    "Params": [],
+                    "Timestamp": "10004050",
+                    "Blocknum": "20004052"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "Collect",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000027"
+                    ],
+                    "Timestamp": "10004060",
+                    "Blocknum": "20004062"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10005000",
+                "Blocknum": "20005000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "SetLogFile",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000028"
+                    ],
+                    "Timestamp": "10005010",
+                    "Blocknum": "20005012"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "SetMinSum",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000029"
+                    ],
+                    "Timestamp": "10005020",
+                    "Blocknum": "20005022"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "Put",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000030"
+                    ],
+                    "Timestamp": "10005030",
+                    "Blocknum": "20005032"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "Acc",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000031"
+                    ],
+                    "Timestamp": "10005040",
+                    "Blocknum": "20005042"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "fallback",
+                    "Params": [],
+                    "Timestamp": "10005050",
+                    "Blocknum": "20005052"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "Collect",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000032"
+                    ],
+                    "Timestamp": "10005060",
+                    "Blocknum": "20005062"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10006000",
+                "Blocknum": "20006000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "SetLogFile",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000033"
+                    ],
+                    "Timestamp": "10006010",
+                    "Blocknum": "20006012"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "SetMinSum",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000034"
+                    ],
+                    "Timestamp": "10006020",
+                    "Blocknum": "20006022"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "Put",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000035"
+                    ],
+                    "Timestamp": "10006030",
+                    "Blocknum": "20006032"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "Acc",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000036"
+                    ],
+                    "Timestamp": "10006040",
+                    "Blocknum": "20006042"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "fallback",
+                    "Params": [],
+                    "Timestamp": "10006050",
+                    "Blocknum": "20006052"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "Collect",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000037"
+                    ],
+                    "Timestamp": "10006060",
+                    "Blocknum": "20006062"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10007000",
+                "Blocknum": "20007000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "SetLogFile",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000038"
+                    ],
+                    "Timestamp": "10007010",
+                    "Blocknum": "20007012"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "SetMinSum",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000039"
+                    ],
+                    "Timestamp": "10007020",
+                    "Blocknum": "20007022"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "Put",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000040"
+                    ],
+                    "Timestamp": "10007030",
+                    "Blocknum": "20007032"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "Acc",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000041"
+                    ],
+                    "Timestamp": "10007040",
+                    "Blocknum": "20007042"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "2",
+                    "Function": "fallback",
+                    "Params": [],
+                    "Timestamp": "10007050",
+                    "Blocknum": "20007052"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "Collect",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000042"
+                    ],
+                    "Timestamp": "10007060",
+                    "Blocknum": "20007062"
+                }
+            ]
+        }
+    }
+]

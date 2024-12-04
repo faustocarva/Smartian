@@ -4,7 +4,9 @@ import hashlib
 from eth_abi import encode
 from eth_utils import to_bytes
 from loguru import logger
+from pydantic import ValidationError
 
+from genai4fuzz.model.testcase import TestCaseModel
 from genai4fuzz.utils.general import flatten_list, discard_fields
 from genai4fuzz.config import Config
 from genai4fuzz.services.sast import SastService
@@ -40,13 +42,10 @@ class TestCase(object):
 
     @staticmethod
     def try_to_adapt_json_testcase(json: list):
-        testcases = {}
-        if type(json) is dict:
-            testcases = json.get('TestCases') if testcases_json.get('TestCases') is not None else testcases_json.get('TestCase')
-        else:
-            testcases = json
-        return testcases
-
+        if isinstance(json, dict):
+            return json.get('TestCases') or json.get('TestCase', {})
+        return json or {}
+    
     @property
     def ENTITIES(self):
         return copy.deepcopy(self._ENTITIES)        
@@ -96,7 +95,6 @@ class TestCase(object):
             args = tx
             if not any(t.endswith('[]') for t in types) and any(isinstance(i, list) for i in tx):
                 args = flatten_list(tx)
-                #args = [item for sublist in tx for item in sublist]
 
             i = 0
             for type in types:
@@ -162,11 +160,14 @@ class TestCase(object):
         json["Entities"] = self.ENTITIES
 
     def _is_agent(self, agent: str):
-        index = int(agent[-1])
-        if index < 1 or index > 4:
+        try:
+            index = int(agent[-1])
+            if index not in {1, 2, 3, 4}:
+                return None
+            return self.ENTITIES[index - 1]['Contract']
+        except (ValueError, IndexError):
             return None
-        return self.ENTITIES[index - 1]['Contract']
-
+        
     def _get_agent(self, agent: str):
         index = int(agent[-1])
         if index < 1 or index > 4:
@@ -227,12 +228,20 @@ class TestCase(object):
             '''))
 
     def is_valid_testcase_struct(self):
-        if self.testcase.get('TestCase') and self.testcase['TestCase'].get('DeployTx') and self.testcase['TestCase'].get('Txs'):
+        try:
+            testcase_data = self.testcase.get("TestCase", self.testcase)
+            TestCaseModel(**testcase_data)
             return True
-        elif self.testcase.get('DeployTx') and self.testcase.get('Txs'):
-            return True
-        else:
-            return False                
+        except ValidationError as e:
+            #print(f"Validation error: {e}")
+            return False
+        
+        # if self.testcase.get('TestCase') and self.testcase['TestCase'].get('DeployTx') and self.testcase['TestCase'].get('Txs'):
+        #     return True
+        # elif self.testcase.get('DeployTx') and self.testcase.get('Txs'):
+        #     return True
+        # else:
+        #     return False                
                         
     def process_testcase(self, contract_abi, with_args):
         if not self._is_valid_struct:

@@ -1,0 +1,184 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10002000",
+                "Blocknum": "20002000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "payable",
+                    "Timestamp": "10000200",
+                    "Blocknum": "20000300"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "gameIsGoingOn",
+                    "Timestamp": "10000201",
+                    "Blocknum": "20000400"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "hit",
+                    "Params": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "Timestamp": "10000202",
+                    "Blocknum": "20000500"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "2",
+                    "Function": "maxBet",
+                    "Params": [
+                        {
+                            1,
+                            2
+                        }
+                    ],
+                    "Timestamp": "10000210",
+                    "Blocknum": "20000600"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "deal",
+                    "Timestamp": "10000211",
+                    "Blocknum": "20000700"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10003000",
+                "Blocknum": "20003000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "6888",
+                    "Timestamp": "100003011",
+                    "Blocknum": "200003010"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "pricing",
+                    "Params": [
+                        [
+                            0,
+                            0,
+                            0x00
+                        ]
+                    ],
+                    "Timestamp": "100003021",
+                    "Blocknum": "200003020"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getAttributeSet",
+                    "Params": [],
+                    "Timestamp": "100003031",
+                    "Blocknum": "200003030"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "price",
+                    "Params": [
+                        "0x00",
+                        0,
+                        1
+                    ],
+                    "Timestamp": "100003041",
+                    "Blocknum": "200003040"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "betFallback",
+                    "Params": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "Timestamp": "100003051",
+                    "Blocknum": "200003050"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10003600",
+                "Blocknum": "20003600"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "fallback",
+                    "Timestamp": "100003601",
+                    "Blocknum": "200003600"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getHouseCardsNumber",
+                    "Timestamp": "100003611",
+                    "Blocknum": "200003610"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getAttributeSet",
+                    "Params": [],
+                    "Timestamp": "100003621",
+                    "Blocknum": "200003620"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "2",
+                    "Function": "doBet",
+                    "Params": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "Timestamp": "100003631",
+                    "Blocknum": "200003630"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "stand",
+                    "Timestamp": "100003641",
+                    "Blocknum": "200003640"
+                }
+            ]
+        }
+    },
+]
