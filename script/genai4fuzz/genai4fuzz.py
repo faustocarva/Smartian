@@ -45,7 +45,95 @@ class Genai4fuzz():
 
         return result.stdout
     
-    def _create_prompt(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
+    def _create_prompt_V2(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
+        
+        functions_descs = self._sast_service.get_functions_from_ABI(contract_abi)
+        functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
+        if functions_with_modifiers is not None:
+            functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
+        else:
+            functions_descs_str = '\n'.join([function for function in functions_descs])
+        
+        prompt =  [
+            {
+                'role': 'system',
+                'content':  """
+                    You are an expert assistant specializing in Solidity fuzzing with a deep understanding of SWC and DASP vulnerabilities. 
+                    Your objective is to generate a diverse set of transactions and inputs targeting the main EVM/Solidity vulnerabilities.
+                    Respond strictly in JSON format, following the provided instructions without any additional text.
+                """
+            },
+            {
+                'role': 'user',
+                'content': """
+                    ### Objective:
+                    Generate 10 distinct test case objects, designed to uncover potential bugs and vulnerabilities in a Solidity contract. Each test case should adhere to the structure defined below and target common EVM/Solidity vulnerabilities, such as those listed in the SWC Registry and DASP Top 10.                            
+                """
+            },            
+            {
+                'role': 'user',
+                'content': f'''
+                    ### Available Contract Functions:
+                    The following Solidity contract functions are available for test case generation:
+                    
+                    {functions_descs_str}
+                '''
+            },            
+            {
+                'role': 'user',
+                'content': """
+                    ### Test Case Structure
+
+                    Each test case consists of a deployment transaction (`DeployTx`) followed by a sequence of transactions (`Txs`).
+                    
+                    #### Root
+                    - An array of `TestCase` objects.
+                    
+                    #### DeployTx
+
+                    -   **From**: The deployer's name (e.g., `SmartianAgent1`).
+                    -   **Value**: The amount of Ether sent with the deployment transaction (in Wei, use "0" if no Ether is sent).
+                    -   **Function**: The constructor function name, which is `constructor`.
+                    -   **Params** (optional): The parameters passed to the constructor.
+                        -   Parameters can be nested arrays if the function requires it.                    
+                    -   **Timestamp**: The timestamp of the deployment transaction (e.g., "10000000").
+                    -   **Blocknum**: The block number of the deployment transaction (e.g., "20000000").
+
+                    #### Tx (Transaction)
+
+                    -   **From**: The sender's name (e.g., `SmartianAgent2`).
+                    -   **Value**: The amount of Ether sent with the transaction (in Wei, use "0" if no Ether is sent or the function is not payable).
+                    -   **Function**: The function name being called.
+                    -   **Params** (optional): The parameters passed to the function.
+                        -   Use raw values for parameters. For example:
+                            -   `address`: Use the full address (e.g., `SmartianAgent1`).
+                            -   `uint256`: Use integer literals (e.g., "0", "1", "1000", "115792089237316195423570985008687907853269984665640564039457584007913129639935" (max uint256)).
+                        -   Parameters can be nested arrays if the function requires it.
+                    -   **Timestamp**: The timestamp of the transaction.
+                    -   **Blocknum**: The block number of the transaction.                
+                """
+            },
+            {
+                'role': 'user',
+                'content': f'''
+                    ### Test Case Requirements
+
+                    -   Create {total_tests} test cases.
+                    -   Each test case must should contain {total_txs} transactions (`Tx` objects).
+                    -   You must respect function parameters and you must not use other function that are not available.
+                    -   Vary parameter values across test cases, using boundary values and values that might trigger edge cases.
+                    -   Use all four sender contracts (`SmartianAgent1`-`SmartianAgent4`) in diverse roles and combinations.
+                    -   Ensure transactions respect function modifiers (e.g., only call `mint` and `unfreeze` from the owner address, send Ether only to the `ico` payable function).
+                    -   Generate transactions that might trigger error conditions (e.g., `require` statements, reverts).
+                    -   Consider the contract's state and how transactions might change it when designing test cases.
+                    -   **The response must be RFC8259 compliant JSON. Do not include any additional text or explanations.**                
+                '''
+            }
+        ]
+        
+        return prompt
+    
+    def _create_prompt_V1_until_10122024(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
         
         functions_descs = self._sast_service.get_functions_from_ABI(contract_abi)
         functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
@@ -130,7 +218,7 @@ class Genai4fuzz():
         _, contract_abi, _, contract_sol = self._read_contract_files(contact_dir)
         testcase = open('example.json', "r").read()
         
-        messages = self._create_prompt(contract_abi, contract_sol, [testcase])
+        messages = self._create_prompt_V1_until_10122024(contract_abi, contract_sol, [testcase])
         print (f"Total tokens from prompt: {self._chat_service.count_tokens(messages, model)}")
  
     def count_total_ins(self, contact_dir: str):
@@ -146,18 +234,21 @@ class Genai4fuzz():
         _, contract_abi, _, contract_sol = self._read_contract_files(contact_dir)
         testcase = open('example.json', "r").read()
                 
-        messages = self._create_prompt(contract_abi, contract_sol, [testcase], total_tests, total_txs)
+        messages = self._create_prompt_V1_until_10122024(contract_abi, contract_sol, [testcase], total_tests, total_txs)
         print (self._chat_service.dump_prompt(messages))
         
-    def run_llm(self, contact_dir: str, llm: str, model: str, temperature: float, total_tests=10, total_txs=4):
+    def run_llm(self, contact_dir: str, llm: str, model: str, temperature: float, total_tests=10, total_txs=4, prompt="V1"):
         
         if not os.path.exists(contact_dir):
             raise Exception("not found")
         
         _, contract_abi, base_contract_name, contract_sol  = self._read_contract_files(contact_dir)
         
-        testcase = open('example.json', "r").read()        
-        messages = self._create_prompt(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
+        testcase = open('example.json', "r").read()
+        if prompt == "V1":
+            messages = self._create_prompt_V1_until_10122024(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
+        elif prompt == "V2":
+            messages = self._create_prompt_V2(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
         
         logger.info(f"Requesting test cases for contract {base_contract_name}")
         if llm == "gpt":
@@ -303,7 +394,8 @@ class Genai4fuzz():
         
             file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]
             for file_path in file_list:
-                uniqueseeds_set = set()                
+                logger.info(f"Processing file {file_path}")
+                uniqueseeds_set = set()
                 try:
                     with open(file_path, 'r') as file:
                         total_files += 1
@@ -339,7 +431,7 @@ class Genai4fuzz():
                     continue
 
         seed_dir = self._extract_deepest_name(root_contract_dir) or root_contract_dir
-        temperature = re.search(r'(\d+\.\d+)', seed_dir).group(1)
+        temperature = re.search(r'_([^_]*\d+\.\d+)_', seed_dir).group(1)
         print(f"{model},{temperature},{seed_dir},{total_files},{total_files_with_invalid_json},{total_seeds},{total_duplicate_seeds},{total_seeds_with_invalid_struct},{total_args_in_seeds},{total_invalid_args_in_seeds},{total_functions_in_seeds},{total_invalid_function_in_seeds}")
         
     def seed_coverage_ratio(self, root_contract_dir: str, model="", date= ""):
@@ -357,6 +449,8 @@ class Genai4fuzz():
             file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]        
 
             for file_path in file_list:
+                logger.info(f"Processing file {file_path}")
+                uniqueseeds_set = set()                
                 try:
                     with open(file_path, 'r') as file:
                         total_seeds += 1
@@ -369,6 +463,14 @@ class Genai4fuzz():
                         testcases = TestCase.try_to_adapt_json_testcase(testcases_json)
                         for testecase_element in testcases:
                             tc = TestCase(testecase_element)                            
+                            if not tc.is_valid_testcase_struct():
+                                continue
+                            obj_hash = tc.get_testcase_hash(["Blocknum", "Timestamp"])
+                            if obj_hash in uniqueseeds_set:
+                                continue
+                            else:
+                                uniqueseeds_set.add(obj_hash)
+                            
                             testdata = json.dumps(tc.process_testcase(contract_abi, True))
                             tmp_test_file = tempfile.NamedTemporaryFile(delete=True, mode='w')
                             tmp_test_file.write(testdata)
@@ -381,7 +483,7 @@ class Genai4fuzz():
                     continue
 
         seed_dir = self._extract_deepest_name(root_contract_dir) or root_contract_dir
-        temperature = re.search(r'(\d+\.\d+)', seed_dir).group(1)
+        temperature = re.search(r'_([^_]*\d+\.\d+)_', seed_dir).group(1)
 
         for key, values in coverage_map.items():
             for index, value in enumerate(values, start=1):

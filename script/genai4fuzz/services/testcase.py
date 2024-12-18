@@ -5,6 +5,7 @@ from eth_abi import encode
 from eth_utils import to_bytes
 from loguru import logger
 from pydantic import ValidationError
+from typing import List, Any, Dict
 
 from genai4fuzz.model.testcase import TestCaseModel
 from genai4fuzz.utils.general import flatten_list, discard_fields
@@ -234,14 +235,7 @@ class TestCase(object):
             return True
         except ValidationError as e:
             #print(f"Validation error: {e}")
-            return False
-        
-        # if self.testcase.get('TestCase') and self.testcase['TestCase'].get('DeployTx') and self.testcase['TestCase'].get('Txs'):
-        #     return True
-        # elif self.testcase.get('DeployTx') and self.testcase.get('Txs'):
-        #     return True
-        # else:
-        #     return False                
+            return False            
                         
     def process_testcase(self, contract_abi, with_args):
         if not self._is_valid_struct:

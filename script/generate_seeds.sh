@@ -8,13 +8,15 @@ DEFAULT_MODEL="Llama3-8B"
 DEFAULT_NUM_SEEDS=10
 DEFAULT_NUM_TXS=4
 DEFAULT_BACKEND="together"
-TEMPERATURES=(1.0 0.2 0.4 0.6 0.8 1.2)
+TEMPERATURES=(0.0 0.2 0.4 1.0)
+DEFAULT_PROMPT="V1"
 
 # Input parameters with defaults
 MODEL=${1:-$DEFAULT_MODEL}
 BACKEND=${2:-$DEFAULT_BACKEND}
 NUM_SEEDS=${3:-$DEFAULT_NUM_SEEDS}
 NUM_TXS=${4:-$DEFAULT_NUM_TXS}
+PROMPT=${5:-$DEFAULT_PROMPT}
 
 # Define the dataset base directory
 BASE_DIR="./B1_orig"
@@ -32,6 +34,7 @@ echo "Number of Seeds: $NUM_SEEDS"
 echo "Number of Transactions: $NUM_TXS"
 echo "Temperatures: ${TEMPERATURES[*]}"
 echo "Base Directory: $BASE_DIR"
+echo "Prompt: $PROMPT"
 echo
 
 # Get the total number of temperatures
@@ -49,7 +52,7 @@ for TEMP in "${TEMPERATURES[@]}"; do
     # Process each subdirectory
     for dir in "$TARGET_DIR"/*; do
         echo "Processing $dir"
-        poetry run genai4fuzz run_llm "$dir" "$BACKEND" "$MODEL" "$TEMP" "$NUM_SEEDS" "$NUM_TXS"
+        poetry run genai4fuzz run_llm "$dir" "$BACKEND" "$MODEL" "$TEMP" "$NUM_SEEDS" "$NUM_TXS" "$PROMPT"
     done
 
     # Ask for confirmation only if not the last temperature
