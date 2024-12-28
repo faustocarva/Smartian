@@ -462,7 +462,7 @@ class Genai4fuzz():
                         testcases_json = json.loads(content)
                         testcases = TestCase.try_to_adapt_json_testcase(testcases_json)
                         for testecase_element in testcases:
-                            tc = TestCase(testecase_element)                            
+                            tc = TestCase(testecase_element)
                             if not tc.is_valid_testcase_struct():
                                 continue
                             obj_hash = tc.get_testcase_hash(["Blocknum", "Timestamp"])

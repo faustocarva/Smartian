@@ -59,7 +59,7 @@ class TestCase(object):
         self._is_valid_struct = True
         if not self.is_valid_testcase_struct():
             self._is_valid_struct = False
-            logger.error("TestCase struct does not respect JSON format")
+            logger.error("TestCase struct does not respect JSON format or invalid data types")
             
         self._total_invalid_functions = 0
         self._total_invalid_args = 0
@@ -235,7 +235,7 @@ class TestCase(object):
             return True
         except ValidationError as e:
             #print(f"Validation error: {e}")
-            return False            
+            return False
                         
     def process_testcase(self, contract_abi, with_args):
         if not self._is_valid_struct:
