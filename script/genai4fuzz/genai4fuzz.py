@@ -436,7 +436,7 @@ class Genai4fuzz():
         temperature = re.search(r'_([^_]*\d+\.\d+)_', seed_dir).group(1)
         print(f"{model},{temperature},{seed_dir},{total_files},{total_files_with_invalid_json},{total_seeds},{total_duplicate_seeds},{total_seeds_with_invalid_struct},{total_args_in_seeds},{total_invalid_args_in_seeds},{total_functions_in_seeds},{total_invalid_function_in_seeds}")
         
-    def seed_coverage_ratio(self, root_contract_dir: str, model="", date= ""):
+    def seed_coverage_ratio(self, root_contract_dir: str, model="", date= "", keep_duplicates=False):
         if not os.path.isdir(root_contract_dir):
             return
     
@@ -468,7 +468,7 @@ class Genai4fuzz():
                             if not tc.is_valid_testcase_struct():
                                 continue
                             obj_hash = tc.get_testcase_hash(["Blocknum", "Timestamp"])
-                            if obj_hash in uniqueseeds_set:
+                            if not keep_duplicates and obj_hash in uniqueseeds_set:
                                 continue
                             else:
                                 uniqueseeds_set.add(obj_hash)

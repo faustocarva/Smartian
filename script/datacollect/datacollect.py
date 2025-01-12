@@ -1,12 +1,16 @@
-import pandas as pd
-import seaborn as sns
+# Standard library imports
+import itertools
+
+# Third-party library imports
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import f_oneway
-import matplotlib.cm as cm
+import pandas as pd
+import seaborn as sns
 from matplotlib.colors import to_rgba
-import matplotlib.colors as mcolors
 from scipy import stats
+from scipy.stats import f_oneway
 
 class DataCollect():
     LLAMA3_70_COLOR = '#1f77b4'
@@ -22,10 +26,84 @@ class DataCollect():
     def __init__(self) -> None:
         print("")
 
+    def get_mean_valid_seeds_per_model(self, csv):
+        df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
+        df['valid_seeds'] = df['total_seeds'] - df['total_duplicate_seeds'] - df['total_seeds_with_invalid_struct']         
+        df['valid_seeds'] = df['valid_seeds'].replace(0, pd.NA)
+        
+        return (
+            df.groupby(['model', 'temperature'])
+            .apply(lambda group: pd.Series({
+                'mean_valid_seeds': round(group['valid_seeds'].mean())
+            }))
+            .reset_index()            
+        )        
+
+        
     def load_coverage_data(self, csv):
         df = pd.read_csv(csv, header=None, names=self.B1_TOTAL_COV_HEADER)
         return df
     
+    def build_coverage_data(self, csv):
+        executions_df = pd.read_csv(csv, header=None, names=self.COVERAGE_HEADER)    
+        totals_df = pd.read_csv("B1-ins.csv")        
+
+        total_valid_seeds = executions_df.groupby(['model', 'temperature', 'contract']).size().reset_index(name='row_count')
+        total_valid_seeds = total_valid_seeds.groupby(['model', 'temperature']).size().reset_index(name='seed_count').sort_values(by=['seed_count'], ascending=False)
+
+        totals = executions_df.groupby(
+            ['contract', 'model', 'temperature']
+        ).size().reset_index(name='totalSeedsPerModelTemp')
+    
+        
+        # Calculate mean values for each contract-model-temperature combination
+        grouped_metrics = executions_df.groupby(
+            ['contract', 'model', 'temperature']
+        ).agg({
+            'coveredInstructions': 'mean',
+            'coveredEdges': 'mean',
+            'bugsFound': 'mean',
+            'coveredDefUseChains': 'mean'
+        }).reset_index()
+        
+        grouped_metrics = grouped_metrics.merge(totals, on=['contract', 'model', 'temperature'])
+                
+        # Generate complete combination matrix
+        unique_models = grouped_metrics['model'].unique()
+        unique_temperatures = grouped_metrics['temperature'].unique()
+        
+        # Fill missing combinations with zeros
+        new_rows = []
+        for _, row in totals_df.iterrows():
+            contract = row['contract']
+            new_total_instructions = row['totalInstructions']
+            new_total_edges = row['totalEdges']
+            
+            for model, temperature in itertools.product(unique_models, unique_temperatures):
+                query_result = grouped_metrics.loc[
+                    (grouped_metrics['contract'] == contract) &
+                    (grouped_metrics['model'] == model) &
+                    (grouped_metrics['temperature'] == temperature)].index
+                    
+                if query_result.empty:
+                    new_rows.append({
+                        'contract': contract,
+                        'model': model,
+                        'temperature': temperature,
+                        'coveredInstructions': 0,
+                        'coveredEdges': 0,
+                        'bugsFound': 0,
+                        'coveredDefUseChains': 0,
+                        'totalInstructions': new_total_instructions,
+                        'totalEdges': new_total_edges,
+                        'totalSeedsPerModelTemp': 0
+                    })
+                else:
+                    grouped_metrics.loc[query_result, 'totalInstructions'] = new_total_instructions
+                    grouped_metrics.loc[query_result, 'totalEdges'] = new_total_edges
+                
+        return pd.concat([grouped_metrics, pd.DataFrame(new_rows)], ignore_index=True), total_valid_seeds
+        
     def build_perf_score_seeds(self, csv):
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
 
@@ -210,10 +288,10 @@ class DataCollect():
             df['invalid_functions_rate'] = df['total_invalid_function_in_seeds'] / max_total_functions
 
             # Calculate combined penalty factor including all metrics
-            df['penalty_factor'] = (1 - 0.4*df['duplicate_rate'] - 
-                                0.4*df['invalid_struct_rate'] - 
-                                0.1*df['invalid_args_rate'] - 
-                                0.1*df['invalid_functions_rate']).clip(lower=0)
+            df['penalty_factor'] = (1 - df['duplicate_rate'] - 
+                                df['invalid_struct_rate'] - 
+                                0.01*df['invalid_args_rate'] - 
+                                0.01*df['invalid_functions_rate']).clip(lower=0)
 
             df['performance_score'] = df['total_seeds'] * df['penalty_factor']
 
@@ -635,7 +713,8 @@ class DataCollect():
         print(result) 
         
     def performance_score_print_tables(self, csv):
-        df = self.build_perf_score_seeds(csv)
+        #df = self.build_perf_score_seeds(csv)
+        df = self.build_perf_score_seeds_args_funcs(csv)        
         
         result = (
             df.groupby(['model', 'temperature'])
@@ -680,6 +759,7 @@ class DataCollect():
                 
     def duplicate_cluster_quality_heat(self, csv):
         df = self.build_perf_score_seeds_args_funcs(csv)
+        #df = self.build_perf_score_seeds_args_funcs_2(csv)
         #df = self.build_perf_score_seeds(csv)
 
         # Aggregate data by model and temperature
@@ -769,20 +849,177 @@ class DataCollect():
         result = result.sort_values(by=['model'], ascending=False)
         print(result)
 
+    def coverage_means(self, coverage, metrics):
+        df, total_valid_seeds = self.build_coverage_data(coverage)
+
+        df['instruction_coverage'] = (
+            df['coveredInstructions'].div(df['totalInstructions'])
+            .mul(100)
+            .round(2)
+        )
+
+        df['edge_coverage'] = (
+            df['coveredEdges'].div(df['totalEdges'])
+            .mul(100)
+            .round(2)
+        )
+
+        coverage_by_model_temp = (
+            df.groupby(['model', 'temperature'])
+            .agg({
+                'instruction_coverage': 'mean',
+                'edge_coverage': 'mean'
+            })
+            .round(2)
+            .reset_index()
+            .rename(columns={
+                'instruction_coverage': 'mean_instruction_coverage_percentage',
+                'edge_coverage': 'mean_edge_coverage_percentage'
+            })
+            .sort_values(['mean_instruction_coverage_percentage', 'mean_edge_coverage_percentage'], ascending=False)
+        )
+
+        coverage_by_model_temp = coverage_by_model_temp.merge(total_valid_seeds, on=['model', 'temperature'])
+        valid_seed = self.get_mean_valid_seeds_per_model(metrics)
+        coverage_by_model_temp = coverage_by_model_temp.merge(valid_seed, on=['model', 'temperature'])
+        print(coverage_by_model_temp)
+
+        coverage_by_model= (
+            coverage_by_model_temp.groupby(['model'])
+            .agg({
+                'mean_instruction_coverage_percentage': 'mean',
+                'mean_edge_coverage_percentage': 'mean',
+                'mean_valid_seeds': 'mean',
+                'seed_count': 'mean'
+                
+            })
+            .round(2)
+            .reset_index()
+            .sort_values(['mean_instruction_coverage_percentage', 'mean_edge_coverage_percentage'], ascending=False)
+        )
+        print(coverage_by_model)
+        
+        # Plot 1: Coverage Percentage by Model
+        plt.figure(figsize=(14, 8))
+        ax1 = plt.subplot(2, 2, 1)
+        
+        model_graph = coverage_by_model
+        model_graph.rename(columns={'mean_instruction_coverage_percentage': 'instruction_coverage'}, inplace=True)        
+        model_graph.rename(columns={'mean_edge_coverage_percentage': 'edge_coverage'}, inplace=True)
+        model_graph.drop(columns=['mean_valid_seeds', 'seed_count']).set_index('model').plot(kind='bar', ax=ax1)
+        plt.title('Average Coverage by Model')
+        plt.xlabel('')
+        plt.ylim(0, 100)                
+        plt.ylabel('Coverage Percentage')
+        plt.xticks(rotation=45)
+        plt.legend(title='Coverage Metric')
+        
+        for p in ax1.patches:
+            ax1.annotate(f'{p.get_height():.2f}%', 
+                        (p.get_x() + p.get_width() / 2., p.get_height()), 
+                        ha='center', va='center', 
+                        fontsize=8, color='black', 
+                        xytext=(0, 13), textcoords='offset points',
+                        rotation=50)
+        plt.tight_layout()            
+        plt.savefig('coverage_means.pdf', bbox_inches="tight")
+        
+        
+        # Plot 2: Temperature Heatmap Instruction
+        plt.figure(figsize=(14, 8))
+        ax2 = plt.subplot(2, 2, 1)
+        
+        pivot_data = coverage_by_model_temp.pivot_table(
+            values='mean_instruction_coverage_percentage',
+            index='model',
+            columns='temperature',
+            aggfunc='mean'
+        )
+        
+        sns.heatmap(pivot_data, annot=True, fmt='.1f', cmap='YlOrRd', ax=ax2, vmax=100)
+        plt.title('Instruction Coverage Heatmap (Model vs Temperature)')
+        plt.xlabel('Temperature')
+        plt.ylabel('Model')
+        
+        plt.tight_layout()            
+        plt.savefig('instruction_heatmap_mode_temp.pdf', bbox_inches="tight")        
+
+        # Plot 3: Temperature Heatmap Edge
+        plt.figure(figsize=(14, 8))
+        ax2 = plt.subplot(2, 2, 1)
+        
+        pivot_data = coverage_by_model_temp.pivot_table(
+            values='mean_edge_coverage_percentage',
+            index='model',
+            columns='temperature',
+            aggfunc='mean'
+        )
+        
+        sns.heatmap(pivot_data, annot=True, fmt='.1f', cmap='YlOrRd', ax=ax2, vmax=100)
+        plt.title('Edge Coverage Heatmap (Model vs Temperature)')
+        plt.xlabel('Temperature')
+        plt.ylabel('Model')
+        plt.tight_layout()            
+        plt.savefig('edge_heatmap_mode_temp.pdf', bbox_inches="tight")        
+        
+        # Plot 4: Temperature Heatmap defusechain
+        plt.figure(figsize=(14, 8))
+        ax2 = plt.subplot(2, 2, 1)        
+        defuse_by_model_temp = df.pivot_table(
+            values='coveredDefUseChains',
+            index='model',
+            columns='temperature',
+            aggfunc='sum'
+        )
+        
+        sns.heatmap(defuse_by_model_temp, annot=True, fmt='.0f', cmap='Greens', ax=ax2)
+        plt.title('Total Coverage of DefUse Chain Found (Model vs Temperature)')
+        plt.xlabel('Temperature')
+        plt.ylabel('Model')
+        plt.tight_layout()            
+        plt.savefig('defuse_heatmap_mode_temp.pdf', bbox_inches="tight")        
+        
+        
+        # Plot 5: Temperature Heatmap bugsfound        
+        plt.figure(figsize=(14, 8))
+        ax2 = plt.subplot(2, 2, 1)        
+        bugs_by_model_temp = df.pivot_table(
+            values='bugsFound',
+            index='model',
+            columns='temperature',
+            aggfunc='sum'
+        )
+        
+        sns.heatmap(bugs_by_model_temp, annot=True, fmt='.0f', cmap="Purples", ax=ax2)
+        plt.title('Total Bugs Found (Model vs Temperature)')
+        plt.xlabel('Temperature')
+        plt.ylabel('Model')
+        plt.tight_layout()            
+        plt.savefig('bugs_heatmap_mode_temp.pdf', bbox_inches="tight")        
+        
+        
+        # Plot 6: Coverage Distribution by Model
+        plt.figure(figsize=(14, 8))
+        ax2 = plt.subplot(2, 2, 1)        
+        
+        sns.violinplot(data=df, x='model', y='instruction_coverage', ax=ax2)
+        plt.title('Instruction Coverage Distribution by Model')
+        plt.xticks(rotation=45)
+        plt.xlabel('')
+        plt.ylabel('Coverage Percentage')
+        plt.tight_layout()            
+        plt.savefig('violin_inst_cov.pdf', bbox_inches="tight")        
+        
+        
     def coverage(self, csv):
         b1_csv = self.load_coverage_data("B1-ins.csv")
         total_instructions = b1_csv['toalInstructions'].sum()
         total_edges = b1_csv['totalEdges'].sum()
 
         df = pd.read_csv(csv, header=None, names=self.COVERAGE_HEADER)
-                
-        #df[['totalExecutions','deployFailCount','coveredEdges','coveredInstructions','coveredDefUseChains','bugsFound']] = df[['totalExecutions','deployFailCount','coveredEdges','coveredInstructions','coveredDefUseChains','bugsFound']].fillna(0)
         
         total_grp = df.groupby(['model', 'temperature', 'contract']).size().reset_index(name='row_count')
         print(total_grp.groupby(['model', 'temperature']).size().reset_index(name='seed_count').sort_values(by=['seed_count'], ascending=False))
-        #print(df.groupby(['model', 'temperature', 'contract']).count())        
-        
-        #return
     
         average_covered_instructions = df.groupby(['model', 'temperature', 'contract'])['coveredInstructions'].mean().reset_index()
         total_inst_grouped = average_covered_instructions.groupby(['model', 'temperature'])['coveredInstructions'].sum().reset_index()
@@ -797,9 +1034,7 @@ class DataCollect():
         total_edges_grouped['totalCoveredEdges_percentage'] = (total_edges_grouped['totalCoveredEdges'] / total_edges) * 100            
         total_edges_grouped = total_edges_grouped.sort_values(by=['totalCoveredEdges_percentage'], ascending=False)
         print(total_edges_grouped)
-        
-        return
-        
+                
         average_covered_instructions = df.groupby(['model', 'temperature'])['coveredInstructions'].mean().reset_index()
         average_covered_instructions.rename(columns={'coveredInstructions': 'averageCoveredInstructions'}, inplace=True)
         average_covered_instructions = average_covered_instructions.sort_values(by=['averageCoveredInstructions'], ascending=False)
