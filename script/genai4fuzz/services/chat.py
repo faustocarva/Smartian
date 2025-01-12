@@ -365,3 +365,43 @@ class ChatService(metaclass=SingletonMeta):
             return response.choices[0].message.content
         return None
     
+    
+    def query_hyperbolic(self, prompt_msgs: list, model: str, temperature=1) -> str:
+
+        if "HYPERBOLIC_API_KEY" not in os.environ:
+            logger.error("HYPERBOLIC_API_KEY is not set.")
+            exit(0)
+    
+        model_string = self._query_providers(f"hyperbolic.model.{model}")
+        if model_string is None:
+            logger.error(f"Model {model} not found.")
+            exit(0)
+
+        provider_url = self._query_providers(f"hyperbolic.url")
+        if provider_url is None:
+            logger.error(f"Provider url not found.")
+            exit(0)
+
+        limit = self._query_providers(f"hyperbolic.model.{model}.limit")
+        if limit is None:
+            limit = 8192
+            logger.info(f"Model limit  not found.")
+
+        max_tokens = int(int(limit) - (self.count_tokens(prompt_msgs, model)*1.5))
+        logger.info(f"Invoke hyperbolic with max_tokens={max_tokens} and model {model_string}")
+
+        client = OpenAI(
+            base_url = provider_url,
+            api_key = os.environ["HYPERBOLIC_API_KEY"]
+        )
+        
+        t_start = time.time()
+        response = self.fetch_chat_completion(client, prompt_msgs, model_string, max_tokens, temperature)
+        g_time = time.time() - t_start
+        logger.info(f"hyperbolic response time: {g_time}")
+        if (response is not None):
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+            return response.choices[0].message.content
+        return None
+
+    

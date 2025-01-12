@@ -267,6 +267,8 @@ class Genai4fuzz():
             chat_completion = self._chat_service.query_grok(messages, model, temperature)
         elif llm == "google":
             chat_completion = self._chat_service.query_google(messages, model, temperature)
+        elif llm == "hyperbolic":
+            chat_completion = self._chat_service.query_hyperbolic(messages, model, temperature)            
 
         if (chat_completion is not None):
             logger.info(f"New {llm} test case generated!")
@@ -403,7 +405,7 @@ class Genai4fuzz():
                         if not is_valid_json(content):
                             content = json_from_text(content)
                             if not is_valid_json(content):
-                                #logger.error(f"Invalid JSON file {file_path}")                            
+                                logger.error(f"Invalid JSON file {file_path}")                            
                                 total_files_with_invalid_json += 1
                                 continue
                         testcases_json = json.loads(content)
