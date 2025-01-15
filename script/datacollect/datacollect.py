@@ -39,6 +39,54 @@ class DataCollect():
             .reset_index()            
         )        
 
+    def fill_missing_experiments(self, df):
+        """
+        Fill in missing experiment combinations in a DataFrame, keeping only transaction indices 1-10
+        and filling remaining values with 0.
+        
+        Parameters:
+        df (pandas.DataFrame): Input DataFrame with experimental results
+        
+        Returns:
+        pandas.DataFrame: Complete DataFrame with filtered combinations and 0 for missing values
+        """
+        # First filter the original DataFrame to keep only transaction_index 1-10
+        df = df[df['transaction_index'].between(1, 10)]
+        
+        # Get unique values for each dimension
+        models = df['model'].unique()
+        temperatures = df['temperature'].unique()
+        contracts = df['contract'].unique()
+        transaction_indices = list(range(1, 11))  # Force transaction indices to be 1-10
+        
+        # Create all possible combinations
+        index = pd.MultiIndex.from_product([contracts, temperatures, transaction_indices, models],
+                                        names=['contract', 'temperature', 'transaction_index', 'model'])
+        
+        # Convert to DataFrame
+        complete_df = pd.DataFrame(index=index).reset_index()
+        
+        # Merge with original data
+        result = pd.merge(complete_df, df, 
+                        on=['contract', 'temperature', 'transaction_index', 'model'],
+                        how='left')
+        
+        # Sort the result for better readability
+        result = result.sort_values(['contract', 'temperature', 'transaction_index', 'model'])
+        
+        # Reset index
+        result = result.reset_index(drop=True)
+        
+        # Fill all numeric columns with 0
+        numeric_columns = ['totalExecutions', 'deployFailCount', 'coveredEdges', 
+                        'coveredInstructions', 'coveredDefUseChains', 'bugsFound']
+        result[numeric_columns] = result[numeric_columns].fillna(0)
+        
+        # Fill seed_file with 'missing' if it exists in the DataFrame
+        if 'seed_file' in result.columns:
+            result['seed_file'] = result['seed_file'].fillna('missing')
+            
+        return result
         
     def load_coverage_data(self, csv):
         df = pd.read_csv(csv, header=None, names=self.B1_TOTAL_COV_HEADER)
@@ -47,6 +95,8 @@ class DataCollect():
     def build_coverage_data(self, csv):
         executions_df = pd.read_csv(csv, header=None, names=self.COVERAGE_HEADER)    
         totals_df = pd.read_csv("B1-ins.csv")        
+        
+        executions_df = self.fill_missing_experiments(executions_df)        
 
         total_valid_seeds = executions_df.groupby(['model', 'temperature', 'contract']).size().reset_index(name='row_count')
         total_valid_seeds = total_valid_seeds.groupby(['model', 'temperature']).size().reset_index(name='seed_count').sort_values(by=['seed_count'], ascending=False)
@@ -850,6 +900,7 @@ class DataCollect():
         print(result)
 
     def coverage_means(self, coverage, metrics):
+
         df, total_valid_seeds = self.build_coverage_data(coverage)
 
         df['instruction_coverage'] = (
@@ -899,11 +950,13 @@ class DataCollect():
         )
         print(coverage_by_model)
         
+        model_order = coverage_by_model['model'].tolist()
+        
         # Plot 1: Coverage Percentage by Model
         plt.figure(figsize=(14, 8))
         ax1 = plt.subplot(2, 2, 1)
         
-        model_graph = coverage_by_model
+        model_graph = coverage_by_model.copy()  # Create a copy to avoid modifying original
         model_graph.rename(columns={'mean_instruction_coverage_percentage': 'instruction_coverage'}, inplace=True)        
         model_graph.rename(columns={'mean_edge_coverage_percentage': 'edge_coverage'}, inplace=True)
         model_graph.drop(columns=['mean_valid_seeds', 'seed_count']).set_index('model').plot(kind='bar', ax=ax1)
@@ -924,7 +977,6 @@ class DataCollect():
         plt.tight_layout()            
         plt.savefig('coverage_means.pdf', bbox_inches="tight")
         
-        
         # Plot 2: Temperature Heatmap Instruction
         plt.figure(figsize=(14, 8))
         ax2 = plt.subplot(2, 2, 1)
@@ -935,12 +987,12 @@ class DataCollect():
             columns='temperature',
             aggfunc='mean'
         )
+        pivot_data = pivot_data.reindex(model_order)
         
         sns.heatmap(pivot_data, annot=True, fmt='.1f', cmap='YlOrRd', ax=ax2, vmax=100)
         plt.title('Instruction Coverage Heatmap (Model vs Temperature)')
         plt.xlabel('Temperature')
         plt.ylabel('Model')
-        
         plt.tight_layout()            
         plt.savefig('instruction_heatmap_mode_temp.pdf', bbox_inches="tight")        
 
@@ -954,6 +1006,7 @@ class DataCollect():
             columns='temperature',
             aggfunc='mean'
         )
+        pivot_data = pivot_data.reindex(model_order)
         
         sns.heatmap(pivot_data, annot=True, fmt='.1f', cmap='YlOrRd', ax=ax2, vmax=100)
         plt.title('Edge Coverage Heatmap (Model vs Temperature)')
@@ -971,6 +1024,7 @@ class DataCollect():
             columns='temperature',
             aggfunc='sum'
         )
+        defuse_by_model_temp = defuse_by_model_temp.reindex(model_order)
         
         sns.heatmap(defuse_by_model_temp, annot=True, fmt='.0f', cmap='Greens', ax=ax2)
         plt.title('Total Coverage of DefUse Chain Found (Model vs Temperature)')
@@ -978,7 +1032,6 @@ class DataCollect():
         plt.ylabel('Model')
         plt.tight_layout()            
         plt.savefig('defuse_heatmap_mode_temp.pdf', bbox_inches="tight")        
-        
         
         # Plot 5: Temperature Heatmap bugsfound        
         plt.figure(figsize=(14, 8))
@@ -989,6 +1042,7 @@ class DataCollect():
             columns='temperature',
             aggfunc='sum'
         )
+        bugs_by_model_temp = bugs_by_model_temp.reindex(model_order)
         
         sns.heatmap(bugs_by_model_temp, annot=True, fmt='.0f', cmap="Purples", ax=ax2)
         plt.title('Total Bugs Found (Model vs Temperature)')
@@ -997,18 +1051,23 @@ class DataCollect():
         plt.tight_layout()            
         plt.savefig('bugs_heatmap_mode_temp.pdf', bbox_inches="tight")        
         
-        
         # Plot 6: Coverage Distribution by Model
         plt.figure(figsize=(14, 8))
         ax2 = plt.subplot(2, 2, 1)        
         
-        sns.violinplot(data=df, x='model', y='instruction_coverage', ax=ax2)
+        # Create a copy of the dataframe and ensure correct column name
+        plot_df = df.copy()
+        if 'instruction_coverage' not in plot_df.columns:
+            plot_df['instruction_coverage'] = plot_df['mean_instruction_coverage_percentage']
+        
+        # Use order parameter in violinplot with the processed dataframe
+        sns.violinplot(data=plot_df, x='model', y='instruction_coverage', ax=ax2, order=model_order)
         plt.title('Instruction Coverage Distribution by Model')
         plt.xticks(rotation=45)
         plt.xlabel('')
         plt.ylabel('Coverage Percentage')
         plt.tight_layout()            
-        plt.savefig('violin_inst_cov.pdf', bbox_inches="tight")        
+        plt.savefig('violin_inst_cov.pdf', bbox_inches="tight")
         
         
     def coverage(self, csv):
