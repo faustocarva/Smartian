@@ -8,8 +8,9 @@ type FuzzerCLI =
   | [<AltCommandLine("-v")>] [<Unique>] Verbose of int
   | [<AltCommandLine("-t")>] [<Mandatory>] [<Unique>] Timelimit of sec: int
   | [<AltCommandLine("-o")>] [<Mandatory>] [<Unique>] OutputDir of path: string
-  | [<AltCommandLine("-s")>] [<Unique>] SeedDir   of path: string  
+  | [<AltCommandLine("-s")>] [<Unique>] SeedDir of path: string  
   | [<AltCommandLine("-a")>] [<Unique>] ABIFile of path: string
+  | [<AltCommandLine("-x")>] [<Unique>] DumpSeed
   | [<Unique>] WithBugGain
   | [<Unique>] NoSDFA  
   | [<Unique>] NoDDFA
@@ -26,6 +27,7 @@ with
       | OutputDir _ -> "Directory to store testcase outputs."
       | SeedDir _ -> "Directory with LLM seeds."      
       | ABIFile _ -> "ABI JSON file."
+      | DumpSeed _ -> "Dump Initial Seeds."      
       | NoSDFA -> "Disable static data-flow analysis to guide fuzzing."
       | WithBugGain -> "Enable the feedback from bugs found."
       | NoDDFA -> "Disable dynamic data-flow analysis during the fuzzing."
@@ -43,6 +45,7 @@ type FuzzOption = {
   Timelimit         : int
   ProgPath          : string  
   ABIPath           : string
+  DumpSeed          : bool
   WithBugGain       : bool  
   StaticDFA         : bool
   DynamicDFA        : bool
@@ -62,6 +65,7 @@ let parseFuzzOption (args: string array) =
     Timelimit = r.GetResult (<@ Timelimit @>)
     ProgPath = r.GetResult (<@ Program @>)
     ABIPath = r.GetResult(<@ ABIFile @>, defaultValue = "")
+    DumpSeed = (r.Contains(<@ DumpSeed @>))    
     StaticDFA = not (r.Contains(<@ NoSDFA @>))  // Enabled by default.
     DynamicDFA = not (r.Contains(<@ NoDDFA @>)) // Enabled by default.
     UseLLLMSeeds = (r.Contains(<@ UseLLLMSeeds @>))

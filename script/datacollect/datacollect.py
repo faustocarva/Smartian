@@ -11,13 +11,14 @@ import seaborn as sns
 from matplotlib.colors import to_rgba
 from scipy import stats
 from scipy.stats import f_oneway
+import matplotlib.gridspec as gridspec
 
 class DataCollect():
     LLAMA3_70_COLOR = '#1f77b4'
     LLAMA3_8_COLOR = '#ff7f0e'
-    GPTOMINI_COLOR = '#2ca02c'
-    MIXTRAL_8X7B_COLOR = '#d62728'
-    GEMINI_FLASH_COLOR = '#9467bd'
+    GPTOMINI_COLOR = '#d62728'
+    MIXTRAL_8X7B_COLOR = '#9467bd'
+    GEMINI_FLASH_COLOR = '#2ca02c'
     
     METRICS_HEADER = 'model,temperature,file,total_files,total_files_with_invalid_json,total_seeds,total_duplicate_seeds,total_seeds_with_invalid_struct,total_args_in_seeds,total_invalid_args_in_seeds,total_functions_in_seeds,total_invalid_function_in_seeds'.split(',')
     COVERAGE_HEADER = 'contract,temperature,transaction_index,model,seed_file,totalExecutions,deployFailCount,coveredEdges,coveredInstructions,coveredDefUseChains,bugsFound'.split(',')
@@ -113,7 +114,8 @@ class DataCollect():
             'coveredInstructions': 'mean',
             'coveredEdges': 'mean',
             'bugsFound': 'mean',
-            'coveredDefUseChains': 'mean'
+            'coveredDefUseChains': 'mean',
+            'deployFailCount': ['mean', 'sum']
         }).reset_index()
         
         grouped_metrics = grouped_metrics.merge(totals, on=['contract', 'model', 'temperature'])
@@ -161,7 +163,7 @@ class DataCollect():
         max_total_seeds = df['total_seeds'].max()
         
         df['valid_seeds'] = df['total_seeds'] - df['total_duplicate_seeds'] - df['total_seeds_with_invalid_struct']         
-        df['valid_seeds'] = df['valid_seeds'].replace(0, pd.NA)
+        #df['valid_seeds'] = df['valid_seeds'].replace(0, pd.NA)
 
         df['duplicate_percentage'] = (df['total_duplicate_seeds'] / max_total_seeds) * 100
         df['invalid_struct_percentage'] = (df['total_seeds_with_invalid_struct'] / max_total_seeds) * 100
@@ -494,20 +496,153 @@ class DataCollect():
         plt.tight_layout()                
         
         plt.savefig('plot_total_efective_seeds_by_model_temperature.pdf', bbox_inches="tight")
+    
+    def best_model_temp_metrics(self, csv):
+        df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
+        
+        """Process the raw metrics data to calculate performance metrics."""
+        # Define the desired order of models
+        model_order = ["Llama3-70B", "gemini-1.5-flash", "mixtral-8x7b", "gpt4omini", "Llama3-8B"]
+        
+        # Find the maximum possible seeds across all models
+        max_seeds = df.groupby('model')['total_seeds'].max().max()
+        
+        # Group by model and temperature
+        grouped = df.groupby(['model', 'temperature']).agg({
+            'total_seeds': 'mean',  # Average seeds per run
+            'total_args_in_seeds': 'sum',
+            'total_invalid_args_in_seeds': 'sum',
+            'total_functions_in_seeds': 'sum',
+            'total_invalid_function_in_seeds': 'sum',
+            'file': 'count'  # Count number of runs
+        }).reset_index()
 
+        # Ensure the model column follows the desired order
+        grouped['model'] = pd.Categorical(grouped['model'], categories=model_order, ordered=True)
+        grouped = grouped.sort_values(['model', 'temperature'])
+
+        # Calculate seed generation rate
+        grouped['seed_generation_rate'] = (grouped['total_seeds'] / max_seeds) * 100
+
+        # Calculate separate error rates for args and functions
+        grouped['args_error_rate'] = (
+            grouped['total_invalid_args_in_seeds'] / grouped['total_args_in_seeds'] * 100
+        )
+        grouped['functions_error_rate'] = (
+            grouped['total_invalid_function_in_seeds'] / grouped['total_functions_in_seeds'] * 100
+        )
+        grouped['combined_error_rate'] = (
+            (grouped['total_invalid_args_in_seeds'] / grouped['total_args_in_seeds'] +
+            grouped['total_invalid_function_in_seeds'] / grouped['total_functions_in_seeds']) / 2 * 100
+        )
+        
+        # Calculate scaled error rate
+        grouped['scaled_error_rate'] = grouped['combined_error_rate'] * (max_seeds / grouped['total_seeds'])
+        
+        # Handle any infinite values
+        grouped = grouped.replace([np.inf, -np.inf], np.nan)
+        
+        processed_data = grouped
+                
+        """Generate a detailed summary table of model performance."""
+        summary = []
+        
+        for model in processed_data['model'].unique():
+            model_data = processed_data[processed_data['model'] == model]
+            best_temp_idx = model_data['scaled_error_rate'].idxmin()
+            best_performance = model_data.loc[best_temp_idx]
+            
+            summary.append({
+                'Model': model,
+                'Best Temperature': best_performance['temperature'],
+                'Seed Generation Rate (%)': best_performance['seed_generation_rate'],
+                'Combined Error Rate (%)': best_performance['combined_error_rate'],
+                'Scaled Error Rate': best_performance['scaled_error_rate'],
+                'Args Error Rate (%)': best_performance['args_error_rate'],
+                'Functions Error Rate (%)': best_performance['functions_error_rate']
+            })
+                
+        # Generate and display summary table
+        summary_table = pd.DataFrame(summary)
+        print("\nModel Performance Summary:")
+        print(summary_table.to_string(index=False))
+        
+        # Generate LaTeX table
+        model_summaries = []
+        
+        for model in processed_data['model'].unique():
+            model_data = processed_data[processed_data['model'] == model]
+            avg_seed_rate = model_data['seed_generation_rate'].mean()
+            best_temp_idx = model_data['combined_error_rate'].idxmin()
+            best_temp = model_data.loc[best_temp_idx]
+            
+            model_summaries.append({
+                'model': model,
+                'seed_rate': avg_seed_rate,
+                'best_temp': best_temp['temperature'],
+                'error_rate': best_temp['combined_error_rate'],
+                'scaled_error': best_temp['scaled_error_rate'],
+                'args_error': best_temp['args_error_rate'],
+                'func_error': best_temp['functions_error_rate']
+            })
+        
+        # Generate LaTeX table
+        latex_table = [
+            "\\begin{table}[h]",
+            "\\centering",
+            "\\begin{tabular}{lcccccc}",
+            "\\hline",
+            "\\textbf{Model} & \\textbf{Seed Rate} & \\textbf{Best} & \\textbf{Combined} & \\textbf{Scaled} & \\textbf{Args} & \\textbf{Func} \\\\",
+            "& \\textbf{(\\%)} & \\textbf{Temp} & \\textbf{Error (\\%)} & \\textbf{Error} & \\textbf{Error (\\%)} & \\textbf{Error (\\%)} \\\\",
+            "\\hline"
+        ]
+        
+        # Add data rows
+        for summary in model_summaries:
+            row = (
+                f"{summary['model']} & "
+                f"{summary['seed_rate']:.1f} & "
+                f"{summary['best_temp']:.1f} & "
+                f"{summary['error_rate']:.2f} & "
+                f"{summary['scaled_error']:.2f} & "
+                f"{summary['args_error']:.2f} & "
+                f"{summary['func_error']:.2f} \\\\"
+            )
+            latex_table.append(row)
+        
+        # Add footer
+        latex_table.extend([
+            "\\hline",
+            "\\end{tabular}",
+            "\\caption{Comprehensive Model Performance Summary showing seed generation rates, "
+            "optimal temperatures, and various error metrics. Args and Func Error show the "
+            "breakdown of errors by argument validation and function validation respectively.}",
+            "\\label{tab:model-performance}",
+            "\\end{table}"
+        ])
+        
+        print("\nLaTeX Table:")
+        print('\n'.join(latex_table))
+            
     def total_seed_and_files(self, csv):
         # Read and process data
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
         
         # Calculate means grouped by model and temperature
         grouped_df = df.groupby(['model', 'temperature']).agg({
+            'total_seeds': 'mean',  # Average seeds per run            
             'total_files': 'mean',
             'total_files_with_invalid_json': 'mean',
             'total_seeds': 'mean',
             'total_duplicate_seeds': 'mean',
-            'total_seeds_with_invalid_struct': 'mean'
+            'total_seeds_with_invalid_struct': 'mean',
+            'file': 'count'  # Count number of runs
             
         }).reset_index()
+
+        # Calculate seed generation rate
+        max_seeds = df.groupby('model')['total_seeds'].max().max()        
+        grouped_df['seed_generation_rate'] = (grouped_df['total_seeds'] / max_seeds) * 100
 
         # Calculate mean total_files - total_files_with_invalid_json
         grouped_df['valid_files_mean'] = grouped_df['total_files'] - grouped_df['total_files_with_invalid_json']
@@ -533,7 +668,6 @@ class DataCollect():
         
         for model, marker, color in zip(models, markers, color_palette):
             model_data = grouped_df[grouped_df['model'] == model]
-            
             # Plot seeds vs temperature on primary y-axis
             line1, = ax1.plot(model_data['temperature'], 
                             model_data['valid_seeds'], 
@@ -547,9 +681,9 @@ class DataCollect():
         
         # Customize primary y-axis
         ax1.set_xlabel('Temperature')
-        ax1.set_ylabel('Total Valid Seeds', fontweight='bold')
+        ax1.set_ylabel('Total Valid Seeds Generated', fontweight='bold')
         ax1.tick_params(axis='y')
-        ax1.set_title('Valid Seeds and Valid Files vs Temperature by Model',  fontweight='bold', fontsize=12)
+        ax1.set_title('Total Valid Seeds and Total Contracts with Generated Seeds vs Temperature by Model',  fontweight='bold', fontsize=12)
         
         # Create secondary y-axis for valid files mean
         ax2 = ax1.twinx()
@@ -615,8 +749,12 @@ class DataCollect():
         }).reset_index()
 
         # Calculate valid files and seeds
+        max_seeds = df.groupby('model')['total_seeds'].max().max()                
         grouped_df['valid_files_mean'] = grouped_df['total_files'] - grouped_df['total_files_with_invalid_json']
         grouped_df['valid_seeds'] = grouped_df['total_seeds'] - grouped_df['total_duplicate_seeds'] - grouped_df['total_seeds_with_invalid_struct']    
+        
+        # Calculate percentage of valid files
+        grouped_df['valid_files_percentage'] = (grouped_df['valid_files_mean'] / grouped_df['total_files']) * 100
         
         # Create figure with shared y-axis
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
@@ -647,7 +785,7 @@ class DataCollect():
         
         ax1.set_xlabel('Temperature', fontsize=12, fontweight='bold')
         ax1.set_ylabel('Total Valid Seeds', fontsize=12, fontweight='bold')
-        ax1.set_title('Valid Seeds vs Temperature by Model', 
+        ax1.set_title('Total Valid Seeds Generated vs Temperature Across Models', 
                     fontweight='bold', 
                     fontsize=14,
                     pad=20)
@@ -657,11 +795,11 @@ class DataCollect():
         # Add light background color to first plot
         ax1.set_facecolor('#f8f9fa')
         
-        # Second plot: Valid Files
+        # Second plot: Valid Files Percentage
         for model, marker, color in zip(models, markers, color_palette):
             model_data = grouped_df[grouped_df['model'] == model]
             line = ax2.plot(model_data['temperature'], 
-                        model_data['valid_files_mean'], 
+                        model_data['valid_files_percentage'], 
                         marker=marker,
                         markersize=12,
                         linewidth=3,
@@ -671,15 +809,15 @@ class DataCollect():
             
             # Add shadow effect to lines
             ax2.plot(model_data['temperature'], 
-                    model_data['valid_files_mean'],
+                    model_data['valid_files_percentage'],
                     color='gray',
                     linewidth=4,
                     alpha=0.2,
                     zorder=-1)
         
         ax2.set_xlabel('Temperature', fontsize=12, fontweight='bold')
-        ax2.set_ylabel('Total Valid Files', fontsize=12, fontweight='bold')
-        ax2.set_title('Valid Files vs Temperature by Model', 
+        ax2.set_ylabel('Percentage of Valid Files (%)', fontsize=12, fontweight='bold')
+        ax2.set_title('Percentage of Valid Files vs Temperature Across Models', 
                     fontweight='bold', 
                     fontsize=14,
                     pad=20)
@@ -701,12 +839,6 @@ class DataCollect():
             legend.get_frame().set_facecolor('white')
             legend.get_frame().set_alpha(0.9)
         
-        # Add a super title
-        fig.suptitle('Model Performance Analysis', 
-                    fontsize=16, 
-                    fontweight='bold', 
-                    y=1.05)
-        
         # Add subtle border around the entire figure
         for ax in [ax1, ax2]:
             for spine in ax.spines.values():
@@ -715,8 +847,256 @@ class DataCollect():
         
         # Adjust layout
         plt.tight_layout()           
-        plt.savefig('plot_total_files_seeds_by_model_side_temperature.pdf',bbox_inches="tight")                    
+        plt.savefig('plot_total_files_seeds_by_model_side_temperature.pdf',bbox_inches="tight")
+        
+        ######################################
+        df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)        
+                
+        # Calculate means grouped by model and temperature
+        grouped_df = df.groupby(['model', 'temperature']).agg({
+            'total_files': 'mean',
+            'total_files_with_invalid_json': 'mean',
+            'total_seeds': 'mean',
+            'total_duplicate_seeds': 'mean',
+            'total_seeds_with_invalid_struct': 'mean'
+        }).reset_index()
 
+        # Calculate metrics
+        grouped_df['valid_files_mean'] = grouped_df['total_files'] - grouped_df['total_files_with_invalid_json']
+        grouped_df['valid_files_percentage'] = (grouped_df['valid_files_mean'] / grouped_df['total_files']) * 100
+        grouped_df['valid_seeds'] = grouped_df['total_seeds'] - grouped_df['total_duplicate_seeds'] - grouped_df['total_seeds_with_invalid_struct']
+
+        # Format model names
+        def format_model_name(name):
+            model_name_map = {
+                'llama3-70b': 'Llama3-70B',
+                'gpt4-0mini': 'GPT4-0mini',
+                'gpt4omini': 'GPT4-0mini',                
+                'llama3-8b': 'Llama3-8B',
+                'mixtral-8x7b': 'Mixtral-8x7B',
+                'gemini-1.5-flash': 'Gemini-1.5-Flash'
+            }
+            return model_name_map.get(name.lower(), name)
+
+        grouped_df['model'] = grouped_df['model'].apply(format_model_name)
+        models = grouped_df['model'].unique()
+        markers = ['o', 'D', 's', '^', 'v']  # More distinct markers
+        color_palette = sns.color_palette("tab10", len(models))
+
+        # Plot for valid seeds
+        plt.figure(figsize=(12, 8))
+        ax = plt.gca()
+
+        for model, marker, color in zip(models, markers, color_palette):
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Main line with markers
+            plt.plot(model_data['temperature'], 
+                    model_data['valid_seeds'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            # Shadow effect
+            plt.plot(model_data['temperature'], 
+                    model_data['valid_seeds'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        # Styling
+        plt.xlabel('Temperature', fontsize=14, fontweight='bold')
+        plt.ylabel('Number of Valid Seeds', fontsize=14, fontweight='bold')
+        plt.title('Total Valid Seeds Generated vs Temperature', fontweight='bold', fontsize=16, pad=20)
+
+        # Grid and background
+        plt.grid(True, linestyle='--', alpha=0.7)
+        ax.set_facecolor('#f8f9fa')
+        ax.tick_params(axis='both', which='major', labelsize=12)
+
+        # Enhanced legend - now inside the plot
+        legend = plt.legend(
+            title="Models",
+            title_fontsize=12,
+            fontsize=11,
+            loc='center right',
+            bbox_to_anchor=(1, 0.6),
+            frameon=True,
+            fancybox=True,
+            shadow=True,
+            borderpad=1
+        )
+        legend.get_frame().set_facecolor('white')
+        legend.get_frame().set_alpha(0.9)
+
+        # Spines
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#cccccc')
+            spine.set_linewidth(1.5)
+
+        plt.tight_layout()
+        plt.savefig('plot_valid_seeds.pdf', bbox_inches='tight', dpi=600)
+        plt.close()
+
+        # Plot for duplicate seeds
+        plt.figure(figsize=(12, 8))
+        ax = plt.gca()
+
+        for model, marker, color in zip(models, markers, color_palette):
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            plt.plot(model_data['temperature'], 
+                    model_data['total_duplicate_seeds'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            plt.plot(model_data['temperature'], 
+                    model_data['total_duplicate_seeds'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        plt.xlabel('Temperature', fontsize=14, fontweight='bold')
+        plt.ylabel('Number of Duplicate Seeds', fontsize=14, fontweight='bold')
+        plt.title('Duplicate Seeds Generated vs Temperature', fontweight='bold', fontsize=16, pad=20)
+        plt.grid(True, linestyle='--', alpha=0.7)
+        ax.set_facecolor('#f8f9fa')
+        ax.tick_params(axis='both', which='major', labelsize=12)
+
+        legend = plt.legend(
+            title="Models",
+            title_fontsize=12,
+            fontsize=11,
+            loc='best',
+            frameon=True,
+            fancybox=True,
+            shadow=True,
+            borderpad=1
+        )
+        legend.get_frame().set_facecolor('white')
+        legend.get_frame().set_alpha(0.9)
+
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#cccccc')
+            spine.set_linewidth(1.5)
+
+        plt.tight_layout()
+        plt.savefig('plot_duplicate_seeds.pdf', bbox_inches='tight', dpi=600)
+        plt.close()
+
+        # Plot for invalid structure seeds
+        plt.figure(figsize=(12, 8))
+        ax = plt.gca()
+
+        for model, marker, color in zip(models, markers, color_palette):
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            plt.plot(model_data['temperature'], 
+                    model_data['total_seeds_with_invalid_struct'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            plt.plot(model_data['temperature'], 
+                    model_data['total_seeds_with_invalid_struct'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        plt.xlabel('Temperature', fontsize=14, fontweight='bold')
+        plt.ylabel('Number of Invalid Structure Seeds', fontsize=14, fontweight='bold')
+        plt.title('Seeds with Invalid Structure vs Temperature', fontweight='bold', fontsize=16, pad=20)
+        plt.grid(True, linestyle='--', alpha=0.7)
+        ax.set_facecolor('#f8f9fa')
+        ax.tick_params(axis='both', which='major', labelsize=12)
+
+        legend = plt.legend(
+            title="Models",
+            title_fontsize=12,
+            fontsize=11,
+            loc='best',
+            frameon=True,
+            fancybox=True,
+            shadow=True,
+            borderpad=1
+        )
+        legend.get_frame().set_facecolor('white')
+        legend.get_frame().set_alpha(0.9)
+
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#cccccc')
+            spine.set_linewidth(1.5)
+
+        plt.tight_layout()
+        plt.savefig('plot_invalid_structure_seeds.pdf', bbox_inches='tight', dpi=600)
+        plt.close()
+
+        # Plot for valid files percentage
+        plt.figure(figsize=(12, 8))
+        ax = plt.gca()
+
+        for model, marker, color in zip(models, markers, color_palette):
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            plt.plot(model_data['temperature'], 
+                    model_data['valid_files_percentage'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            plt.plot(model_data['temperature'], 
+                    model_data['valid_files_percentage'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        plt.xlabel('Temperature', fontsize=14, fontweight='bold')
+        plt.ylabel('Percentage of Valid Outputs (%)', fontsize=14, fontweight='bold')
+        plt.title('Percentage of Valid Outputs vs Temperature', fontweight='bold', fontsize=16, pad=20)
+        plt.grid(True, linestyle='--', alpha=0.7)
+        ax.set_facecolor('#f8f9fa')
+        ax.tick_params(axis='both', which='major', labelsize=12)
+
+        legend = plt.legend(
+            title="Models",
+            title_fontsize=12,
+            fontsize=11,
+            loc='center right',
+            #bbox_to_anchor=(0, 1),
+            bbox_to_anchor=(1, 0.7),
+            frameon=True,
+            fancybox=True,
+            shadow=True,
+            borderpad=1
+        )
+        legend.get_frame().set_facecolor('white')
+        legend.get_frame().set_alpha(0.9)
+
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#cccccc')
+            spine.set_linewidth(1.5)
+
+        plt.tight_layout()
+        plt.savefig('plot_valid_files_percentage.pdf', bbox_inches='tight', dpi=600)
+        plt.close()        
+                            
     def performance_score_all_metrics(self, csv):
         df = self.build_perf_score_seeds_args_funcs(csv)
 
@@ -763,8 +1143,8 @@ class DataCollect():
         print(result) 
         
     def performance_score_print_tables(self, csv):
-        #df = self.build_perf_score_seeds(csv)
-        df = self.build_perf_score_seeds_args_funcs(csv)        
+        df = self.build_perf_score_seeds(csv)
+        #df = self.build_perf_score_seeds_args_funcs(csv)        
         
         result = (
             df.groupby(['model', 'temperature'])
@@ -1068,8 +1448,7 @@ class DataCollect():
         plt.ylabel('Coverage Percentage')
         plt.tight_layout()            
         plt.savefig('violin_inst_cov.pdf', bbox_inches="tight")
-        
-        
+               
     def coverage(self, csv):
         b1_csv = self.load_coverage_data("B1-ins.csv")
         total_instructions = b1_csv['toalInstructions'].sum()

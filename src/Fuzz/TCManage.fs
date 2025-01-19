@@ -109,7 +109,7 @@ let private dumpBug opt seed bugSet =
   System.IO.File.WriteAllText(tcPath, tcStr)
   totalBug <- totalBug + 1
 
-let private dumpTestCase opt seed =
+let dumpTestCase opt seed =
   let tc = Seed.concretize seed
   let tcStr = TestCase.toJson tc
   let tcName = sprintf "id-%05d_%05d" totalTC (elapsedSec())

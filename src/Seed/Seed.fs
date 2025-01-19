@@ -12,13 +12,15 @@ type Seed = {
   Transactions : Transaction array
   /// The index of 'Inputs' to mutate for the next grey-box concolic testing.
   TXCursor : int
+  SeedOrigin : string
 }
 
 module Seed =
 
   let empty =
     { Transactions = [| |]
-      TXCursor = 0 }
+      TXCursor = 0
+      SeedOrigin = "" }
 
   /// Initialize a seed with specified function specs.
   let init cnstrFunc funcs =
@@ -26,7 +28,7 @@ module Seed =
     let normalTxs = Array.map Transaction.init funcs
     let txs = Array.append [| deployTx |] normalTxs
     let idx = try Array.findIndex (not << Transaction.isEmpty) txs with _ -> -1
-    { Transactions = txs; TXCursor = idx }
+    { Transactions = txs; TXCursor = idx; SeedOrigin = "" }
 
   let initFromTestCase cnstrFunc funcs tc =
     let deployTx = Transaction.initFromTXdData cnstrFunc tc.DeployTx |> Transaction.fixForConstructor
@@ -40,7 +42,7 @@ module Seed =
 
     let txs = Array.append [| deployTx |] normalTxs
     let idx = try Array.findIndex (not << Transaction.isEmpty) txs with _ -> -1
-    { Transactions = txs; TXCursor = idx }
+    { Transactions = txs; TXCursor = idx; SeedOrigin = "" }
 
 
   /// Postprocess to ensure that the seed has a valid for deploying transaction.

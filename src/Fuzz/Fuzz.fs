@@ -190,6 +190,10 @@ let run args =
   //for seed in initSeeds do  
   //  printfn "Seeds: %s" (Seed.toString seed)
 
+  if opt.DumpSeed then 
+    List.iter (fun seed -> TCManage.dumpTestCase opt seed) initSeeds
+    exit 0
+
   let concQ = List.fold ConcolicQueue.enqueue ConcolicQueue.empty initSeeds
   let randQ = List.fold RandFuzzQueue.enqueue (RandFuzzQueue.init ()) initSeeds
   log "Start main fuzzing phase"
