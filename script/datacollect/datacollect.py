@@ -27,6 +27,18 @@ class DataCollect():
     def __init__(self) -> None:
         print("")
 
+    @staticmethod
+    def format_model_name(name):
+        model_name_map = {
+            'llama3-70b': 'Llama3-70B',
+            'gpt4-0mini': 'GPT4-0mini',
+            'gpt4omini': 'GPT4-0mini',                
+            'llama3-8b': 'Llama3-8B',
+            'mixtral-8x7b': 'Mixtral-8x7B',
+            'gemini-1.5-flash': 'Gemini-1.5-Flash'
+        }
+        return model_name_map.get(name.lower(), name)
+
     def get_mean_valid_seeds_per_model(self, csv):
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
         df['valid_seeds'] = df['total_seeds'] - df['total_duplicate_seeds'] - df['total_seeds_with_invalid_struct']         
@@ -623,7 +635,130 @@ class DataCollect():
         
         print("\nLaTeX Table:")
         print('\n'.join(latex_table))
+
+    def seed_args_and_funcs(self, csv):
+        df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)                    
+        # Format model names
+        df['model'] = df['model'].apply(self.format_model_name)
+        
+        # Define the desired order of models
+        model_order = ["Llama3-70B", "Gemini-1.5-Flash", "Mixtral-8x7B", "GPT4-0mini", "Llama3-8B"]
+
+        # Group by model and temperature
+        grouped = df.groupby(['model', 'temperature']).agg({
+            'total_args_in_seeds': 'sum',
+            'total_invalid_args_in_seeds': 'sum',
+            'total_functions_in_seeds': 'sum',
+            'total_invalid_function_in_seeds': 'sum',
+            'file': 'count'  # Count number of runs
+        }).reset_index()
+
+        # Ensure the model column follows the desired order
+        grouped['model'] = pd.Categorical(grouped['model'], categories=model_order, ordered=True)
+        grouped = grouped.sort_values(['model', 'temperature'])
+
+        # Calculate error rates
+        grouped['args_error_rate'] = (
+            grouped['total_invalid_args_in_seeds'] / grouped['total_args_in_seeds'] * 100
+        )
+
+        grouped['functions_error_rate'] = (
+            grouped['total_invalid_function_in_seeds'] / grouped['total_functions_in_seeds'] * 100
+        )
+
+        grouped['combined_error_rate'] = (
+            (grouped['total_invalid_args_in_seeds'] / grouped['total_args_in_seeds'] +
+            grouped['total_invalid_function_in_seeds'] / grouped['total_functions_in_seeds']) / 2 * 100
+        )
+
+        grouped['invalid_args_per_run'] = grouped['total_invalid_args_in_seeds'] / grouped['file']
+        grouped['invalid_functions_per_run'] = grouped['total_invalid_function_in_seeds'] / grouped['file']
+
+
+        # Create visualizations for each metric
+        metrics_to_plot = [
+            ('args_error_rate', 'Arguments Error Rate (%)', 'Invalid Functions Arguments (%) By Temperature', 100),
+            ('functions_error_rate', 'Functions Error Rate (%)', 'Invalid Functions (%) By Temperature', 100),
+            ('combined_error_rate', 'Combined Error Rate (%)', 'Combined Error Rate By Temperature', 100),
+            ('invalid_args_per_run', 'Total Invalid Arguments', 'Total Invalid Arguments By Temperature', 0),
+            ('invalid_functions_per_run', 'Total Invalid Functions', 'Total Invalid Functions By Temperature', 0)
+        ]
+        
+        def plot_metric(data, metric, title, ylabel, ylim=0, figsize=(12, 8)):
+            plt.figure(figsize=figsize)
+            ax = plt.gca()
             
+            # Define distinct markers and colors to match the style
+            model_styles = {
+                "Llama3-70B": {"marker": "o", "color": "#1f77b4"},
+                "Gemini-1.5-Flash": {"marker": "^", "color": "#2ca02c"},
+                "Mixtral-8x7B": {"marker": "x", "color": "#9467bd"},
+                "GPT4-0mini": {"marker": "D", "color": "#d62728"},
+                "Llama3-8B": {"marker": "s", "color": "#ff7f0e"}
+            }
+
+            for model in model_styles:
+                model_data = data[data['model'] == model]
+                style = model_styles[model]
+                
+                # Main line with markers
+                plt.plot(model_data['temperature'], 
+                        model_data[metric], 
+                        marker=style["marker"],
+                        markersize=12,
+                        linewidth=3,
+                        color=style["color"],
+                        label=model,
+                        alpha=0.8)
+                
+                # Shadow effect
+                plt.plot(model_data['temperature'], 
+                        model_data[metric],
+                        color='gray',
+                        linewidth=4,
+                        alpha=0.2,
+                        zorder=-1)
+
+            # Styling
+            plt.xlabel('Temperature', fontsize=14, fontweight='bold')
+            plt.ylabel(ylabel, fontsize=14, fontweight='bold')
+            plt.title(title, fontweight='bold', fontsize=16, pad=20)
+
+            # Grid and background
+            plt.grid(True, linestyle='--', alpha=0.7)
+            ax.set_facecolor('#f8f9fa')
+            ax.tick_params(axis='both', which='major', labelsize=12)
+
+            # Enhanced legend
+            legend = plt.legend(
+                title="Models",
+                title_fontsize=12,
+                fontsize=11,
+                loc='best',
+                frameon=True,
+                fancybox=True,
+                shadow=True,
+                borderpad=1
+            )
+            legend.get_frame().set_facecolor('white')
+            legend.get_frame().set_alpha(0.9)
+
+            # Spines
+            for spine in ax.spines.values():
+                spine.set_edgecolor('#cccccc')
+                spine.set_linewidth(1.5)
+
+            if ylim > 0:
+                plt.ylim(0, ylim)
+
+            plt.tight_layout()
+            return plt
+        
+        for metric, ylabel, title, ylim in metrics_to_plot:
+            plot = plot_metric(grouped, metric, title, ylabel, ylim)
+            plot.savefig(f'{metric}.pdf', bbox_inches='tight', dpi=600)
+            plt.close()
+        
     def total_seed_and_files(self, csv):
         # Read and process data
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
@@ -866,19 +1001,8 @@ class DataCollect():
         grouped_df['valid_files_percentage'] = (grouped_df['valid_files_mean'] / grouped_df['total_files']) * 100
         grouped_df['valid_seeds'] = grouped_df['total_seeds'] - grouped_df['total_duplicate_seeds'] - grouped_df['total_seeds_with_invalid_struct']
 
-        # Format model names
-        def format_model_name(name):
-            model_name_map = {
-                'llama3-70b': 'Llama3-70B',
-                'gpt4-0mini': 'GPT4-0mini',
-                'gpt4omini': 'GPT4-0mini',                
-                'llama3-8b': 'Llama3-8B',
-                'mixtral-8x7b': 'Mixtral-8x7B',
-                'gemini-1.5-flash': 'Gemini-1.5-Flash'
-            }
-            return model_name_map.get(name.lower(), name)
 
-        grouped_df['model'] = grouped_df['model'].apply(format_model_name)
+        grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
         models = grouped_df['model'].unique()
         markers = ['o', 'D', 's', '^', 'v']  # More distinct markers
         color_palette = sns.color_palette("tab10", len(models))
