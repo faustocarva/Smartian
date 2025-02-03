@@ -289,7 +289,6 @@ class Genai4fuzz():
         else: 
             logger.error(f"Error generating seed !")
     
-    
     def convert_to_smartian(self, contract_dir: str, output_dir: str, model="", date="", with_args=True):
         """
         Convert contract test cases to Smartian format.
@@ -362,57 +361,6 @@ class Genai4fuzz():
                 logger.error(f"Failed to process file {file_path}: {str(e)}")
                 continue    
     
-    # def convert_to_smartian(self, contract_dir: str, output_dir: str, model="", date= "", with_args=True):
-    #     if not os.path.isdir(contract_dir):
-    #         return
-    #     if (model is None):
-    #         model = ""
-    #     if (output_dir is None):
-    #         output_dir = contract_dir
-    #     if (date is None):
-    #         date = ""
-                                    
-    #     _, contract_abi, base_contract_name,_ = self._read_contract_files(contract_dir)
-        
-    #     seed_dir = self._extract_deepest_name(contract_dir) or contract_dir
-
-    #     file_list = [file for file in glob.glob(os.path.join(contract_dir, '')+f"*{model}*_testcase_{date}*")]
-    #     if len(file_list) > 0:
-    #         if not os.path.exists(output_dir):
-    #             os.makedirs(output_dir)
-                        
-    #     file_index = 0
-
-    #     if os.path.exists(os.path.join(output_dir, seed_dir)):
-    #         shutil.rmtree(os.path.join(output_dir, seed_dir), ignore_errors=True)
-    #     os.makedirs(os.path.join(output_dir, seed_dir))
-        
-    #     for file_path in file_list:
-    #         try:
-
-    #             with open(file_path, 'r') as file:
-    #                 content = file.read()
-    #                 if not is_valid_json(content):
-    #                     content = json_from_text(content)
-    #                     if not is_valid_json(content):
-    #                         raise ValueError("TestCase cant be loaded as JSON")
-    #                 testcases_json = json.loads(content)
-    #                 testcases = TestCase.try_to_adapt_json_testcase(testcases_json)
-    #                 testcase_index = 0
-    #                 for testecase_element in testcases:
-    #                     tc = TestCase(testecase_element)
-    #                     if not tc.is_valid_testcase_struct():
-    #                         raise ValueError("TestCase struct does not respect JSON format")
-    #                     tc_json = tc.process_testcase(contract_abi, with_args)
-    #                     testcase_file_name = f"id-{file_index:05}_{testcase_index:05}"
-    #                     with open(os.path.join(output_dir, seed_dir, testcase_file_name), "w") as f:
-    #                         f.write(json.dumps(tc_json, indent=4))
-    #                     testcase_index += 1
-    #             file_index += 1                        
-    #         except Exception as e:
-    #             logger.error(f"Exeption {e}, file {file_path}")
-    #             continue
-
     def seed_uniqueness_ratio(self, root_contract_dir: str, model="", date= ""):
         if not os.path.isdir(root_contract_dir):
             return
@@ -544,9 +492,11 @@ class Genai4fuzz():
                         for testecase_element in testcases:
                             tc = TestCase(testecase_element)
                             if not tc.is_valid_testcase_struct():
+                                logger.info(f"Ivalide struct  {file_path}")                                
                                 continue
                             obj_hash = tc.get_testcase_hash(["Blocknum", "Timestamp"])
                             if not keep_duplicates and obj_hash in uniqueseeds_set:
+                                logger.info(f"Duplicate seed {file_path}")                                
                                 continue
                             else:
                                 uniqueseeds_set.add(obj_hash)

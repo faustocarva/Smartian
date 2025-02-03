@@ -11,7 +11,39 @@ from genai4fuzz.config import Config
 class SastService(metaclass=SingletonMeta):
     def __init__(self) -> None:
         self._config = Config()
-
+        
+        
+    def get_function_signatures_mod(self, contract_file, target_functions):
+        try:
+            slither = Slither(contract_file)
+            sigs = {}
+            
+            for contract in slither.contracts_derived:
+                for function in contract.functions:
+                    param_types = [param.type.__str__() for param in function.parameters]
+                    returns = [ret.type.__str__() for ret in function.return_values]
+                    signature = f"{function.name}({','.join(param_types)})"
+                    
+                    if function.visibility == 'public' and signature in target_functions:
+                        sigs[signature] = {
+                            'modifiers': [m.name for m in function.modifiers],
+                            'returns': returns
+                        }
+                        
+            result = []
+            for func in target_functions:
+                if func in sigs:
+                    mods = ' '.join(sigs[func]['modifiers'])
+                    returns_str = f" returns ({','.join(sigs[func]['returns'])})" if sigs[func]['returns'] else ""
+                    result.append(f"{func}{' ' + mods if mods else ''}{returns_str}")
+                else:
+                    result.append(func)
+            
+            return result
+        except Exception as e:
+            logger.error(f"Slither Exception in file {contract_file}")
+            return None
+    
     def get_function_modifiers(self, contract_file, target_functions):
         try:
             slither = Slither(contract_file)

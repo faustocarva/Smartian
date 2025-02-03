@@ -109,7 +109,7 @@ class DataCollect():
         executions_df = pd.read_csv(csv, header=None, names=self.COVERAGE_HEADER)    
         totals_df = pd.read_csv("B1-ins.csv")        
         
-        executions_df = self.fill_missing_experiments(executions_df)        
+        executions_df = self.fill_missing_experiments(executions_df)
 
         total_valid_seeds = executions_df.groupby(['model', 'temperature', 'contract']).size().reset_index(name='row_count')
         total_valid_seeds = total_valid_seeds.groupby(['model', 'temperature']).size().reset_index(name='seed_count').sort_values(by=['seed_count'], ascending=False)
@@ -1066,6 +1066,215 @@ class DataCollect():
         plt.savefig('plot_valid_seeds.pdf', bbox_inches='tight', dpi=600)
         plt.close()
 
+        ######################################
+        df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
+                
+        # Calculate means grouped by model and temperature
+        grouped_df = df.groupby(['model', 'temperature']).agg({
+            'total_files': 'mean',
+            'total_files_with_invalid_json': 'mean',
+            'total_seeds': 'mean',
+            'total_duplicate_seeds': 'mean',
+            'total_seeds_with_invalid_struct': 'mean'
+        }).reset_index()
+
+        # Calculate metrics
+        grouped_df['valid_files_mean'] = grouped_df['total_files'] - grouped_df['total_files_with_invalid_json']
+        grouped_df['valid_files_percentage'] = (grouped_df['valid_files_mean'] / grouped_df['total_files']) * 100
+        grouped_df['valid_seeds'] = grouped_df['total_seeds'] - grouped_df['total_duplicate_seeds'] - grouped_df['total_seeds_with_invalid_struct']
+
+        grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
+        models = grouped_df['model'].unique()
+        markers = ['o', 's', '^', 'D', 'v']  # Distinct markers for models
+        colors = sns.color_palette("deep", len(models))  # Deep color palette for better contrast
+
+        # Plot setup
+        plt.figure(figsize=(12, 8))
+        ax = plt.gca()
+
+        # Plot for each model
+        for model, marker, color in zip(models, markers, colors):
+            model_data = grouped_df[grouped_df['model'] == model]
+            temps = model_data['temperature']
+            
+            # Solid line for valid seeds
+            plt.plot(temps, model_data['valid_seeds'], 
+                    color=color, 
+                    linestyle='-',
+                    linewidth=3,
+                    marker=marker,
+                    markersize=10,
+                    label=f'{model}',
+                    zorder=3)
+                    
+            # Dotted line for total seeds
+            plt.plot(temps, model_data['total_seeds'],
+                    color=color,
+                    linestyle=':',
+                    linewidth=2,
+                    alpha=0.7,
+                    marker=marker,
+                    markersize=8,
+                    zorder=2)
+                    
+            # Fill between total and valid to show invalid
+            plt.fill_between(temps, 
+                            model_data['total_seeds'],
+                            model_data['valid_seeds'],
+                            color=color,
+                            alpha=0.1,
+                            zorder=1)
+                            
+            # Add percentage text for valid seeds
+            for x, y, total, valid in zip(temps, model_data['valid_seeds'], 
+                                        model_data['total_seeds'], model_data['valid_seeds']):
+                percentage = (valid / total * 100) if total > 0 else 0
+                plt.text(x, y - (total * 0.05),  # Position below the point
+                        f'{percentage:.1f}%',
+                        ha='center',
+                        va='top',
+                        fontsize=8,
+                        color=color,
+                        alpha=0.8)
+
+        # Styling
+        plt.xlabel('Temperature', fontsize=14, fontweight='bold')
+        plt.ylabel('Number of Seeds', fontsize=14, fontweight='bold')
+        plt.title('Seed Generation Quality by Model', fontweight='bold', fontsize=16, pad=20)
+
+        # Grid and background
+        plt.grid(True, linestyle='--', alpha=0.3)
+        ax.set_facecolor('#f8f9fa')
+        ax.tick_params(axis='both', which='major', labelsize=12)
+
+        # Legend inside the plot
+        legend = plt.legend(
+            title="Models",
+            title_fontsize=12,
+            fontsize=11,
+            loc='center right',
+            bbox_to_anchor=(1, 0.6),                        
+            frameon=True,
+            fancybox=True,
+            shadow=True,
+            borderpad=1
+        )
+        legend.get_frame().set_facecolor('white')
+        legend.get_frame().set_alpha(0.9)
+
+        # Spines
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#cccccc')
+            spine.set_linewidth(1.5)
+
+        plt.tight_layout()
+        plt.savefig('plot_seed_metrics.pdf', bbox_inches='tight', dpi=600)
+        plt.close()
+
+        ######################################
+        df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
+                
+        # Calculate means grouped by model and temperature
+        grouped_df = df.groupby(['model', 'temperature']).agg({
+            'total_files': 'mean',
+            'total_files_with_invalid_json': 'mean',
+            'total_seeds': 'mean',
+            'total_duplicate_seeds': 'mean',
+            'total_seeds_with_invalid_struct': 'mean'
+        }).reset_index()
+
+        # Calculate metrics
+        grouped_df['valid_files_mean'] = grouped_df['total_files'] - grouped_df['total_files_with_invalid_json']
+        grouped_df['valid_files_percentage'] = (grouped_df['valid_files_mean'] / grouped_df['total_files']) * 100
+        grouped_df['valid_seeds'] = grouped_df['total_seeds'] - grouped_df['total_duplicate_seeds'] - grouped_df['total_seeds_with_invalid_struct']
+
+        grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
+        models = grouped_df['model'].unique()
+        markers = ['o', 's', '^', 'D', 'v']  # Distinct markers for models
+        colors = sns.color_palette("deep", len(models))  # Deep color palette for better contrast
+
+        # Create side-by-side plots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+        
+        # Plot 1: Duplicate Seeds
+        for model, marker, color in zip(models, markers, colors):
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            ax1.plot(model_data['temperature'], 
+                    model_data['total_duplicate_seeds'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            ax1.plot(model_data['temperature'], 
+                    model_data['total_duplicate_seeds'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        ax1.set_xlabel('Temperature', fontsize=14, fontweight='bold')
+        ax1.set_ylabel('Number of Duplicate Seeds', fontsize=14, fontweight='bold')
+        ax1.set_title('Duplicate Seeds Generated vs Temperature', fontweight='bold', fontsize=16, pad=20)
+        ax1.grid(True, linestyle='--', alpha=0.7)
+        ax1.set_facecolor('#f8f9fa')
+        ax1.tick_params(axis='both', which='major', labelsize=12)
+
+        # Plot 2: Invalid Structure Seeds
+        for model, marker, color in zip(models, markers, colors):
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            ax2.plot(model_data['temperature'], 
+                    model_data['total_seeds_with_invalid_struct'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            ax2.plot(model_data['temperature'], 
+                    model_data['total_seeds_with_invalid_struct'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        ax2.set_xlabel('Temperature', fontsize=14, fontweight='bold')
+        ax2.set_ylabel('Number of Invalid Structure Seeds', fontsize=14, fontweight='bold')
+        ax2.set_title('Seeds with Invalid Structure vs Temperature', fontweight='bold', fontsize=16, pad=20)
+        ax2.grid(True, linestyle='--', alpha=0.7)
+        ax2.set_facecolor('#f8f9fa')
+        ax2.tick_params(axis='both', which='major', labelsize=12)
+
+        # Add separate legends for each plot
+        for ax in [ax1, ax2]:
+            legend = ax.legend(
+                title="Models",
+                title_fontsize=12,
+                fontsize=11,
+                loc='best',
+                frameon=True,
+                fancybox=True,
+                shadow=True,
+                borderpad=1
+            )
+            legend.get_frame().set_facecolor('white')
+            legend.get_frame().set_alpha(0.9)
+
+        # Style spines for both plots
+        for ax in [ax1, ax2]:
+            for spine in ax.spines.values():
+                spine.set_edgecolor('#cccccc')
+                spine.set_linewidth(1.5)
+
+        plt.tight_layout()
+        plt.savefig('combined_plots.pdf', bbox_inches='tight', dpi=600)
+        plt.close()
+        ######################################
         # Plot for duplicate seeds
         plt.figure(figsize=(12, 8))
         ax = plt.gca()
@@ -1116,6 +1325,7 @@ class DataCollect():
         plt.tight_layout()
         plt.savefig('plot_duplicate_seeds.pdf', bbox_inches='tight', dpi=600)
         plt.close()
+        ######################################
 
         # Plot for invalid structure seeds
         plt.figure(figsize=(12, 8))
@@ -1167,6 +1377,7 @@ class DataCollect():
         plt.tight_layout()
         plt.savefig('plot_invalid_structure_seeds.pdf', bbox_inches='tight', dpi=600)
         plt.close()
+        ######################################
 
         # Plot for valid files percentage
         plt.figure(figsize=(12, 8))

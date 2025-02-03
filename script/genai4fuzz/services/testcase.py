@@ -42,7 +42,7 @@ class TestCase(object):
         ]
 
     @staticmethod
-    def try_to_adapt_json_testcase(json: list):
+    def try_to_adapt_json_testcase(json: Any):
         if isinstance(json, dict):
             return json.get('TestCases') or json.get('TestCase', {})
         return json or {}
@@ -85,6 +85,16 @@ class TestCase(object):
         return bytes(value, 'utf-8')
                                                     
     def _encode_args(self, function_selector, tx):
+        """
+        Encode function arguments for contract interaction.
+        
+        Args:
+            function_selector: The function selector string
+            tx: List of arguments to encode
+            
+        Returns:
+            Encoded arguments as hex string or None if encoding fails
+        """        
         try:
             intTypes = [ "uint8", "uint16", "uint32", "uint64", "uint128", "uint256", "int8", "int16", "int32", "int64", "int128", "int256"]
             intArraysTypes = [ "uint8[]", "uint16[]", "uint32[]", "uint64[]", "uint128[]", "uint256[]", "int8[]", "int16[]", "int32[]", "int64[]", "int128[]", "int256[]"]
@@ -111,15 +121,19 @@ class TestCase(object):
                     else:
                         _args.append(str(args[i]))
                 elif type == 'bool':
-                    _args.append(str(args[i]).lower() in ['true', 'false'])
+                    value = str(args[i]).lower()
+                    if value not in ['true', 'false']:
+                        raise ValueError(f"Invalid boolean value: {args[i]}")
+                    _args.append(value == 'true')
                 elif type == 'bytes32[]':
                     if isinstance(args[i], list):
-                        bytelist = []                        
+                        bytelist = []
                         for b in args[i]:
-                            bytelist(self._convert_bytes(b))
+                            converted_bytes = self._convert_bytes(b)
+                            bytelist.append(converted_bytes)
                         _args.append(bytelist)
                     else:
-                        raise ValueError("Not a list of bytes")
+                        raise ValueError("Not a list of bytes")                    
                 elif type == 'bytes32' or type == 'bytes':
                     if isinstance(args[i], list):
                         if len(args[i]) > 1:
@@ -234,7 +248,7 @@ class TestCase(object):
             TestCaseModel(**testcase_data)
             return True
         except ValidationError as e:
-            #print(f"Validation error: {e}")
+            print(f"Validation error: {e}")
             return False
                         
     def process_testcase(self, contract_abi, with_args):
