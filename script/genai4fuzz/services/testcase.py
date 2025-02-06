@@ -165,11 +165,31 @@ class TestCase(object):
             self._total_invalid_args += 1
             return None
 
-    def get_testcase_hash(self, fields_to_discard = []):
-        obj_str = json.dumps(self.testcase, sort_keys=True)
+    def get_testcase_hash(self, fields_to_discard=None):
+        """
+        Generate a SHA-256 hash of the testcase after discarding specified fields.
+        
+        Args:
+            fields_to_discard (set, optional): Fields to exclude from hash computation
+        
+        Returns:
+            str: Hexadecimal representation of SHA-256 hash
+        """
+        fields_to_discard = fields_to_discard or set()
         filtered_data = discard_fields(self.testcase, fields_to_discard)
-        obj_str = json.dumps(filtered_data, sort_keys=True)
-        return hashlib.sha256(obj_str.encode('utf-8')).hexdigest()
+        
+        # Use ensure_ascii=False to handle Unicode efficiently
+        return hashlib.sha256(
+            json.dumps(filtered_data, 
+                    sort_keys=True, 
+                    ensure_ascii=False).encode('utf-8')
+        ).hexdigest()
+    
+    # def get_testcase_hash(self, fields_to_discard = []):
+    #     obj_str = json.dumps(self.testcase, sort_keys=True)
+    #     filtered_data = discard_fields(self.testcase, fields_to_discard)
+    #     obj_str = json.dumps(filtered_data, sort_keys=True)
+    #     return hashlib.sha256(obj_str.encode('utf-8')).hexdigest()
 
     def _inject_agents(self, json):
         json["Entities"] = self.ENTITIES
@@ -248,7 +268,7 @@ class TestCase(object):
             TestCaseModel(**testcase_data)
             return True
         except ValidationError as e:
-            print(f"Validation error: {e}")
+            #print(f"Validation error: {e}")
             return False
                         
     def process_testcase(self, contract_abi, with_args):

@@ -360,48 +360,8 @@ class Genai4fuzz():
             except Exception as e:
                 logger.error(f"Failed to process file {file_path}: {str(e)}")
                 continue    
-    
-    def seed_uniqueness_ratio(self, root_contract_dir: str, model="", date= ""):
-        if not os.path.isdir(root_contract_dir):
-            return
-        total_seeds = 0
-        total_duplicate_seeds = 0
-        
-        for contract_dir in os.listdir(root_contract_dir):            
-            full_path = os.path.join(root_contract_dir, contract_dir)
-            file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]
-
-            for file_path in file_list:
-                hash_set = set()
-                #print(file_path)
-                try:
-                    with open(file_path, 'r') as file:
-                        content = file.read()
-                        if not is_valid_json(content):
-                            content = json_from_text(content)
-                            if not is_valid_json(content):
-                                continue
-                        testcases_json = json.loads(content)
-                        testcases = TestCase.try_to_adapt_json_testcase(testcases_json)
-                        for testecase_element in testcases:
-                            tc = TestCase(testecase_element)
-                            obj_hash = tc.get_testcase_hash(["Blocknum", "Timestamp"])
-                            #print(obj_hash)
-                            if obj_hash in hash_set:
-                                #print(f"Duplicate found")
-                                total_duplicate_seeds += 1
-                            else:
-                                hash_set.add(obj_hash)
-                            total_seeds += 1
-                except Exception as e:
-                    logger.error(f"Exception somewhere {e} {file_path}")
-                    continue
-
-        seed_dir = self._extract_deepest_name(root_contract_dir) or root_contract_dir
-        temperature = re.search(r'(\d+\.\d+)', seed_dir).group(1)
-        print(f"{model},{temperature},{seed_dir},{total_seeds},{total_duplicate_seeds}")
-            
-    def seed_metrics(self, root_contract_dir: str, model="", date= ""):
+                
+    def seed_metrics(self, root_contract_dir: str, model="", date= "", simple_duplicate = True):
         if not os.path.isdir(root_contract_dir):
             return
     
@@ -436,13 +396,19 @@ class Genai4fuzz():
                                 continue
                         testcases_json = json.loads(content)
                         testcases = TestCase.try_to_adapt_json_testcase(testcases_json)
-                        for testecase_element in testcases:
+                        for testcase_element in testcases:
                             total_seeds += 1                            
-                            tc = TestCase(testecase_element)                            
+                            tc = TestCase(testcase_element)                            
+                            
                             if not tc.is_valid_testcase_struct():
                                 total_seeds_with_invalid_struct += 1
                                 continue
-                            obj_hash = tc.get_testcase_hash(["Blocknum", "Timestamp"])
+                             
+                            if simple_duplicate: 
+                                obj_hash = tc.get_testcase_hash(["Blocknum", "Timestamp"])
+                            else:
+                                obj_hash = tc.get_testcase_hash()
+                                
                             if obj_hash in uniqueseeds_set:
                                 total_duplicate_seeds += 1
                             else:
@@ -455,14 +421,14 @@ class Genai4fuzz():
                             total_functions_in_seeds += totals[1][0]
                             total_invalid_function_in_seeds += totals[1][1]
                 except Exception as e:
-                    logger.error(f"Exception somewhere {e} {file_path}")
+                    logger.error(f"Exception {e} {file_path}")
                     continue
 
         seed_dir = self._extract_deepest_name(root_contract_dir) or root_contract_dir
         temperature = re.search(r'_([^_]*\d+\.\d+)_', seed_dir).group(1)
         print(f"{model},{temperature},{seed_dir},{total_files},{total_files_with_invalid_json},{total_seeds},{total_duplicate_seeds},{total_seeds_with_invalid_struct},{total_args_in_seeds},{total_invalid_args_in_seeds},{total_functions_in_seeds},{total_invalid_function_in_seeds}")
         
-    def seed_coverage_ratio(self, root_contract_dir: str, model="", date= "", keep_duplicates=False):
+    def seed_coverage_ratio(self, root_contract_dir: str, model="", date= "", remove_simple_duplicates=False, remove_full_duplicates=False):
         if not os.path.isdir(root_contract_dir):
             return
     
@@ -494,13 +460,19 @@ class Genai4fuzz():
                             if not tc.is_valid_testcase_struct():
                                 logger.info(f"Ivalide struct  {file_path}")                                
                                 continue
-                            obj_hash = tc.get_testcase_hash(["Blocknum", "Timestamp"])
-                            if not keep_duplicates and obj_hash in uniqueseeds_set:
-                                logger.info(f"Duplicate seed {file_path}")                                
-                                continue
-                            else:
-                                uniqueseeds_set.add(obj_hash)
                             
+                            if remove_simple_duplicates or remove_full_duplicates:
+                                if remove_simple_duplicates: 
+                                    obj_hash = tc.get_testcase_hash(["Blocknum", "Timestamp"])
+                                elif remove_full_duplicates:
+                                    obj_hash = tc.get_testcase_hash()
+
+                                if obj_hash in uniqueseeds_set:
+                                    logger.info(f"Duplicate seed {file_path}")
+                                    continue
+                                else:
+                                    uniqueseeds_set.add(obj_hash)
+                                                                
                             testdata = json.dumps(tc.process_testcase(contract_abi, True))
                             tmp_test_file = tempfile.NamedTemporaryFile(delete=True, mode='w')
                             tmp_test_file.write(testdata)

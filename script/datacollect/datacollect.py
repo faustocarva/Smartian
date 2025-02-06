@@ -31,8 +31,8 @@ class DataCollect():
     def format_model_name(name):
         model_name_map = {
             'llama3-70b': 'Llama3-70B',
-            'gpt4-0mini': 'GPT4-0mini',
-            'gpt4omini': 'GPT4-0mini',                
+            'gpt4-0mini': 'GPT-4o-Mini',
+            'gpt4omini': 'GPT-4o-Mini',         
             'llama3-8b': 'Llama3-8B',
             'mixtral-8x7b': 'Mixtral-8x7B',
             'gemini-1.5-flash': 'Gemini-1.5-Flash'
@@ -43,6 +43,8 @@ class DataCollect():
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
         df['valid_seeds'] = df['total_seeds'] - df['total_duplicate_seeds'] - df['total_seeds_with_invalid_struct']         
         df['valid_seeds'] = df['valid_seeds'].replace(0, pd.NA)
+        df['model'] = df['model'].apply(self.format_model_name)
+        
         
         return (
             df.groupby(['model', 'temperature'])
@@ -67,6 +69,7 @@ class DataCollect():
         df = df[df['transaction_index'].between(1, 10)]
         
         # Get unique values for each dimension
+
         models = df['model'].unique()
         temperatures = df['temperature'].unique()
         contracts = df['contract'].unique()
@@ -127,8 +130,12 @@ class DataCollect():
             'coveredEdges': 'mean',
             'bugsFound': 'mean',
             'coveredDefUseChains': 'mean',
-            'deployFailCount': ['mean', 'sum']
+            #'deployFailCount': ['mean', 'sum']
         }).reset_index()
+        
+        print(grouped_metrics.columns.to_list())  # Shows the index (can be Index or MultiIndex)
+        print(totals.columns.to_list())
+        
         
         grouped_metrics = grouped_metrics.merge(totals, on=['contract', 'model', 'temperature'])
                 
@@ -642,7 +649,7 @@ class DataCollect():
         df['model'] = df['model'].apply(self.format_model_name)
         
         # Define the desired order of models
-        model_order = ["Llama3-70B", "Gemini-1.5-Flash", "Mixtral-8x7B", "GPT4-0mini", "Llama3-8B"]
+        model_order = ["Llama3-70B", "Gemini-1.5-Flash", "Mixtral-8x7B", "GPT-4o-Mini", "Llama3-8B"]
 
         # Group by model and temperature
         grouped = df.groupby(['model', 'temperature']).agg({
@@ -693,7 +700,7 @@ class DataCollect():
                 "Llama3-70B": {"marker": "o", "color": "#1f77b4"},
                 "Gemini-1.5-Flash": {"marker": "^", "color": "#2ca02c"},
                 "Mixtral-8x7B": {"marker": "x", "color": "#9467bd"},
-                "GPT4-0mini": {"marker": "D", "color": "#d62728"},
+                "GPT-4o-Mini": {"marker": "D", "color": "#d62728"},
                 "Llama3-8B": {"marker": "s", "color": "#ff7f0e"}
             }
 
@@ -1617,7 +1624,10 @@ class DataCollect():
     def coverage_means(self, coverage, metrics):
 
         df, total_valid_seeds = self.build_coverage_data(coverage)
-
+        total_valid_seeds['model'] = total_valid_seeds['model'].apply(self.format_model_name)
+        df['model'] = df['model'].apply(self.format_model_name)   
+             
+        
         df['instruction_coverage'] = (
             df['coveredInstructions'].div(df['totalInstructions'])
             .mul(100)
@@ -1723,7 +1733,7 @@ class DataCollect():
         )
         pivot_data = pivot_data.reindex(model_order)
         
-        sns.heatmap(pivot_data, annot=True, fmt='.1f', cmap='YlOrRd', ax=ax2, vmax=100)
+        sns.heatmap(pivot_data, annot=True, fmt='.1f', cmap='Purples', ax=ax2, vmax=100)
         plt.title('Edge Coverage Heatmap (Model vs Temperature)')
         plt.xlabel('Temperature')
         plt.ylabel('Model')
