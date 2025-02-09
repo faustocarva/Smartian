@@ -55,18 +55,22 @@ jobs:
       run: |
         cd script
         python -m pip install --upgrade pip setuptools wheel
+        poetry run pip install setuptools==67.8.0
         poetry install
         
     - name: Verify environment
       run: |
         cd script
+        poetry run pip install setuptools==67.8.0  # Install setuptools inside the poetry env
         poetry run python -c "
         import sys
+        import setuptools
         import pkg_resources
         import slither
         import eth_abi
         import web3
         print(f'Python version: {sys.version}')
+        print(f'Setuptools version: {setuptools.__version__}')
         print(f'Slither version: {pkg_resources.get_distribution(\"slither-analyzer\").version}')
         print('Successfully imported required packages')
         "
