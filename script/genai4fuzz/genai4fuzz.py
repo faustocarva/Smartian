@@ -20,15 +20,22 @@ class Genai4fuzz():
         self._chat_service = ChatService()
         self._sast_service = SastService()
             
-    def _read_contract_files(self, contact_dir):
-        base_contract_name = (os.path.basename(contact_dir.rstrip("/")))
-        contract_abi_file_name = os.path.join(contact_dir, base_contract_name)  + '.abi'
-        contract_bin_file_name = os.path.join(contact_dir, base_contract_name)  + '.bin'
-        contract_sol_file_name = os.path.join(contact_dir, base_contract_name)  + '.sol'
+    def _read_contract_files(self, contract_dir):
+        if not os.path.isdir(contract_dir):
+            raise ValueError(f"Contract directory not found: {contract_dir}")
+            
+        base_name = os.path.basename(contract_dir.rstrip("/"))
         
-        contract_abi_file = open(contract_abi_file_name, "r")
-        contract_abi = contract_abi_file.read()
-        return contract_bin_file_name, contract_abi, base_contract_name, contract_sol_file_name
+        # Build file paths
+        abi_file = os.path.join(contract_dir, f"{base_name}.abi")
+        bin_file = os.path.join(contract_dir, f"{base_name}.bin") 
+        sol_file = os.path.join(contract_dir, f"{base_name}.sol")
+        
+        # Read ABI file
+        with open(abi_file, "r") as f:
+            abi_content = f.read()
+            
+        return bin_file, abi_content, base_name, sol_file      
         
     def _extract_deepest_name(self, path):
         deepest_name = os.path.basename(path)
@@ -36,15 +43,7 @@ class Genai4fuzz():
             return os.path.basename(os.path.dirname(path))
     
         return deepest_name
-    
-    def run_smartian(self, program: str, testcase: str):
-        fsharp_executable = '../build/Smartian.dll'
-        parameters = [f'replay --csvout  -p {program} -i {testcase}']
-        cmd = " ".join(['dotnet', fsharp_executable] + parameters)
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-
-        return result.stdout
-    
+        
     def _create_prompt_V2(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
         
         functions_descs = self._sast_service.get_functions_from_ABI(contract_abi)
@@ -133,7 +132,7 @@ class Genai4fuzz():
         
         return prompt
     
-    def _create_prompt_V1_until_10122024(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
+    def _create_prompt_V3_fix_funcAsVars_and_removeExample(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
         
         functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
 
@@ -211,6 +210,86 @@ class Genai4fuzz():
         ]
         
         return prompt
+        
+    def _create_prompt_V1_until_10122024(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
+        
+        #functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
+        functions_descs = self._sast_service.get_functions_from_ABI(contract_abi)        
+
+        functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
+        if functions_with_modifiers is not None:
+            functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
+        else:
+            functions_descs_str = '\n'.join([function for function in functions_descs])
+        
+        prompt =  [
+            {
+                'role': 'system',
+                'content':  """
+                    You are an expert assistant specializing in Solidity fuzzing with a deep understanding of SWC and DASP vulnerabilities. 
+                    Your objective is to generate a diverse set of transactions and inputs targeting the main EVM/Solidity vulnerabilities.
+                    Respond strictly in JSON format, following the provided instructions without any additional text.
+                """
+            },
+            {
+                'role': 'user',            
+                'content': '\n### You have four sender contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. Use their names in the parameters that need an address and in From fields as needed.'
+            },
+            {
+                'role': 'user',
+                'content':'\n### You have the following Solidity Contract Functions for Test Case Generation: \n' + functions_descs_str
+            },            
+            {
+                'role': 'user',
+                'content': """
+                    ### JSON Grammar for EVM Test Case
+
+                    #### Root
+                    - An array of `TestCase` objects.
+
+                    #### TestCase
+                    - **DeployTx**: An object representing the deployment transaction, using the constructor function.
+                    - **Txs**: An array of transaction (`Tx`) objects.
+
+                    #### DeployTx
+                    - **From**: A string representing the deployer's name or address.
+                    - **Value**: A string representing the amount of Ether sent with the transaction.
+                    - **Function**: A string representing the constructor function name being called.                    
+                    - **Params** (optional): An array representing the parameters passed to the constructor, if it exists.                    
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+
+                    #### Tx (Transaction)
+                    - **From**: A string representing the sender's name.
+                    - **Value**: A string representing the amount of Ether sent with the transaction, if function is payable.
+                    - **Function**: A string representing the function name being called.
+                    - **Params** (optional): An array representing the parameters passed to the function.
+                    - Parameters can be nested arrays.
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+                """
+            },
+            {
+                'role': 'user',
+                'content': '\n### Example \n' + testcase[0]
+            },
+            {
+                'role': 'user',
+                'content': f'''
+                    ### Notes
+                    - Each `TestCase` contains a `DeployTx` object and an array of `Tx` objects.
+                    - Each transaction (`Tx`) includes details such as sender (`From`), value (`Value`), function name (`Function`), optional parameters (`Params`), timestamp (`Timestamp`), and block number (`Blocknum`).
+                    - Parameters (`Params`) can be nested arrays to accommodate functions requiring multiple lists of parameters.
+                
+                    ### Objective
+                    Create {total_tests} new test case objects, each containing more than {total_txs} transactions that might uncover bugs in the contract. 
+                    Ensure the transactions use raw values and respect the data types in the function signatures and consider functions modifiers in your transactions.
+                    Provide the response as RFC8259 compliant JSON without explanations.
+                '''
+            }
+        ]
+        
+        return prompt
 
     def estimate_prompt(self, contact_dir: str, model: str):
         if not os.path.exists(contact_dir):
@@ -221,7 +300,15 @@ class Genai4fuzz():
         
         messages = self._create_prompt_V1_until_10122024(contract_abi, contract_sol, [testcase])
         print (f"Total tokens from prompt: {self._chat_service.count_tokens(messages, model)}")
- 
+  
+    def run_smartian(self, program: str, testcase: str):
+        fsharp_executable = '../build/Smartian.dll'
+        parameters = [f'replay --csvout  -p {program} -i {testcase}']
+        cmd = " ".join(['dotnet', fsharp_executable] + parameters)
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+        return result.stdout
+
     def count_total_ins(self, contact_dir: str):
         contract_bin_file_name, _, base_contract_name, _ = self._read_contract_files(contact_dir)
         bytecode = open(contract_bin_file_name, "r").read()
@@ -360,12 +447,12 @@ class Genai4fuzz():
 
             except Exception as e:
                 logger.error(f"Failed to process file {file_path}: {str(e)}")
-                continue    
+                continue
                 
     def seed_metrics(self, root_contract_dir: str, model="", date= "", simple_duplicate = True):
         if not os.path.isdir(root_contract_dir):
             return
-    
+
         total_seeds = 0
         total_files_with_invalid_json = 0
         total_files = 0
@@ -378,9 +465,9 @@ class Genai4fuzz():
 
         for contract_dir in os.listdir(root_contract_dir):
             full_path = os.path.join(root_contract_dir, contract_dir)
-                                    
+
             _, contract_abi, _,_ = self._read_contract_files(full_path)
-        
+
             file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]
             for file_path in file_list:
                 logger.info(f"Processing file {file_path}")
@@ -392,14 +479,14 @@ class Genai4fuzz():
                         if not is_valid_json(content):
                             content = json_from_text(content)
                             if not is_valid_json(content):
-                                logger.error(f"Invalid JSON file {file_path}")                            
+                                logger.error(f"Invalid JSON file {file_path}")
                                 total_files_with_invalid_json += 1
                                 continue
                         testcases_json = json.loads(content)
                         testcases = TestCase.try_to_adapt_json_testcase(testcases_json)
                         for testcase_element in testcases:
-                            total_seeds += 1                            
-                            tc = TestCase(testcase_element)                            
+                            total_seeds += 1
+                            tc = TestCase(testcase_element)
                             
                             if not tc.is_valid_testcase_struct():
                                 total_seeds_with_invalid_struct += 1
@@ -418,7 +505,7 @@ class Genai4fuzz():
                             tc.process_testcase(contract_abi, True)
                             totals = tc.get_validation_totals()
                             total_args_in_seeds += totals[0][0]
-                            total_invalid_args_in_seeds += totals[0][1]                            
+                            total_invalid_args_in_seeds += totals[0][1]
                             total_functions_in_seeds += totals[1][0]
                             total_invalid_function_in_seeds += totals[1][1]
                 except Exception as e:
@@ -441,11 +528,11 @@ class Genai4fuzz():
                                     
             contract_bin, contract_abi, _,_ = self._read_contract_files(full_path)
         
-            file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]        
+            file_list = [file for file in glob.glob(os.path.join(full_path, '')+f"*{model}*_testcase_{date}*")]
 
             for file_path in file_list:
                 logger.info(f"Processing file {file_path}")
-                uniqueseeds_set = set()                
+                uniqueseeds_set = set()
                 try:
                     with open(file_path, 'r') as file:
                         total_seeds += 1
@@ -459,7 +546,7 @@ class Genai4fuzz():
                         for testecase_element in testcases:
                             tc = TestCase(testecase_element)
                             if not tc.is_valid_testcase_struct():
-                                logger.info(f"Ivalide struct  {file_path}")                                
+                                logger.info(f"Ivalide struct  {file_path}")
                                 continue
                             
                             if remove_simple_duplicates or remove_full_duplicates:

@@ -47,11 +47,14 @@ class TestCase(object):
             return json.get('TestCases') or json.get('TestCase', {})
         return json or {}
     
+    
     @property
     def ENTITIES(self):
-        return copy.deepcopy(self._ENTITIES)        
+        return self._entities_copy
 
     def __init__(self, tc: dict) -> None:
+        self._entities_copy = copy.deepcopy(self._ENTITIES)
+                
         self._config = Config()
         self._sast_service = SastService()
 
@@ -107,6 +110,7 @@ class TestCase(object):
             if not any(t.endswith('[]') for t in types) and any(isinstance(i, list) for i in tx):
                 args = flatten_list(tx)
             i = 0
+            self._total_args += 1            
             for type in types:
                 if type in intTypes:
                     _args.append(int(args[i]))
@@ -145,35 +149,15 @@ class TestCase(object):
                 elif type in intArraysTypes:
                     _args.append([int(item) for item in args[i]])
                     
-                i += 1
+                i += 1            
             encoded_args = encode(types, _args)
-            self._total_args += 1
             return encoded_args.hex()               
         except Exception as e:
+            logger.error(f"Function {func}, types {types} args {tx}")            
             logger.error(f"Exeption {e}")
             self._total_invalid_args += 1
             return None
 
-    def get_testcase_hash(self, fields_to_discard=None):
-        """
-        Generate a SHA-256 hash of the testcase after discarding specified fields.
-        
-        Args:
-            fields_to_discard (set, optional): Fields to exclude from hash computation
-        
-        Returns:
-            str: Hexadecimal representation of SHA-256 hash
-        """
-        fields_to_discard = fields_to_discard or set()
-        filtered_data = discard_fields(self.testcase, fields_to_discard)
-        
-        # Use ensure_ascii=False to handle Unicode efficiently
-        return hashlib.sha256(
-            json.dumps(filtered_data, 
-                    sort_keys=True, 
-                    ensure_ascii=False).encode('utf-8')
-        ).hexdigest()
-    
     # def get_testcase_hash(self, fields_to_discard = []):
     #     obj_str = json.dumps(self.testcase, sort_keys=True)
     #     filtered_data = discard_fields(self.testcase, fields_to_discard)
@@ -183,35 +167,46 @@ class TestCase(object):
     def _inject_agents(self, json):
         json["Entities"] = self.ENTITIES
 
-
     def _get_agent(self, agent: str):
         try:
-            if not agent.startswith("SmartianAgent"):
+            if not isinstance(agent, str):
+                logger.warning(f"Invalid agent type: {type(agent)}, expected string")
                 return None
                 
-            index = int(agent[-1])
-            if index not in {1, 2, 3, 4}:
-                logger.warning("Invalid SmartianAgent id, defaulting to 1")
-                index = 1                
+            if not agent.startswith("SmartianAgent"):
+                return None
+            
+            import re
+            digits_match = re.search(r'SmartianAgent(\d+)$', agent)
+            if not digits_match:
+                logger.warning(f"Invalid agent format: {agent}")
+                return None
+                
+            index = int(digits_match.group(1))
+            
+            # Validate index range
+            if not 1 <= index <= len(self.ENTITIES):
+                logger.warning(f"Agent index {index} out of range [1, {len(self.ENTITIES)}], defaulting to 1")
+                index = 1
+                
             return self.ENTITIES[index - 1]['Contract']
-        except (ValueError, IndexError):
+            
+        except (ValueError, IndexError, AttributeError) as e:
+            logger.error(f"Error processing agent {agent}: {str(e)}")
             return None
 
-    # def _is_agent(self, agent: str):
+    # def _get_agent(self, agent: str):
     #     try:
+    #         if not agent.startswith("SmartianAgent"):
+    #             return None
+                
     #         index = int(agent[-1])
     #         if index not in {1, 2, 3, 4}:
-    #             return None
+    #             logger.warning("Invalid SmartianAgent id, defaulting to 1")
+    #             index = 1                
     #         return self.ENTITIES[index - 1]['Contract']
     #     except (ValueError, IndexError):
     #         return None
-        
-    # def _get_agent(self, agent: str):
-    #     index = int(agent[-1])
-    #     if index < 1 or index > 4:
-    #         logger.warning("Invalid SmartianAgent id, defaulting to 1")
-    #         index = 1
-    #     return self.ENTITIES[index - 1]['Contract']
         
     def _process_deploy_elements(self, tc, with_args):
         deployTx = self._get_deploy_tx(tc)
@@ -285,10 +280,30 @@ class TestCase(object):
         for tx in self._get_txs(self.testcase):
             tx_parsed = self._process_transaction(tx, contract_abi, with_args)
             if tx_parsed is not None:
-                txs.append(self._process_transaction(tx, contract_abi, with_args))
+                txs.append(tx_parsed)            
         tc_json['Txs'] = txs
         return tc_json
 
     def get_validation_totals(self):
         return [(self._total_args, self._total_invalid_args),
                  (self._total_functions, self._total_invalid_functions)]
+
+    def get_testcase_hash(self, fields_to_discard=None):
+        """
+        Generate a SHA-256 hash of the testcase after discarding specified fields.
+        
+        Args:
+            fields_to_discard (set, optional): Fields to exclude from hash computation
+        
+        Returns:
+            str: Hexadecimal representation of SHA-256 hash
+        """
+        fields_to_discard = fields_to_discard or set()
+        filtered_data = discard_fields(self.testcase, fields_to_discard)
+        
+        # Use ensure_ascii=False to handle Unicode efficiently
+        return hashlib.sha256(
+            json.dumps(filtered_data, 
+                    sort_keys=True, 
+                    ensure_ascii=False).encode('utf-8')
+        ).hexdigest()

@@ -142,22 +142,35 @@ def test_get_testcase_hash_with_fields_to_discard(valid_testcase):
     hash2 = tc.get_testcase_hash(fields_to_discard={"Timestamp"})
     assert hash1 != hash2
 
-def test_get_agent_valid():
-    tc = TestCase({})
-    agent = tc._get_agent("SmartianAgent1")
-    assert agent == "0x24cd2edba056b7c654a50e8201b619d4f624fdda"
-
 def test_get_agent():
     tc = TestCase({})
-    # Test non-SmartianAgent string - should return None
-    assert tc._get_agent("OtherAgent") is None
     
-    # Test invalid SmartianAgent index - should default to index 1
-    assert tc._get_agent("SmartianAgent5") == "0x24cd2edba056b7c654a50e8201b619d4f624fdda"
-    
-    # Test valid SmartianAgent
+    # Test valid agents
     assert tc._get_agent("SmartianAgent1") == "0x24cd2edba056b7c654a50e8201b619d4f624fdda"
     assert tc._get_agent("SmartianAgent2") == "0x118a2c24808934116e6ab4c00ff48145d23b09e1"
+    assert tc._get_agent("SmartianAgent3") == "0x226cc61b3eac93cc2cc9d6cb8d61856670d50fad"
+    assert tc._get_agent("SmartianAgent4") == "0x33b808a5ae24c410e8739b5ca2d5ef3931d3e09f"
+    # Defaults to 0x24cd2edba056b7c654a50e8201b619d4f624fdda
+    assert tc._get_agent("SmartianAgent10") == "0x24cd2edba056b7c654a50e8201b619d4f624fdda"
+    assert tc._get_agent("SmartianAgent0") == "0x24cd2edba056b7c654a50e8201b619d4f624fdda"
+    assert tc._get_agent("SmartianAgent5") == "0x24cd2edba056b7c654a50e8201b619d4f624fdda"    
+    
+    # Test invalid cases - all should return None
+    assert tc._get_agent("SmartianAgent") is None
+    assert tc._get_agent("SmartianAgentABC") is None
+    assert tc._get_agent("SmartianAgent1Extra") is None
+    assert tc._get_agent("") is None
+    assert tc._get_agent(None) is None
+    assert tc._get_agent("randomstring") is None
+    assert tc._get_agent("Agent1") is None
+    assert tc._get_agent("1SmartianAgent") is None
+
+    
+    # Test type handling
+    assert tc._get_agent(123) is None
+    assert tc._get_agent(1.23) is None
+    assert tc._get_agent([]) is None
+    assert tc._get_agent({}) is None
 
 @pytest.mark.parametrize("value", [
     "0x1234",
