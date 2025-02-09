@@ -106,18 +106,13 @@ class TestCase(object):
             args = tx
             if not any(t.endswith('[]') for t in types) and any(isinstance(i, list) for i in tx):
                 args = flatten_list(tx)
-
             i = 0
             for type in types:
                 if type in intTypes:
                     _args.append(int(args[i]))
                 elif type in strTypes:
                     if type == "address":
-                        agent = self._is_agent(args[i])
-                        if agent is not None:
-                            _args.append(str(agent))
-                        else:
-                            _args.append(str(args[i]))
+                        _args.append(str(self._get_agent(args[i]) or args[i]))                        
                     else:
                         _args.append(str(args[i]))
                 elif type == 'bool':
@@ -126,9 +121,9 @@ class TestCase(object):
                         raise ValueError(f"Invalid boolean value: {args[i]}")
                     _args.append(value == 'true')
                 elif type == 'bytes32[]':
-                    if isinstance(args[i], list):
+                    if isinstance(args, list):
                         bytelist = []
-                        for b in args[i]:
+                        for b in args:
                             converted_bytes = self._convert_bytes(b)
                             bytelist.append(converted_bytes)
                         _args.append(bytelist)
@@ -142,17 +137,11 @@ class TestCase(object):
                     else:
                         _args.append(self._convert_bytes(args[i]))
                 elif type == 'address[]':
-                    if isinstance(args[i], list):
-                        tmp_args = []
-                        for p in args[i]:
-                            agent = self._is_agent(p)
-                            if agent is not None:
-                                tmp_args.append(str(agent))
-                            else:
-                                tmp_args.append(str(p))
-                        _args.append(tmp_args)
-                    else:
-                        _args.append(args)
+                    tmp_args = []
+                    args_to_process = args[i] if isinstance(args[i], list) else args
+                    for p in args_to_process:
+                        tmp_args.append(str(self._get_agent(p) or p))
+                    _args.append(tmp_args)
                 elif type in intArraysTypes:
                     _args.append([int(item) for item in args[i]])
                     
@@ -194,21 +183,35 @@ class TestCase(object):
     def _inject_agents(self, json):
         json["Entities"] = self.ENTITIES
 
-    def _is_agent(self, agent: str):
+
+    def _get_agent(self, agent: str):
         try:
+            if not agent.startswith("SmartianAgent"):
+                return None
+                
             index = int(agent[-1])
             if index not in {1, 2, 3, 4}:
-                return None
+                logger.warning("Invalid SmartianAgent id, defaulting to 1")
+                index = 1                
             return self.ENTITIES[index - 1]['Contract']
         except (ValueError, IndexError):
             return None
+
+    # def _is_agent(self, agent: str):
+    #     try:
+    #         index = int(agent[-1])
+    #         if index not in {1, 2, 3, 4}:
+    #             return None
+    #         return self.ENTITIES[index - 1]['Contract']
+    #     except (ValueError, IndexError):
+    #         return None
         
-    def _get_agent(self, agent: str):
-        index = int(agent[-1])
-        if index < 1 or index > 4:
-            logger.warning("Invalid SmartianAgent id, defaulting to 1")
-            index = 1
-        return self.ENTITIES[index - 1]['Contract']
+    # def _get_agent(self, agent: str):
+    #     index = int(agent[-1])
+    #     if index < 1 or index > 4:
+    #         logger.warning("Invalid SmartianAgent id, defaulting to 1")
+    #         index = 1
+    #     return self.ENTITIES[index - 1]['Contract']
         
     def _process_deploy_elements(self, tc, with_args):
         deployTx = self._get_deploy_tx(tc)

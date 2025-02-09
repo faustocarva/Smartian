@@ -135,7 +135,8 @@ class Genai4fuzz():
     
     def _create_prompt_V1_until_10122024(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
         
-        functions_descs = self._sast_service.get_functions_from_ABI(contract_abi)
+        functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
+
         functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
         if functions_with_modifiers is not None:
             functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
@@ -189,10 +190,10 @@ class Genai4fuzz():
                     - **Blocknum**: A string representing the block number when the transaction was included.
                 """
             },
-            {
-                'role': 'user',
-                'content': '\n### Example \n' + testcase[0]
-            },
+            # {
+            #     'role': 'user',
+            #     'content': '\n### Example \n' + testcase[0]
+            # },
             {
                 'role': 'user',
                 'content': f'''
