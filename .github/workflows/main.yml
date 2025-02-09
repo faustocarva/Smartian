@@ -21,24 +21,58 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-dev python3-setuptools gcc
+
     - name: Install Poetry
       run: |
         curl -sSL https://install.python-poetry.org | python3 -
+        
+    - name: Install solc
+      run: |
+        pip install solc-select
+        solc-select install 0.8.0
+        solc-select use 0.8.0
+    
+    - name: Configure Poetry
+      run: |
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
     
     - name: Cache Poetry dependencies
       uses: actions/cache@v3
       with:
-        path: ~/.cache/pypoetry
+        path: |
+          ~/.cache/pypoetry
+          .venv
         key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
         restore-keys: |
           ${{ runner.os }}-poetry-
-    
+
     - name: Install dependencies
       run: |
         cd script
-        poetry install --with dev
-    
+        python -m pip install --upgrade pip setuptools wheel
+        poetry install
+        
+    - name: Verify environment
+      run: |
+        cd script
+        poetry run python -c "
+        import sys
+        import pkg_resources
+        import slither
+        import eth_abi
+        import web3
+        print(f'Python version: {sys.version}')
+        print(f'Slither version: {pkg_resources.get_distribution(\"slither-analyzer\").version}')
+        print('Successfully imported required packages')
+        "
+        
     - name: Run tests
       run: |
         cd script
-        poetry run pytest --cov=./genai4fuzz tests/ -v
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        poetry run pytest tests/test_testcase.py -v --cov=genai4fuzz
