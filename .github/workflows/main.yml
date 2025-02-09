@@ -36,9 +36,9 @@ jobs:
     - name: Install dependencies
       run: |
         cd script
-        poetry install
+        poetry install --with dev
     
     - name: Run tests
       run: |
         cd script
-        poetry run pytest tests/ -v --cov=genai4fuzz
+        poetry run pytest --cov=./genai4fuzz tests/ -v
