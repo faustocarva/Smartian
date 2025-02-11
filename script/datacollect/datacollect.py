@@ -684,8 +684,8 @@ class DataCollect():
 
         # Create visualizations for each metric
         metrics_to_plot = [
-            ('args_error_rate', 'Arguments Error Rate (%)', 'Invalid Functions Arguments (%) By Temperature', 100),
-            ('functions_error_rate', 'Functions Error Rate (%)', 'Invalid Functions (%) By Temperature', 100),
+            ('args_error_rate', 'Arguments Error Rate (%)', 'Invalid Functions Arguments (%) By Temperature', 50),
+            ('functions_error_rate', 'Functions Error Rate (%)', 'Invalid Functions (%) By Temperature', 25),
             ('combined_error_rate', 'Combined Error Rate (%)', 'Combined Error Rate By Temperature', 100),
             ('invalid_args_per_run', 'Total Invalid Arguments', 'Total Invalid Arguments By Temperature', 0),
             ('invalid_functions_per_run', 'Total Invalid Functions', 'Total Invalid Functions By Temperature', 0)
@@ -2139,63 +2139,3 @@ class DataCollect():
         # Adjust layout and show plot
         plt.tight_layout()
         plt.savefig('scatter_plot_coverage.png', dpi=300)
-        
-    def coverage2(self, csv):
-        df = pd.read_csv(csv, header=None, names=self.COVERAGE_HEADER)
-        
-        # Group and calculate averages for each metric
-        average_covered_instructions = df.groupby(['model', 'temperature'])['coveredInstructions'].mean().reset_index()
-        average_covered_instructions.rename(columns={'coveredInstructions': 'averageCoveredInstructions'}, inplace=True)
-        average_covered_instructions = average_covered_instructions.sort_values(by=['model', 'temperature'])
-
-        average_covered_edges = df.groupby(['model', 'temperature'])['coveredEdges'].mean().reset_index()
-        average_covered_edges.rename(columns={'coveredEdges': 'averageCoveredEdges'}, inplace=True)
-        average_covered_edges = average_covered_edges.sort_values(by=['model', 'temperature'])
-
-        average_defusechain = df.groupby(['model', 'temperature'])['coveredDefUseChains'].mean().reset_index()
-        average_defusechain.rename(columns={'coveredDefUseChains': 'averageCoveredDefUseChains'}, inplace=True)
-        average_defusechain = average_defusechain.sort_values(by=['model', 'temperature'])
-
-        average_bugsfound = df.groupby(['model', 'temperature'])['bugsFound'].mean().reset_index()
-        average_bugsfound.rename(columns={'bugsFound': 'averageBugsFound'}, inplace=True)
-        average_bugsfound = average_bugsfound.sort_values(by=['model', 'temperature'])
-
-        # Merge all metrics into a single data frame
-        merged_df = (
-            average_covered_instructions
-            .merge(average_covered_edges, on=['model', 'temperature'])
-            .merge(average_defusechain, on=['model', 'temperature'])
-            .merge(average_bugsfound, on=['model', 'temperature'])
-        )
-
-        # Melt the data for Seaborn compatibility
-        melted_df = merged_df.melt(
-            id_vars=['model', 'temperature'],
-            value_vars=['averageCoveredInstructions', 'averageCoveredEdges', 'averageCoveredDefUseChains', 'averageBugsFound'],
-            var_name='Metric',
-            value_name='Value'
-        )
-
-        # Create the FacetGrid with shared y-axis
-        g = sns.FacetGrid(
-            melted_df, 
-            col='model', 
-            col_wrap=3, 
-            sharey=True,  # Ensure y-axis is shared across all facets
-            height=4, 
-            aspect=1.5
-        )
-        g.map(sns.lineplot, 'temperature', 'Value', 'Metric', marker='o')
-
-        # Customize the plot
-        g.add_legend(title='Metrics')
-        g.set_axis_labels('Temperature', 'Value')
-        g.set_titles('Model: {col_name}')
-        plt.subplots_adjust(top=0.9)
-        g.fig.suptitle('Metrics Trends by Model and Temperature (Uniform Y-Axis)')
-
-        # Optional: Add grid lines for easier comparison
-        for ax in g.axes.flat:
-            ax.grid(alpha=0.3)
-
-        plt.savefig('scatter_plot_coverage_2.png', dpi=800)        

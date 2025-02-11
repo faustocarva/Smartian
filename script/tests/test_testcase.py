@@ -260,3 +260,105 @@ def test_encode_args_with_various_types():
     assert result is not None
     assert isinstance(result, str)
     assert not result.startswith("0x")  # The method returns hex without 0x prefix
+
+
+def test_encode_args_with_various_types():
+    tc = TestCase({})
+    
+    # Original test case
+    tc.interfaces = {
+        "test_selector": ("test_function", ["uint256", "address", "bool", "bytes32"])
+    }
+    args = [
+        "1000",
+        "0x1234567890123456789012345678901234567890",
+        "true",
+        "0x1234567890123456789012345678901234567890123456789012345678901234"
+    ]
+    result = tc._encode_args("test_selector", args)
+    assert result is not None
+    assert isinstance(result, str)
+    assert not result.startswith("0x")
+
+    # Additional test cases based on the log
+    
+    # Test setPrices function (two uint256 parameters)
+    tc.interfaces["setPrices"] = ("setPrices", ["uint256", "uint256"])
+    prices_args = ["100", "200"]
+    result = tc._encode_args("setPrices", prices_args)
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Test mintToken function (address and uint256 parameters)
+    tc.interfaces["mintToken"] = ("mintToken", ["address", "uint256"])
+    mint_args = ["SmartianAgent2", "1000"]
+    result = tc._encode_args("mintToken", mint_args)
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Test balanceOf function (single address parameter)
+    tc.interfaces["balanceOf"] = ("balanceOf", ["address"])
+    balance_args = ["SmartianAgent2"]
+    result = tc._encode_args("balanceOf", balance_args)
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Test freezeAccount function (address and bool parameters)
+    tc.interfaces["freezeAccount"] = ("freezeAccount", ["address", "bool"])
+    freeze_args = ["SmartianAgent2", "true"]
+    result = tc._encode_args("freezeAccount", freeze_args)
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Test transfer function (address and uint256 parameters)
+    tc.interfaces["transfer"] = ("transfer", ["address", "uint256"])
+    transfer_args = ["SmartianAgent3", "200"]
+    result = tc._encode_args("transfer", transfer_args)
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Test setMinBalance function (single uint256 parameter)
+    tc.interfaces["setMinBalance"] = ("setMinBalance", ["uint256"])
+    min_balance_args = ["500"]
+    result = tc._encode_args("setMinBalance", min_balance_args)
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Test transferOwnership function (single address parameter)
+    tc.interfaces["transferOwnership"] = ("transferOwnership", ["address"])
+    ownership_args = ["SmartianAgent3"]
+    result = tc._encode_args("transferOwnership", ownership_args)
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Test sell function (single uint256 parameter)
+    tc.interfaces["sell"] = ("sell", ["uint256"])
+    sell_args = ["300"]
+    result = tc._encode_args("sell", sell_args)
+    assert result is not None
+    assert isinstance(result, str)
+
+
+def test_encode_args_edge_cases():
+    tc = TestCase({})
+    tc.interfaces = {
+        "setPrices": ("setPrices", ["uint256", "uint256"])
+    }
+    
+    # Test with maximum uint256 values
+    max_uint256 = "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+    result = tc._encode_args("setPrices", [max_uint256, max_uint256])
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Test with zero values
+    result = tc._encode_args("setPrices", ["0", "0"])
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Test with large number sequences
+    tc.interfaces["complexFunction"] = ("complexFunction", ["uint256[]"])
+    large_array = ["1000", "2000", "3000", "4000", "5000"]
+    result = tc._encode_args("complexFunction", [large_array])
+    assert result is not None
+    assert isinstance(result, str)

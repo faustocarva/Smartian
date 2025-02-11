@@ -347,8 +347,8 @@ class ChatService(metaclass=SingletonMeta):
             limit = 8192
             logger.info(f"Model limit  not found.")
 
-        max_tokens = int(int(limit) - int(self.count_tokens(prompt_msgs, model))*1.3)
-        #max_tokens = int(limit)
+        #max_tokens = int(int(limit) - int(self.count_tokens(prompt_msgs, model))*1.3)
+        max_tokens = int(limit)
         logger.info(f"Invoke gemini with max_tokens={max_tokens} and model {model_string}")
 
         client = OpenAI(

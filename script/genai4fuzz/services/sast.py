@@ -156,7 +156,6 @@ class SastService(metaclass=SingletonMeta):
         abi = json.loads(abi)
         functions = []
         for item in abi:
-            print(item.get('type'))
             if item.get('type') == 'function':
                 payable = " payable " if item.get('payable', False) or item.get('stateMutability') == 'payable' else ""
                 func_signature = item['name'] + '(' + ','.join([input['type'] for input in item['inputs']]) + ')' + payable

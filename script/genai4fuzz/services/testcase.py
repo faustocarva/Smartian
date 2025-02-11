@@ -81,83 +81,127 @@ class TestCase(object):
             else:
                 return tc.get('Txs')
 
-    def _convert_bytes(self, value):
-        if value.startswith("0x"):
-            padded_string = value[2:].ljust(32, '0')[:32]
-            return to_bytes(hexstr=padded_string)
-        return bytes(value, 'utf-8')
-                                                    
-    def _encode_args(self, function_selector, tx):
+    def _encode_args(self, function_selector: str, tx: list):
         """
         Encode function arguments for contract interaction.
         
         Args:
             function_selector: The function selector string
             tx: List of arguments to encode
-            
+                
         Returns:
             Encoded arguments as hex string or None if encoding fails
         """        
         try:
-            intTypes = [ "uint8", "uint16", "uint32", "uint64", "uint128", "uint256", "int8", "int16", "int32", "int64", "int128", "int256"]
-            intArraysTypes = [ "uint8[]", "uint16[]", "uint32[]", "uint64[]", "uint128[]", "uint256[]", "int8[]", "int16[]", "int32[]", "int64[]", "int128[]", "int256[]"]
-            strTypes = ['address', 'string']
-                        
+            # Type definitions
+            INT_TYPES = [
+                "uint8", "uint16", "uint32", "uint64", "uint128", "uint256",
+                "int8", "int16", "int32", "int64", "int128", "int256"
+            ]
+            INT_ARRAY_TYPES = [f"{t}[]" for t in INT_TYPES]
+            STR_TYPES = ['address', 'string']
+            STR_ARRAY_TYPES = ['string[]']
+            BOOL_ARRAY_TYPES = ['bool[]']
+            BYTES_ARRAY_TYPES = ['bytes[]']
+                            
             _args = []
             func, types = self.interfaces[function_selector]
-            logger.info(f"func {func}, types {types} args {tx}")
+            logger.info(f"Encoding function: {func}, types: {types}, args: {tx}")
+
+            # Handle argument flattening if needed
             args = tx
+
+            self._total_args += 1
+            
             if not any(t.endswith('[]') for t in types) and any(isinstance(i, list) for i in tx):
                 args = flatten_list(tx)
-            i = 0
-            self._total_args += 1            
-            for type in types:
-                if type in intTypes:
-                    _args.append(int(args[i]))
-                elif type in strTypes:
-                    if type == "address":
-                        _args.append(str(self._get_agent(args[i]) or args[i]))                        
+
+            if len(types) != len(args):
+                raise ValueError(f"Dimensional error: Expected {len(types)} arguments but got {len(args)}")            
+
+
+            for i, (type_, arg) in enumerate(zip(types, args)):
+                # Integer types
+                if type_ in INT_TYPES:
+                    _args.append(int(arg))
+
+                # String and address types
+                elif type_ in STR_TYPES:
+                    if type_ == "address":
+                        agent_addr = self._get_agent(arg)
+                        _args.append(str(agent_addr or arg))
                     else:
-                        _args.append(str(args[i]))
-                elif type == 'bool':
-                    value = str(args[i]).lower()
+                        _args.append(str(arg))
+
+                # Boolean type
+                elif type_ == 'bool':
+                    value = str(arg).lower()
                     if value not in ['true', 'false']:
-                        raise ValueError(f"Invalid boolean value: {args[i]}")
+                        raise ValueError(f"Invalid boolean value: {arg}")
                     _args.append(value == 'true')
-                elif type == 'bytes32[]':
-                    if isinstance(args, list):
-                        bytelist = []
-                        for b in args:
-                            converted_bytes = self._convert_bytes(b)
-                            bytelist.append(converted_bytes)
-                        _args.append(bytelist)
+
+                # String array type
+                elif type_ in STR_ARRAY_TYPES:
+                    if not isinstance(arg, list):
+                        raise ValueError(f"Expected list for {type_}, got {type(arg)}")
+                    _args.append([str(item) for item in arg])
+
+                # Boolean array type
+                elif type_ in BOOL_ARRAY_TYPES:
+                    if not isinstance(arg, list):
+                        raise ValueError(f"Expected list for {type_}, got {type(arg)}")
+                    _args.append([item if isinstance(item, bool) else str(item).lower() == 'true' for item in arg])
+
+                # Bytes32 array type
+                elif type_ == 'bytes32[]':
+                    if not isinstance(arg, list):
+                        raise ValueError(f"Expected list for {type_}, got {type(arg)}")
+                    _args.append([self._convert_bytes(b) for b in arg])
+
+                # Bytes types
+                elif type_ in ['bytes32', 'bytes']:
+                    if isinstance(arg, list):
+                        if len(arg) != 1:
+                            raise ValueError(f"Invalid size for bytes array: {len(arg)}")
+                        _args.append(self._convert_bytes(arg[0]))
                     else:
-                        raise ValueError("Not a list of bytes")                    
-                elif type == 'bytes32' or type == 'bytes':
-                    if isinstance(args[i], list):
-                        if len(args[i]) > 1:
-                            raise ValueError("Invalid size")
-                        _args.append(self._convert_bytes(args[i][0]))
-                    else:
-                        _args.append(self._convert_bytes(args[i]))
-                elif type == 'address[]':
-                    tmp_args = []
-                    args_to_process = args[i] if isinstance(args[i], list) else args
-                    for p in args_to_process:
-                        tmp_args.append(str(self._get_agent(p) or p))
-                    _args.append(tmp_args)
-                elif type in intArraysTypes:
-                    _args.append([int(item) for item in args[i]])
-                    
-                i += 1            
+                        _args.append(self._convert_bytes(arg))
+                
+                # Bytes array type
+                elif type_ in BYTES_ARRAY_TYPES:
+                    if not isinstance(arg, list):
+                        raise ValueError(f"Expected list for {type_}, got {type(arg)}")
+                    _args.append([self._convert_bytes(b) for b in arg])
+
+                # Address array type
+                elif type_ == 'address[]':
+                    addr_list = arg if isinstance(arg, list) else [arg]
+                    _args.append([str(self._get_agent(addr) or addr) for addr in addr_list])
+
+                # Integer array types
+                elif type_ in INT_ARRAY_TYPES:
+                    if not isinstance(arg, list):
+                        raise ValueError(f"Expected list for {type_}, got {type(arg)}")
+                    _args.append([int(item) for item in arg])
+
+                else:
+                    raise ValueError(f"Unsupported type: {type_}")
+
             encoded_args = encode(types, _args)
-            return encoded_args.hex()               
+            return encoded_args.hex()
+
         except Exception as e:
-            logger.error(f"Function {func}, types {types} args {tx}")            
-            logger.error(f"Exeption {e}")
+            logger.error(f"Encoding function: {func}, types: {types}, args: {tx}")            
+            logger.error(f"Exception: {str(e)}", exc_info=True)
             self._total_invalid_args += 1
             return None
 
+    def _convert_bytes(self, value):
+        if value.startswith("0x"):
+            padded_string = value[2:].ljust(32, '0')[:32]
+            return to_bytes(hexstr=padded_string)
+        return bytes(value, 'utf-8')
+                                                    
     # def get_testcase_hash(self, fields_to_discard = []):
     #     obj_str = json.dumps(self.testcase, sort_keys=True)
     #     filtered_data = discard_fields(self.testcase, fields_to_discard)
@@ -194,19 +238,6 @@ class TestCase(object):
         except (ValueError, IndexError, AttributeError) as e:
             logger.error(f"Error processing agent {agent}: {str(e)}")
             return None
-
-    # def _get_agent(self, agent: str):
-    #     try:
-    #         if not agent.startswith("SmartianAgent"):
-    #             return None
-                
-    #         index = int(agent[-1])
-    #         if index not in {1, 2, 3, 4}:
-    #             logger.warning("Invalid SmartianAgent id, defaulting to 1")
-    #             index = 1                
-    #         return self.ENTITIES[index - 1]['Contract']
-    #     except (ValueError, IndexError):
-    #         return None
         
     def _process_deploy_elements(self, tc, with_args):
         deployTx = self._get_deploy_tx(tc)
@@ -234,7 +265,7 @@ class TestCase(object):
         function_name = tx['Function']
         func_selector = self._sast_service.get_function_selector(contract_abi, function_name)
         if func_selector is None:
-            logger.warning(f"Invalid function name ({function_name}), skiping transaction")
+            logger.warning(f"Invalid function name ({function_name}), skipping transaction")
             self._total_invalid_functions += 1
             return None
         self._total_functions += 1        
@@ -244,11 +275,11 @@ class TestCase(object):
         else:
             function_name = f"{tx['Function']}({func_selector})"
 
-        data = func_selector
+        data = func_selector # If no arguments, keep calling the function
         if with_args and tx.get('Params') is not None and len(tx.get('Params')) > 0:
             encoded = self._encode_args(func_selector, tx['Params'])
             if encoded is not None:
-                data += encoded
+                data += encoded 
         return json.loads((f'''{{
             "From":"{self._get_agent(tx['From'])}",
             "To":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
