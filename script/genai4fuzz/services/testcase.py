@@ -248,10 +248,10 @@ class TestCase(object):
                 data = encoded
         
         return json.loads(f'''{{
-            "TargetDeployer":"{self._get_agent(deployTx['From'])}",
+            "TargetDeployer":"{str(self._get_agent(deployTx['From']) or deployTx['From'])}",
             "TargetContract":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
             "DeployTx": {{
-                "From":"{self._get_agent(deployTx['From'])}",
+                "From":"{str(self._get_agent(deployTx['From']) or deployTx['From'])}",
                 "To":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
                 "Value":"{deployTx['Value']}",
                 "Data":"{data}",
@@ -281,7 +281,7 @@ class TestCase(object):
             if encoded is not None:
                 data += encoded 
         return json.loads((f'''{{
-            "From":"{self._get_agent(tx['From'])}",
+            "From":"{str(self._get_agent(tx['From']) or tx['From'])}",
             "To":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
             "Value":"{tx['Value']}",
             "Data":"{data}",

@@ -685,7 +685,7 @@ class DataCollect():
         # Create visualizations for each metric
         metrics_to_plot = [
             ('args_error_rate', 'Arguments Error Rate (%)', 'Invalid Functions Arguments (%) By Temperature', 50),
-            ('functions_error_rate', 'Functions Error Rate (%)', 'Invalid Functions (%) By Temperature', 25),
+            ('functions_error_rate', 'Functions Error Rate (%)', 'Invalid Functions (%) By Temperature', 50),
             ('combined_error_rate', 'Combined Error Rate (%)', 'Combined Error Rate By Temperature', 100),
             ('invalid_args_per_run', 'Total Invalid Arguments', 'Total Invalid Arguments By Temperature', 0),
             ('invalid_functions_per_run', 'Total Invalid Functions', 'Total Invalid Functions By Temperature', 0)

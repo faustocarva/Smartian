@@ -306,7 +306,7 @@ class Genai4fuzz():
         parameters = [f'replay --csvout  -p {program} -i {testcase}']
         cmd = " ".join(['dotnet', fsharp_executable] + parameters)
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-
+        #print(result.stderr)
         return result.stdout
 
     def count_total_ins(self, contact_dir: str):
@@ -563,6 +563,7 @@ class Genai4fuzz():
                                                                 
                             testdata = json.dumps(tc.process_testcase(contract_abi, True))
                             tmp_test_file = tempfile.NamedTemporaryFile(delete=True, mode='w')
+                            #print(tmp_test_file)
                             tmp_test_file.write(testdata)
                             tmp_test_file.flush()
                             coverage = self.run_smartian(contract_bin, tmp_test_file.name)
