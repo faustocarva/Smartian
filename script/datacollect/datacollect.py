@@ -686,9 +686,9 @@ class DataCollect():
         metrics_to_plot = [
             ('args_error_rate', 'Arguments Error Rate (%)', 'Invalid Functions Arguments (%) By Temperature', 50),
             ('functions_error_rate', 'Functions Error Rate (%)', 'Invalid Functions (%) By Temperature', 50),
-            ('combined_error_rate', 'Combined Error Rate (%)', 'Combined Error Rate By Temperature', 100),
-            ('invalid_args_per_run', 'Total Invalid Arguments', 'Total Invalid Arguments By Temperature', 0),
-            ('invalid_functions_per_run', 'Total Invalid Functions', 'Total Invalid Functions By Temperature', 0)
+            # ('combined_error_rate', 'Combined Error Rate (%)', 'Combined Error Rate By Temperature', 100),
+            # ('invalid_args_per_run', 'Total Invalid Arguments', 'Total Invalid Arguments By Temperature', 0),
+            # ('invalid_functions_per_run', 'Total Invalid Functions', 'Total Invalid Functions By Temperature', 0)
         ]
         
         def plot_metric(data, metric, title, ylabel, ylim=0, figsize=(12, 8)):
@@ -1230,7 +1230,7 @@ class DataCollect():
         ax1.set_facecolor('#f8f9fa')
         ax1.tick_params(axis='both', which='major', labelsize=12)
 
-        # Plot 2: Invalid Structure Seeds
+        # Plot 2: combined_plots.pdf
         for model, marker, color in zip(models, markers, colors):
             model_data = grouped_df[grouped_df['model'] == model]
             
@@ -1281,6 +1281,7 @@ class DataCollect():
         plt.tight_layout()
         plt.savefig('combined_plots.pdf', bbox_inches='tight', dpi=600)
         plt.close()
+        
         ######################################
         # Plot for duplicate seeds
         plt.figure(figsize=(12, 8))
