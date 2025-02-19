@@ -290,16 +290,6 @@ class Genai4fuzz():
         ]
         
         return prompt
-
-    def estimate_prompt(self, contact_dir: str, model: str):
-        if not os.path.exists(contact_dir):
-            raise Exception("not found")
-        
-        _, contract_abi, _, contract_sol = self._read_contract_files(contact_dir)
-        testcase = open('example.json', "r").read()
-        
-        messages = self._create_prompt_V1_until_10122024(contract_abi, contract_sol, [testcase])
-        print (f"Total tokens from prompt: {self._chat_service.count_tokens(messages, model)}")
   
     def run_smartian(self, program: str, testcase: str):
         fsharp_executable = '../build/Smartian.dll'
