@@ -22,7 +22,7 @@ class DataCollect():
     
     METRICS_HEADER = 'model,temperature,file,total_files,total_files_with_invalid_json,total_seeds,total_duplicate_seeds,total_seeds_with_invalid_struct,total_args_in_seeds,total_invalid_args_in_seeds,total_functions_in_seeds,total_invalid_function_in_seeds'.split(',')
     COVERAGE_HEADER = 'contract,temperature,transaction_index,model,seed_file,totalExecutions,deployFailCount,coveredEdges,coveredInstructions,coveredDefUseChains,bugsFound'.split(',')
-    B1_TOTAL_COV_HEADER = 'contract,toalInstructions,totalEdges'.split(',')
+    B1_TOTAL_COV_HEADER = 'contract,totalInstructions,totalEdges'.split(',')
     
     def __init__(self) -> None:
         print("")
@@ -110,7 +110,7 @@ class DataCollect():
     
     def build_coverage_data(self, csv):
         executions_df = pd.read_csv(csv, header=None, names=self.COVERAGE_HEADER)    
-        totals_df = pd.read_csv("B1-ins.csv")        
+        totals_df = self.load_coverage_data("B1-ins.csv")
         
         executions_df = self.fill_missing_experiments(executions_df)
 
@@ -1797,7 +1797,7 @@ class DataCollect():
                
     def coverage(self, csv):
         b1_csv = self.load_coverage_data("B1-ins.csv")
-        total_instructions = b1_csv['toalInstructions'].sum()
+        total_instructions = int(b1_csv['totalInstructions'].sum())
         total_edges = b1_csv['totalEdges'].sum()
 
         df = pd.read_csv(csv, header=None, names=self.COVERAGE_HEADER)

@@ -210,7 +210,98 @@ class Genai4fuzz():
         ]
         
         return prompt
+
+    def _create_prompt_V4_usefullcode(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
+
+        # Read SOL file
+        with open(contract_sol, "r") as f:
+            sol_content = f.read()
+                
+        functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
+
+        functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
+        if functions_with_modifiers is not None:
+            functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
+        else:
+            functions_descs_str = '\n'.join([function for function in functions_descs])
+                
+        prompt =  [
+            {
+                'role': 'system',
+                'content':  """
+                    You are an expert assistant specializing in Solidity fuzzing with a deep understanding of SWC and DASP vulnerabilities. 
+                    Your objective is to generate a diverse set of transactions and inputs targeting the main EVM/Solidity vulnerabilities.
+                    Respond strictly in JSON format, following the provided instructions without any additional text.
+                    You should convert ETH values to Wei by multiplying by 10^18. Input amount must be a string to preserve precision for UInt256 representation.                    
+                """
+            },
+            {
+                'role': 'user',            
+                'content': '\n### You have only four sender/agent contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. Use their names in the parameters that need an address and in From fields as needed.'
+            },
+            {
+                'role': 'user',
+                'content':'\n\n### You have the following Solidity Contract code for Test Case Generation: \n\n' + self._sast_service.remove_comments_from_contract(sol_content)
+            },            
+            {
+                'role': 'user',
+                'content':'\n\n### You must use only functions in the following list for Test Case Generation: \n\n' + functions_descs_str
+            },            
+            
+            {
+                'role': 'user',
+                'content': """
+                    ### JSON Grammar for EVM Test Case
+
+                    #### Root
+                    - An array of `TestCase` objects.
+
+                    #### TestCase
+                    - **DeployTx**: An object representing the deployment transaction, using the constructor function.
+                    - **Txs**: An array of transaction (`Tx`) objects.
+
+                    #### DeployTx
+                    - **From**: A string representing the deployer's name or address.
+                    - **Value**: A UInt256 representing the amount of Ether sent with the deployment transaction (in Wei, use "0" if no Ether is sent).                                        
+                    - **Function**: A string representing the constructor function name being called.                    
+                    - **Params** (optional): The parameters passed to the constructor.
+                        -   Parameters can be nested arrays if the function requires it.                                        
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+
+                    #### Tx (Transaction)
+                    - **From**: A string representing the sender's name.
+                    - **Value**: A UInt256 representing the amount of Ether sent with the transaction (in Wei, use "0" if no Ether is sent or the function is not payable).                                        
+                    - **Function**: A string representing the function name being called.
+                    - **Params** (optional): An array representing the parameters passed to the function.
+                    - Parameters can be nested arrays.
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+                """
+            },
+            {
+                'role': 'user',
+                'content': '\n### Example \n' + testcase[0]
+            },
+            {
+                'role': 'user',
+                'content': f'''
+                    ### Notes
+                    - Each `TestCase` contains a `DeployTx` object and an array of `Tx` objects.
+                    - Each transaction (`Tx`) includes details such as sender (`From`), value (`Value`), function name (`Function`), optional parameters (`Params`), timestamp (`Timestamp`), and block number (`Blocknum`).
+                    - Parameters (`Params`) can be nested arrays to accommodate functions requiring multiple lists of parameters.
+                
+                    ### Objective
+                    Create {total_tests} new test case objects, each containing more than {total_txs} transactions that might uncover bugs in the contract. 
+                    Ensure the transactions use raw values and respect the data types in the function signatures and consider functions modifiers in your transactions.
+                    Consider the contract's state and how transactions might change it when designing test cases.                    
+                    Provide the response as RFC8259 compliant JSON without explanations.
+                '''
+            }
+        ]
         
+        return prompt
+  
     def _create_prompt_V1_until_10122024(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
         
         #functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
@@ -311,7 +402,8 @@ class Genai4fuzz():
         _, contract_abi, _, contract_sol = self._read_contract_files(contact_dir)
         testcase = open('example.json', "r").read()
                 
-        messages = self._create_prompt_V1_until_10122024(contract_abi, contract_sol, [testcase], total_tests, total_txs)
+        #messages = self._create_prompt_V1_until_10122024(contract_abi, contract_sol, [testcase], total_tests, total_txs)
+        messages = self._create_prompt_V4_usefullcode(contract_abi, contract_sol, [testcase], total_tests, total_txs)
         print (self._chat_service.dump_prompt(messages))
         
     def run_llm(self, contact_dir: str, llm: str, model: str, temperature: float, total_tests=10, total_txs=4, prompt="V1"):
@@ -326,6 +418,9 @@ class Genai4fuzz():
             messages = self._create_prompt_V1_until_10122024(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
         elif prompt == "V2":
             messages = self._create_prompt_V2(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
+        elif prompt == "V4":
+            messages = self._create_prompt_V4_usefullcode(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
+
         
         logger.info(f"Requesting test cases for contract {base_contract_name}")
         if llm == "gpt":

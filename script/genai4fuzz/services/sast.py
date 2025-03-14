@@ -1,5 +1,7 @@
 import json
 import re
+import subprocess
+import os
 from eth_utils import function_signature_to_4byte_selector
 from loguru import logger
 from slither.slither import Slither
@@ -12,6 +14,59 @@ class SastService(metaclass=SingletonMeta):
     def __init__(self) -> None:
         self._config = Config()
         
+
+    def extract_pragma_version(self, file_path):
+        """Extract the Solidity pragma version from a smart contract file."""
+        with open(file_path, 'r') as file:
+            content = file.read()
+            # Look for pragma solidity statement
+            match = re.search(r'pragma solidity\s+([^;]+)', content)
+            if match:
+                version_constraint = match.group(1).strip()
+                # Handle various version constraints (^0.8.0, >=0.7.0 <0.9.0, etc.)
+                # This is a simplification - for this example we'll just extract the first exact version
+                version_match = re.search(r'([0-9]+\.[0-9]+\.[0-9]+)', version_constraint)
+                if version_match:
+                    return version_match.group(1)
+        return None
+
+    def ensure_compiler_installed(self, version):
+        """Ensure the required Solc version is installed using solc-select."""
+        try:
+            # Redirect output to null to check if solc-select is installed
+            with open(os.devnull, 'w') as devnull:
+                subprocess.run(['solc-select', '--version'], check=True, stdout=devnull, stderr=devnull)
+        except (subprocess.SubprocessError, FileNotFoundError):
+            print("Installing solc-select...")
+            with open(os.devnull, 'w') as devnull:
+                subprocess.run(['pip', 'install', 'solc-select'], check=True, stdout=devnull, stderr=devnull)
+        
+        # Get list of installed versions quietly
+        result = subprocess.run(['solc-select', 'versions'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        installed_versions = result.stdout.decode('utf-8')
+        
+        # Install the required version if not already installed
+        if version not in installed_versions:
+            print(f"Installing solc version {version}...")
+            with open(os.devnull, 'w') as devnull:
+                subprocess.run(['solc-select', 'install', version], check=True, stdout=devnull, stderr=devnull)
+        
+        # Set the active version quietly
+        subprocess.run(['solc-select', 'use', version], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print(f"Using solc version {version}")
+        
+    def analyze_with_auto_compiler(self, file_path):
+        """Analyze a smart contract using the correct compiler version automatically."""
+        version = self.extract_pragma_version(file_path)
+        
+        if not version:
+            raise ValueError(f"Could not detect Solidity version from {file_path}")
+        
+        self.ensure_compiler_installed(version)
+        
+        # Now run Slither with the correct compiler version
+        slither = Slither(file_path)
+        return slither
         
     def get_function_signatures_mod(self, contract_file, target_functions):
         try:
@@ -46,7 +101,7 @@ class SastService(metaclass=SingletonMeta):
     
     def get_function_modifiers(self, contract_file, target_functions):
         try:
-            slither = Slither(contract_file)
+            slither = self.analyze_with_auto_compiler(contract_file)            
             modifiers = {}
             
             for contract in slither.contracts_derived:
@@ -64,7 +119,7 @@ class SastService(metaclass=SingletonMeta):
             
             return target_functions
         except Exception as e:
-            logger.error(f"Slither Exeption in file {contract_file}")
+            logger.error(f"Slither Exeption {e} in file {contract_file}")
             return None
 
     def get_interface_from_abi(self, abi):
@@ -96,7 +151,6 @@ class SastService(metaclass=SingletonMeta):
                 interface[hash] = "fallback",[]
 
         return interface
-
 
     def get_functions_from_ABI_slither(self, contract_file):
         slither = Slither(contract_file)

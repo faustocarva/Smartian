@@ -113,7 +113,7 @@ class ChatService(metaclass=SingletonMeta):
             logger.error(f"Provider url not found.")
             exit(0)
 
-        limit = self._query_providers(f"grok.model.{model}.limit")
+        limit = self._query_providers(f"fireworks.model.{model}.limit")
         if limit is None:
             limit = 8192
             logger.info(f"Model limit  not found.")
@@ -131,7 +131,7 @@ class ChatService(metaclass=SingletonMeta):
         g_time = time.time() - t_start
         logger.info(f"fireworks response time: {g_time}")
         if (response is not None):
-            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")
             return response.choices[0].message.content
         return None
 
@@ -189,7 +189,7 @@ class ChatService(metaclass=SingletonMeta):
             logger.error(f"Provider url not found.")
             exit(0)
 
-        limit = self._query_providers(f"grok.model.{model}.limit")
+        limit = self._query_providers(f"deepinfra.model.{model}.limit")
         if limit is None:
             limit = 8192
             logger.info(f"Model limit  not found.")
@@ -207,7 +207,7 @@ class ChatService(metaclass=SingletonMeta):
         g_time = time.time() - t_start
         logger.info(f"Deepinfra response time: {g_time}")
         if (response is not None):
-            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")
             return response.choices[0].message.content
         return None
 
@@ -245,7 +245,7 @@ class ChatService(metaclass=SingletonMeta):
         g_time = time.time() - t_start
         logger.info(f"Grok response time: {g_time}")
         if (response is not None):
-            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")
             return response.choices[0].message.content
         return None
 
@@ -264,7 +264,7 @@ class ChatService(metaclass=SingletonMeta):
             logger.error(f"Provider url not found.")
             exit(0)
 
-        limit = self._query_providers(f"grok.model.{model}.limit")
+        limit = self._query_providers(f"anyscale.model.{model}.limit")
         if limit is None:
             limit = 8192
             logger.info(f"Model limit  not found.")
@@ -400,7 +400,7 @@ class ChatService(metaclass=SingletonMeta):
         g_time = time.time() - t_start
         logger.info(f"hyperbolic response time: {g_time}")
         if (response is not None):
-            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")
             return response.choices[0].message.content
         return None
 

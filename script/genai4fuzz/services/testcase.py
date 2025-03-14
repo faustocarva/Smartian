@@ -117,7 +117,7 @@ class TestCase(object):
                 args = flatten_list(tx)
 
             if len(types) != len(args):
-                raise ValueError(f"Dimensional error: Expected {len(types)} arguments but got {len(args)}")            
+                raise ValueError(f"Dimensional error: Expected {len(types)} arguments but got {len(args)}")
 
 
             for i, (type_, arg) in enumerate(zip(types, args)):
@@ -191,7 +191,6 @@ class TestCase(object):
             return encoded_args.hex()
 
         except Exception as e:
-            logger.error(f"Encoding function: {func}, types: {types}, args: {tx}")            
             logger.error(f"Exception: {str(e)}", exc_info=True)
             self._total_invalid_args += 1
             return None
@@ -201,12 +200,6 @@ class TestCase(object):
             padded_string = value[2:].ljust(32, '0')[:32]
             return to_bytes(hexstr=padded_string)
         return bytes(value, 'utf-8')
-                                                    
-    # def get_testcase_hash(self, fields_to_discard = []):
-    #     obj_str = json.dumps(self.testcase, sort_keys=True)
-    #     filtered_data = discard_fields(self.testcase, fields_to_discard)
-    #     obj_str = json.dumps(filtered_data, sort_keys=True)
-    #     return hashlib.sha256(obj_str.encode('utf-8')).hexdigest()
 
     def _inject_agents(self, json):
         json["Entities"] = self.ENTITIES
