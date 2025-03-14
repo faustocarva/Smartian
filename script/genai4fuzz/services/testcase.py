@@ -106,7 +106,6 @@ class TestCase(object):
                             
             _args = []
             func, types = self.interfaces[function_selector]
-            logger.info(f"Encoding function: {func}, types: {types}, args: {tx}")
 
             # Handle argument flattening if needed
             args = tx
@@ -115,6 +114,10 @@ class TestCase(object):
             
             if not any(t.endswith('[]') for t in types) and any(isinstance(i, list) for i in tx):
                 args = flatten_list(tx)
+            elif len(tx) == 1 and isinstance(tx[0], list) and len(types) == len(tx[0]):
+                args = tx[0]  # Unwrap one level if necessary                
+
+            logger.info(f"Encoding function: {func}, types: {types}, args: {args}")
 
             if len(types) != len(args):
                 raise ValueError(f"Dimensional error: Expected {len(types)} arguments but got {len(args)}")
@@ -236,7 +239,7 @@ class TestCase(object):
         deployTx = self._get_deploy_tx(tc)
         data = ""
         if with_args and deployTx.get('Params') is not None and len(deployTx.get('Params')) > 0:
-            encoded = self._encode_args("constructor", deployTx['Params'])
+            encoded = self._encode_args("constructor", [deployTx['Params']])
             if encoded is not None:
                 data = encoded
         
@@ -270,7 +273,7 @@ class TestCase(object):
 
         data = func_selector # If no arguments, keep calling the function
         if with_args and tx.get('Params') is not None and len(tx.get('Params')) > 0:
-            encoded = self._encode_args(func_selector, tx['Params'])
+            encoded = self._encode_args(func_selector, [tx['Params']])
             if encoded is not None:
                 data += encoded 
         return json.loads((f'''{{

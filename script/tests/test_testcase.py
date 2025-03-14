@@ -362,3 +362,28 @@ def test_encode_args_edge_cases():
     result = tc._encode_args("complexFunction", [large_array])
     assert result is not None
     assert isinstance(result, str)
+        
+    
+def test_encode_args_address():
+    tc = TestCase({})
+    tc.interfaces = {
+        "setPrices": ("setPrices", ["address[]"]),
+        "set": ("set", ['address[]', 'uint256[]']),
+        "set2": ("set2", ['address[]', 'uint256[]', 'address', 'uint16']),        
+    }
+    
+    result = tc._encode_args("setPrices", [["SmartianAgent1", "SmartianAgent1"]])
+    assert result is not None
+    assert isinstance(result, str)
+
+    result = tc._encode_args("setPrices", [["SmartianAgent1", "SmartianAgent1"], 1])
+    assert result is None
+
+    result = tc._encode_args("set",  [[['SmartianAgent2', 'SmartianAgent3'], ['10', '20']]])
+    assert result is not None
+    assert isinstance(result, str)
+        
+    result = tc._encode_args("set2",  [[['SmartianAgent2', 'SmartianAgent3'], ['10', '20'], 'SmartianAgent4', '1']])
+    assert result is not None
+    assert isinstance(result, str)
+        
