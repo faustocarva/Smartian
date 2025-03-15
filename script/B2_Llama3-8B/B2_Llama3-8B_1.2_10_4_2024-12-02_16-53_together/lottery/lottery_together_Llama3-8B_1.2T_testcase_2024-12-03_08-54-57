@@ -1,0 +1,218 @@
+[
+    {
+        " TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10020000",
+                "Blocknum": "30000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "makeBet",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000001",
+                            1
+                        ]
+                    ],
+                    "Timestamp": "10020141",
+                    "Blocknum": "30000095"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "fallback",
+                    "Params": [],
+                    "Timestamp": "10020151",
+                    "Blocknum": "30000104"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "destruct",
+                    "Timestamp": "10020161",
+                    "Blocknum": "30000113"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "getBets",
+                    "Params": [],
+                    "Timestamp": "10020171",
+                    "Blocknum": "30000122"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "makeBet",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000002",
+                            2
+                        ]
+                    ],
+                    "Timestamp": "10020181",
+                    "Blocknum": "30000131"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "makeBet",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000002",
+                            3
+                        ]
+                    ],
+                    "Timestamp": "10020191",
+                    "Blocknum": "30000140"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10030000",
+                "Blocknum": "40000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "construct",
+                    "Timestamp": "10030141",
+                    "Blocknum": "40000095"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "makeBet",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000001",
+                            4
+                        ]
+                    ],
+                    "Timestamp": "10030151",
+                    "Blocknum": "40000104"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "fallback",
+                    "Params": [],
+                    "Timestamp": "10030161",
+                    "Blocknum": "40000113"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getBets",
+                    "Params": [],
+                    "Timestamp": "10030171",
+                    "Blocknum": "40000122"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "destroy",
+                    "Timestamp": "10030181",
+                    "Blocknum": "40000131"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "makeBet",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000002",
+                            5
+                        ]
+                    ],
+                    "Timestamp": "10030191",
+                    "Blocknum": "40000140"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10040000",
+                "Blocknum": "50000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "makeBet",
+                    "Params": [],
+                    "Timestamp": "10040141",
+                    "Blocknum": "50000095"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "destroy",
+                    "Timestamp": "10040151",
+                    "Blocknum": "50000104"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getBets",
+                    "Timestamp": "10040161",
+                    "Blocknum": "50000113"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "makeBet",
+                    "Params": [
+                        []
+                    ],
+                    "Timestamp": "10040171",
+                    "Blocknum": "50000122"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "from",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000003"
+                    ],
+                    "Timestamp": "10040181",
+                    "Blocknum": "50000131"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "makeBet",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000003",
+                            6
+                        ]
+                    ],
+                    "Timestamp": "10040191",
+                    "Blocknum": "50000140"
+                }
+            ]
+        }
+    },
+    ...
+]

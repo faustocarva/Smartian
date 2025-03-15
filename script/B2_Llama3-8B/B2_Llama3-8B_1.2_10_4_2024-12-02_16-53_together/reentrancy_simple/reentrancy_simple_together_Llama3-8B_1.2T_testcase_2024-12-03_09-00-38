@@ -1,0 +1,113 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": 0,
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "14000000",
+                "Blocknum": "24000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": 0,
+                    "Function": "getBalance",
+                    "Timestamp": "14000641",
+                    "Blocknum": "24000498"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": 0,
+                    "Function": "addToBalance",
+                    "Params": [],
+                    "Timestamp": "14000651",
+                    "Blocknum": "24000494"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": 1,
+                    "Function": "withdrawBalance",
+                    "Timestamp": "14000701",
+                    "Blocknum": "24000502"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": 0,
+                    "Function": "getBalance",
+                    ["SmartianAgent3"],
+                    "Timestamp": "14000731",
+                    "Blocknum": "24000508"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": 2,
+                    "Function": "transfer",
+                    "Params": [
+                        zn,
+                        ["0x0000000000000000000000000000000000000001", "0x0000000000000000000000000000000000000002"]
+                    ],
+                    "Timestamp": "14000871",
+                    "Blocknum": "24000522"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": 0,
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "22000000",
+                "Blocknum": "26000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": 0,
+                    "Function": "getBalance",
+                    "Timestamp": "22000641",
+                    "Blocknum": "26000498"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": 0,
+                    "Function": "addToBalance",
+                    "Params": [],
+                    "Timestamp": "22000651",
+                    "Blocknum": "26000494"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": 3,
+                    "Function": "withdrawBalance",
+                    "Timestamp": "22000901",
+                    "Blocknum": "26000502"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": 0,
+                    "Function": "getBalance",
+                    ["SmartianAgent1"],
+                    "Timestamp": "22000931",
+                    "Blocknum": "26000508"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": 4,
+                    "Function": "transfer",
+                    "Params": [
+                        nez,
+                        ["0x0000000000000000000000000000000000000003", "0x0000000000000000000000000000000000000004"]
+                    ],
+                    "Timestamp": "22001231",
+                    "Blocknum": "26000522"
+                }
+            ]
+        }
+    },
+    ...nine more iterations...
+]

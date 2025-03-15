@@ -1,0 +1,523 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000000",
+                "Blocknum": "20000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "winAmount",
+                    "Params": [
+                        0
+                    ],
+                    "Timestamp": "10000101",
+                    "Blocknum": "20000010"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "withdrawLeftOver",
+                    "Timestamp": "10000111",
+                    "Blocknum": "20000012"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "sendToWinner",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000001",
+                            0
+                        ]
+                    ],
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000014"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "payedOut",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000016"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "winner",
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000018"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10001000",
+                "Blocknum": "20001000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "winAmount",
+                    "Params": [
+                        1
+                    ],
+                    "Timestamp": "10001010",
+                    "Blocknum": "20001010"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "sendToWinner",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000002",
+                            1
+                        ]
+                    ],
+                    "Timestamp": "10001020",
+                    "Blocknum": "20001012"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "payedOut",
+                    "Timestamp": "10001030",
+                    "Blocknum": "20001014"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "withdrawLeftOver",
+                    "Timestamp": "10001040",
+                    "Blocknum": "20001016"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "winner",
+                    "Timestamp": "10001050",
+                    "Blocknum": "20001018"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10002000",
+                "Blocknum": "20002000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "withdrawLeftOver",
+                    "Timestamp": "10002010",
+                    "Blocknum": "20002006"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "sendToWinner",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000003",
+                            0
+                        ]
+                    ],
+                    "Timestamp": "10002020",
+                    "Blocknum": "20002008"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "1",
+                    "Function": "winAmount",
+                    "Params": [
+                        2
+                    ],
+                    "Timestamp": "10002030",
+                    "Blocknum": "20002012"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "payedOut",
+                    "Timestamp": "10002040",
+                    "Blocknum": "20002014"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "winner",
+                    "Timestamp": "10002050",
+                    "Blocknum": "20002016"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10003000",
+                "Blocknum": "20003000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "winAmount",
+                    "Params": [
+                        3
+                    ],
+                    "Timestamp": "10003010",
+                    "Blocknum": "20003010"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "withdrawLeftOver",
+                    "Timestamp": "10003020",
+                    "Blocknum": "20003012"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "sendToWinner",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000004",
+                            1
+                        ]
+                    ],
+                    "Timestamp": "10003030",
+                    "Blocknum": "20003014"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "payedOut",
+                    "Timestamp": "10003040",
+                    "Blocknum": "20003016"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "winner",
+                    "Timestamp": "10003050",
+                    "Blocknum": "20003018"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10004000",
+                "Blocknum": "20004000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "winAmount",
+                    "Params": [
+                        4
+                    ],
+                    "Timestamp": "10004010",
+                    "Blocknum": "20004010"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "sendToWinner",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000005",
+                            2
+                        ]
+                    ],
+                    "Timestamp": "10004020",
+                    "Blocknum": "20004012"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "payedOut",
+                    "Timestamp": "10004030",
+                    "Blocknum": "20004014"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "withdrawLeftOver",
+                    "Timestamp": "10004040",
+                    "Blocknum": "20004016"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "winner",
+                    "Timestamp": "10004050",
+                    "Blocknum": "20004018"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10005000",
+                "Blocknum": "20005000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "withdrawLeftOver",
+                    "Timestamp": "10005010",
+                    "Blocknum": "20005006"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "sendToWinner",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000006",
+                            2
+                        ]
+                    ],
+                    "Timestamp": "10005020",
+                    "Blocknum": "20005008"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "winAmount",
+                    "Params": [
+                        5
+                    ],
+                    "Timestamp": "10005030",
+                    "Blocknum": "20005012"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "payedOut",
+                    "Timestamp": "10005040",
+                    "Blocknum": "20005014"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "winner",
+                    "Timestamp": "10005050",
+                    "Blocknum": "20005016"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10006000",
+                "Blocknum": "20006000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "winner",
+                    "Timestamp": "10006010",
+                    "Blocknum": "20006006"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "sendToWinner",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000007",
+                            3
+                        ]
+                    ],
+                    "Timestamp": "10006020",
+                    "Blocknum": "20006008"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "1",
+                    "Function": "winAmount",
+                    "Params": [
+                        6
+                    ],
+                    "Timestamp": "10006030",
+                    "Blocknum": "20006012"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "payedOut",
+                    "Timestamp": "10006040",
+                    "Blocknum": "20006014"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "withdrawLeftOver",
+                    "Timestamp": "10006050",
+                    "Blocknum": "20006016"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10007000",
+                "Blocknum": "20007000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "payedOut",
+                    "Timestamp": "10007010",
+                    "Blocknum": "20007006"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "sendToWinner",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000008",
+                            4
+                        ]
+                    ],
+                    "Timestamp": "10007020",
+                    "Blocknum": "20007008"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "winAmount",
+                    "Params": [
+                        7
+                    ],
+                    "Timestamp": "10007030",
+                    "Blocknum": "20007012"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "withdrawLeftOver",
+                    "Timestamp": "10007040",
+                    "Blocknum": "20007014"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "winner",
+                    "Timestamp": "10007050",
+                    "Blocknum": "20007016"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10008000",
+                "Blocknum": "20008000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "withdrawLeftOver",
+                    "Timestamp": "10008010",
+                    "Blocknum": "20008006"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "sendToWinner",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000009",
+                            5
+                        ]
+                    ],
+                    "Timestamp": "10008020",
+                    "Blocknum": "20008008"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "winAmount",
+                    "Params": [
+                        8
+                    ],
+                    "Timestamp": "10008030",
+                    "Blocknum": "20008012"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "payedOut",
+                    "Timestamp": "10008040",
+                    "Blocknum": "20008014"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "winner",
+                    "Timestamp": "10008050",
+                    "Blocknum": "20008016"
+                }
+            ]
+        }
+    }

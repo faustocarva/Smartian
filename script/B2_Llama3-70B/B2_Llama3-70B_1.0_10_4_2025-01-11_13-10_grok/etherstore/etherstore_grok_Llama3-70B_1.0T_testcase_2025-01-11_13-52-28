@@ -1,0 +1,602 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000000",
+                "Blocknum": "20000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "lastWithdrawTime",
+                    "Params": [
+                        "SmartianAgent2"
+                    ],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000198"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "balances",
+                    "Params": [
+                        "SmartianAgent1"
+                    ],
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000144"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "depositFunds",
+                    "Params": [],
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "withdrawalLimit",
+                    "Params": [],
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000156"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "2",
+                    "Function": "withdrawFunds",
+                    "Params": [
+                        "10"
+                    ],
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000162"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10001000",
+                "Blocknum": "20001000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "lastWithdrawTime",
+                    "Params": [
+                        "SmartianAgent1"
+                    ],
+                    "Timestamp": "10001141",
+                    "Blocknum": "20001198"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "3",
+                    "Function": "depositFunds",
+                    "Params": [],
+                    "Timestamp": "10001201",
+                    "Blocknum": "20001245"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "balances",
+                    "Params": [
+                        "SmartianAgent3"
+                    ],
+                    "Timestamp": "10001321",
+                    "Blocknum": "20001367"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "4",
+                    "Function": "withdrawFunds",
+                    "Params": [
+                        "20"
+                    ],
+                    "Timestamp": "10001451",
+                    "Blocknum": "20001482"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "withdrawalLimit",
+                    "Params": [],
+                    "Timestamp": "10001571",
+                    "Blocknum": "20001597"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10002000",
+                "Blocknum": "20002000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "lastWithdrawTime",
+                    "Params": [
+                        "SmartianAgent2"
+                    ],
+                    "Timestamp": "10002141",
+                    "Blocknum": "20002198"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "5",
+                    "Function": "depositFunds",
+                    "Params": [],
+                    "Timestamp": "10002201",
+                    "Blocknum": "20002245"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "balances",
+                    "Params": [
+                        "SmartianAgent4"
+                    ],
+                    "Timestamp": "10002321",
+                    "Blocknum": "20002367"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "6",
+                    "Function": "withdrawFunds",
+                    "Params": [
+                        "30"
+                    ],
+                    "Timestamp": "10002451",
+                    "Blocknum": "20002482"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "withdrawalLimit",
+                    "Params": [],
+                    "Timestamp": "10002571",
+                    "Blocknum": "20002597"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10003000",
+                "Blocknum": "20003000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "lastWithdrawTime",
+                    "Params": [
+                        "SmartianAgent3"
+                    ],
+                    "Timestamp": "10003141",
+                    "Blocknum": "20003198"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "7",
+                    "Function": "depositFunds",
+                    "Params": [],
+                    "Timestamp": "10003201",
+                    "Blocknum": "20003245"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "balances",
+                    "Params": [
+                        "SmartianAgent1"
+                    ],
+                    "Timestamp": "10003321",
+                    "Blocknum": "20003367"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "8",
+                    "Function": "withdrawFunds",
+                    "Params": [
+                        "40"
+                    ],
+                    "Timestamp": "10003451",
+                    "Blocknum": "20003482"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "withdrawalLimit",
+                    "Params": [],
+                    "Timestamp": "10003571",
+                    "Blocknum": "20003597"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10004000",
+                "Blocknum": "20004000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "lastWithdrawTime",
+                    "Params": [
+                        "SmartianAgent4"
+                    ],
+                    "Timestamp": "10004141",
+                    "Blocknum": "20004198"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "9",
+                    "Function": "depositFunds",
+                    "Params": [],
+                    "Timestamp": "10004201",
+                    "Blocknum": "20004245"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "balances",
+                    "Params": [
+                        "SmartianAgent2"
+                    ],
+                    "Timestamp": "10004321",
+                    "Blocknum": "20004367"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "10",
+                    "Function": "withdrawFunds",
+                    "Params": [
+                        "50"
+                    ],
+                    "Timestamp": "10004451",
+                    "Blocknum": "20004482"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "withdrawalLimit",
+                    "Params": [],
+                    "Timestamp": "10004571",
+                    "Blocknum": "20004597"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10005000",
+                "Blocknum": "20005000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "lastWithdrawTime",
+                    "Params": [
+                        "SmartianAgent1"
+                    ],
+                    "Timestamp": "10005141",
+                    "Blocknum": "20005198"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "11",
+                    "Function": "depositFunds",
+                    "Params": [],
+                    "Timestamp": "10005201",
+                    "Blocknum": "20005245"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "balances",
+                    "Params": [
+                        "SmartianAgent3"
+                    ],
+                    "Timestamp": "10005321",
+                    "Blocknum": "20005367"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "12",
+                    "Function": "withdrawFunds",
+                    "Params": [
+                        "60"
+                    ],
+                    "Timestamp": "10005451",
+                    "Blocknum": "20005482"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "withdrawalLimit",
+                    "Params": [],
+                    "Timestamp": "10005571",
+                    "Blocknum": "20005597"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10006000",
+                "Blocknum": "20006000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "lastWithdrawTime",
+                    "Params": [
+                        "SmartianAgent2"
+                    ],
+                    "Timestamp": "10006141",
+                    "Blocknum": "20006198"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "13",
+                    "Function": "depositFunds",
+                    "Params": [],
+                    "Timestamp": "10006201",
+                    "Blocknum": "20006245"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "balances",
+                    "Params": [
+                        "SmartianAgent4"
+                    ],
+                    "Timestamp": "10006321",
+                    "Blocknum": "20006367"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "14",
+                    "Function": "withdrawFunds",
+                    "Params": [
+                        "70"
+                    ],
+                    "Timestamp": "10006451",
+                    "Blocknum": "20006482"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "withdrawalLimit",
+                    "Params": [],
+                    "Timestamp": "10006571",
+                    "Blocknum": "20006597"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10007000",
+                "Blocknum": "20007000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "lastWithdrawTime",
+                    "Params": [
+                        "SmartianAgent3"
+                    ],
+                    "Timestamp": "10007141",
+                    "Blocknum": "20007198"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "15",
+                    "Function": "depositFunds",
+                    "Params": [],
+                    "Timestamp": "10007201",
+                    "Blocknum": "20007245"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "balances",
+                    "Params": [
+                        "SmartianAgent1"
+                    ],
+                    "Timestamp": "10007321",
+                    "Blocknum": "20007367"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "16",
+                    "Function": "withdrawFunds",
+                    "Params": [
+                        "80"
+                    ],
+                    "Timestamp": "10007451",
+                    "Blocknum": "20007482"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "withdrawalLimit",
+                    "Params": [],
+                    "Timestamp": "10007571",
+                    "Blocknum": "20007597"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10008000",
+                "Blocknum": "20008000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "lastWithdrawTime",
+                    "Params": [
+                        "SmartianAgent4"
+                    ],
+                    "Timestamp": "10008141",
+                    "Blocknum": "20008198"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "17",
+                    "Function": "depositFunds",
+                    "Params": [],
+                    "Timestamp": "10008201",
+                    "Blocknum": "20008245"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "balances",
+                    "Params": [
+                        "SmartianAgent2"
+                    ],
+                    "Timestamp": "10008321",
+                    "Blocknum": "20008367"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "18",
+                    "Function": "withdrawFunds",
+                    "Params": [
+                        "90"
+                    ],
+                    "Timestamp": "10008451",
+                    "Blocknum": "20008482"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "withdrawalLimit",
+                    "Params": [],
+                    "Timestamp": "10008571",
+                    "Blocknum": "20008597"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10009000",
+                "Blocknum": "20009000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "lastWithdrawTime",
+                    "Params": [
+                        "SmartianAgent1"
+                    ],
+                    "Timestamp": "10009141",
+                    "Blocknum": "20009198"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "19",
+                    "Function": "depositFunds",
+                    "Params": [],
+                    "Timestamp": "10009201",
+                    "Blocknum": "20009245"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "balances",
+                    "Params": [
+                        "SmartianAgent3"
+                    ],
+                    "Timestamp": "10009321",
+                    "Blocknum": "20009367"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "20",
+                    "Function": "withdrawFunds",
+                    "Params": [
+                        "100"
+                    ],
+                    "Timestamp": "10009451",
+                    "Blocknum": "20009482"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "withdrawalLimit",
+                    "Params": [],
+                    "Timestamp": "10009571",
+                    "Blocknum": "20009597"
+                }
+            ]
+        }
+    }
+]

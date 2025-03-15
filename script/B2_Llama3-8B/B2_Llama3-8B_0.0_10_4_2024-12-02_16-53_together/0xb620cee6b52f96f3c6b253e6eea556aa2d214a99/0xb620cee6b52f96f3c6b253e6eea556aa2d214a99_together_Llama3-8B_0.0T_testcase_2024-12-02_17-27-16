@@ -1,0 +1,490 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000000",
+                "Blocknum": "20000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "callFirstTarget",
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000198"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "setSeed",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000001",
+                        "1"
+                    ],
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000144"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "callSecondTarget",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000002"
+                    ],
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "setSecret",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000003"
+                    ],
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000156"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "claimPrize",
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000162"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000010",
+                "Blocknum": "20000010"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "becomePlayer",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getLength",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "addSeed",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000004"
+                    ],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000140"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getPrize",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "2",
+                    "Function": "winPrize",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000160"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000020",
+                "Blocknum": "20000020"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "manipulateSecret",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "getSecret",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "1",
+                    "Function": "guessSeed",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000005"
+                    ],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000140"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "owner",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "winner",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000160"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000030",
+                "Blocknum": "20000030"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "players",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "secret",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "addSeed",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000006"
+                    ],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000140"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "firstTarget",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "2",
+                    "Function": "secondTarget",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000160"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000040",
+                "Blocknum": "20000040"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "callFirstTarget",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "setSeed",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000007",
+                        "1"
+                    ],
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "callSecondTarget",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000008"
+                    ],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000140"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "setSecret",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000009"
+                    ],
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "claimPrize",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000160"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000050",
+                "Blocknum": "20000050"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "becomePlayer",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getLength",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "addSeed",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000010"
+                    ],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000140"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getPrize",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "2",
+                    "Function": "winPrize",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000160"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000060",
+                "Blocknum": "20000060"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "manipulateSecret",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "getSecret",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "1",
+                    "Function": "guessSeed",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000011"
+                    ],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000140"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "owner",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "winner",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000160"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000070",
+                "Blocknum": "20000070"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "players",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "secret",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "addSeed",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000012"
+                    ],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000140"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "firstTarget",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "2",
+                    "Function": "secondTarget",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000160"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000080",
+                "Blocknum": "20000080"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "callFirstTarget",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "setSeed",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000013",
+                        "1"
+                    ],
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "callSecondTarget",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000014"
+                    ],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000140"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "setSecret",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000015"
+                    ],
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "claimPrize",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000160"
+                }
+            ]
+        }
+    }

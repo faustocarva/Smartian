@@ -1,0 +1,467 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000000",
+                "Blocknum": "20000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "blockReward",
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000198"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "ticketPrice",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000144"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getPot",
+                    "Params": ["1"],
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getTicketsCountByBuyer",
+                    "Params": ["1", "SmartianAgent2"],
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000156"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getIsCashed",
+                    "Params": ["1", "2"],
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000162"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10001000",
+                "Blocknum": "20001000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getSubpotsCount",
+                    "Timestamp": "10001041",
+                    "Blocknum": "20001098"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "calculateWinner",
+                    "Params": ["1", "2"],
+                    "Timestamp": "10001051",
+                    "Blocknum": "20001042"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getRoundIndex",
+                    "Timestamp": "10001061",
+                    "Blocknum": "20001052"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getHashOfBlock",
+                    "Params": ["1"],
+                    "Timestamp": "10001071",
+                    "Blocknum": "20001062"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "fallback",
+                    "Timestamp": "10001081",
+                    "Blocknum": "20001072"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10002000",
+                "Blocknum": "20002000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "blockReward",
+                    "Timestamp": "10002041",
+                    "Blocknum": "20002098"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "ticketPrice",
+                    "Timestamp": "10002051",
+                    "Blocknum": "20002042"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "getPot",
+                    "Params": ["2"],
+                    "Timestamp": "10002061",
+                    "Blocknum": "20002052"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "getTicketsCountByBuyer",
+                    "Params": ["2", "SmartianAgent4"],
+                    "Timestamp": "10002071",
+                    "Blocknum": "20002062"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "getIsCashed",
+                    "Params": ["2", "3"],
+                    "Timestamp": "10002081",
+                    "Blocknum": "20002072"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10003000",
+                "Blocknum": "20003000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "getSubpotsCount",
+                    "Timestamp": "10003041",
+                    "Blocknum": "20003098"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "calculateWinner",
+                    "Params": ["2", "3"],
+                    "Timestamp": "10003051",
+                    "Blocknum": "20003042"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "getRoundIndex",
+                    "Timestamp": "10003061",
+                    "Blocknum": "20003052"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "getHashOfBlock",
+                    "Params": ["2"],
+                    "Timestamp": "10003071",
+                    "Blocknum": "20003062"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "fallback",
+                    "Timestamp": "10003081",
+                    "Blocknum": "20003072"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10004000",
+                "Blocknum": "20004000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "cash",
+                    "Params": ["1", "2"],
+                    "Timestamp": "10004041",
+                    "Blocknum": "20004098"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getDecisionBlockNumber",
+                    "Params": ["1", "2"],
+                    "Timestamp": "10004051",
+                    "Blocknum": "20004042"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getBlocksPerRound",
+                    "Timestamp": "10004061",
+                    "Blocknum": "20004052"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getTicketPrice",
+                    "Timestamp": "10004071",
+                    "Blocknum": "20004062"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getSubpot",
+                    "Params": ["1"],
+                    "Timestamp": "10004081",
+                    "Blocknum": "20004072"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10005000",
+                "Blocknum": "20005000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "cash",
+                    "Params": ["2", "3"],
+                    "Timestamp": "10005041",
+                    "Blocknum": "20005098"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getDecisionBlockNumber",
+                    "Params": ["2", "3"],
+                    "Timestamp": "10005051",
+                    "Blocknum": "20005042"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getBlocksPerRound",
+                    "Timestamp": "10005061",
+                    "Blocknum": "20005052"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getTicketPrice",
+                    "Timestamp": "10005071",
+                    "Blocknum": "20005062"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getSubpot",
+                    "Params": ["2"],
+                    "Timestamp": "10005081",
+                    "Blocknum": "20005072"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10006000",
+                "Blocknum": "20006000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "cash",
+                    "Params": ["3", "4"],
+                    "Timestamp": "10006041",
+                    "Blocknum": "20006098"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "getDecisionBlockNumber",
+                    "Params": ["3", "4"],
+                    "Timestamp": "10006051",
+                    "Blocknum": "20006042"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "getBlocksPerRound",
+                    "Timestamp": "10006061",
+                    "Blocknum": "20006052"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "getTicketPrice",
+                    "Timestamp": "10006071",
+                    "Blocknum": "20006062"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "getSubpot",
+                    "Params": ["3"],
+                    "Timestamp": "10006081",
+                    "Blocknum": "20006072"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10007000",
+                "Blocknum": "20007000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "cash",
+                    "Params": ["4", "5"],
+                    "Timestamp": "10007041",
+                    "Blocknum": "20007098"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "getDecisionBlockNumber",
+                    "Params": ["4", "5"],
+                    "Timestamp": "10007051",
+                    "Blocknum": "20007042"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "getBlocksPerRound",
+                    "Timestamp": "10007061",
+                    "Blocknum": "20007052"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "getTicketPrice",
+                    "Timestamp": "10007071",
+                    "Blocknum": "20007062"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "getSubpot",
+                    "Params": ["4"],
+                    "Timestamp": "10007081",
+                    "Blocknum": "20007072"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10008000",
+                "Blocknum": "20008000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "blockReward",
+                    "Timestamp": "10008041",
+                    "Blocknum": "20008098"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "ticketPrice",
+                    "Timestamp": "10008051",
+                    "Blocknum": "20008042"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getPot",
+                    "Params": ["4"],
+                    "Timestamp": "10008061",
+                    "Blocknum": "20008052"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getTicketsCountByBuyer",
+                    "Params": ["4", "SmartianAgent4"],
+                    "Timestamp": "10008071",
+                    "Blocknum": "20008062"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "getIsCashed",
+                    "Params": ["4", "5"],
+                    "Timestamp": "10008081",
+                    "Blocknum": "20008072"
+                }
+            ]
+        }
+    }

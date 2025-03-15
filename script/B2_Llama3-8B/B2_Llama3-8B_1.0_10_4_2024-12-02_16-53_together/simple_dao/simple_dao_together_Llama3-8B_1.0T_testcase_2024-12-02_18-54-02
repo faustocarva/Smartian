@@ -1,0 +1,526 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000010",
+                "Blocknum": "20000001"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000111",
+                    "Blocknum": "20000104"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "withdraw",
+                    "Params": [10],
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000111"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "credit",
+                    "Params": [1],
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000115"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000003"],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000118"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "credit",
+                    "Params": [1, 2],
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000120"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000126"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "withdraw",
+                    "Params": [20],
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000128"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000002"],
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000002"],
+                    "Timestamp": "10000191",
+                    "Blocknum": "20000132"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "credit",
+                    "Params": [],
+                    "Timestamp": "10000201",
+                    "Blocknum": "20000135"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000100",
+                "Blocknum": "20000102"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000111",
+                    "Blocknum": "20000105"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "withdraw",
+                    "Params": [1],
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000108"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "credit",
+                    "Params": [1],
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000112"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000002"],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000115"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "credit",
+                    "Params": [1, 2],
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000118"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000120"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "withdraw",
+                    "Params": [10],
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000123"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000001"],
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000126"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000001"],
+                    "Timestamp": "10000191",
+                    "Blocknum": "20000129"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "credit",
+                    "Params": [],
+                    "Timestamp": "10000201",
+                    "Blocknum": "20000131"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000015",
+                "Blocknum": "20000107"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000115",
+                    "Blocknum": "20000110"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "withdraw",
+                    "Params": [2],
+                    "Timestamp": "10000125",
+                    "Blocknum": "20000113"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "2",
+                    "Function": "credit",
+                    "Params": [1, 2, 3],
+                    "Timestamp": "10000135",
+                    "Blocknum": "20000116"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "1",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000002"],
+                    "Timestamp": "10000145",
+                    "Blocknum": "20000119"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000155",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "withdraw",
+                    "Params": [5],
+                    "Timestamp": "10000165",
+                    "Blocknum": "20000125"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "2",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000001"],
+                    "Timestamp": "10000175",
+                    "Blocknum": "20000128"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "1",
+                    "Function": "credit",
+                    "Params": [1, 2],
+                    "Timestamp": "10000185",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "1",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000002"],
+                    "Timestamp": "10000195",
+                    "Blocknum": "20000134"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000020",
+                "Blocknum": "20000103"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000120",
+                    "Blocknum": "20000106"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "withdraw",
+                    "Params": [5],
+                    "Timestamp": "10000130",
+                    "Blocknum": "20000109"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "credit",
+                    "Params": [2, 3],
+                    "Timestamp": "10000140",
+                    "Blocknum": "20000112"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000001"],
+                    "Timestamp": "10000150",
+                    "Blocknum": "20000115"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "2",
+                    "Function": "credit",
+                    "Params": [1, 3, 4],
+                    "Timestamp": "10000160",
+                    "Blocknum": "20000118"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "1",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000170",
+                    "Blocknum": "20000121"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "withdraw",
+                    "Params": [10],
+                    "Timestamp": "10000180",
+                    "Blocknum": "20000124"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000002"],
+                    "Timestamp": "10000190",
+                    "Blocknum": "20000127"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000002"],
+                    "Timestamp": "10000200",
+                    "Blocknum": "20000130"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000025",
+                "Blocknum": "20000104"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000125",
+                    "Blocknum": "20000108"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "withdraw",
+                    "Params": [3],
+                    "Timestamp": "10000135",
+                    "Blocknum": "20000111"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "2",
+                    "Function": "credit",
+                    "Params": [2, 1, 4],
+                    "Timestamp": "10000145",
+                    "Blocknum": "20000114"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000001"],
+                    "Timestamp": "10000155",
+                    "Blocknum": "20000117"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000165",
+                    "Blocknum": "20000120"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "withdraw",
+                    "Params": [8],
+                    "Timestamp": "10000175",
+                    "Blocknum": "20000123"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000002"],
+                    "Timestamp": "10000185",
+                    "Blocknum": "20000126"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000002"],
+                    "Timestamp": "10000195",
+                    "Blocknum": "20000129"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000205",
+                    "Blocknum": "20000132"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000030",
+                "Blocknum": "20000105"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "1",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000130",
+                    "Blocknum": "20000110"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "withdraw",
+                    "Params": [3],
+                    "Timestamp": "10000140",
+                    "Blocknum": "20000113"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "2",
+                    "Function": "credit",
+                    "Params": [3, 1, 5],
+                    "Timestamp": "10000150",
+                    "Blocknum": "20000116"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000001"],
+                    "Timestamp": "10000160",
+                    "Blocknum": "20000119"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "donate",
+                    "Params": [],
+                    "Timestamp": "10000170",
+                    "Blocknum": "20000122"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "withdraw",
+                    "Params": [6],
+                    "Timestamp": "10000180",
+                    "Blocknum": "20000125"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000002"],
+                    "Timestamp": "10000190",
+                    "Blocknum": "20000128"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "queryCredit",
+                    "Params": ["0x0000000000000000000000000000000000000002"],
+                    "Timestamp": "10000200",
+                    "Blocknum": "20000131"
+                }
+            ]
+        }
+    }
+]

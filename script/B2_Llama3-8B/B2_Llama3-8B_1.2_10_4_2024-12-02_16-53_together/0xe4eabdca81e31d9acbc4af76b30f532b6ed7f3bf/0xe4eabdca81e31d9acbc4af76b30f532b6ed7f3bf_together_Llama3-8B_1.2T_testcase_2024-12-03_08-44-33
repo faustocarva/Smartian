@@ -1,0 +1,214 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "12000480",
+                "Blocknum": "22001320"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getfreebie",
+                    "Params": [],
+                    "Timestamp": "12000504",
+                    "Blocknum": "22001324"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "owner",
+                    "Timestamp": "12000516",
+                    "Blocknum": "22001329"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "3",
+                    "Function": "command",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000004",
+                            "0x0000000000000000000000000000000000000005"
+                        ],
+                        [
+                            "3",
+                            "4"
+                        ]
+                    ],
+                    "Timestamp": "12000535",
+                    "Blocknum": "22001334"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "fallback",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000006"
+                    ],
+                    "Timestamp": "12000548",
+                    "Blocknum": "22001342"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": " býpayable return(0x0000000000000000000000000000000000000001, 100);",
+                    "Params": [],
+                    "Timestamp": "12000559",
+                    "Blocknum": "22001349"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "4",
+                    "Function": "Command(0x0000000000000000000000000000000000000000, '0x000000000000000000000000000000000000000'),
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000008",
+                            "0x0000000000000000000000000000000000000009"
+                        ],
+                        [
+                            "4",
+                            "5"
+                        ]
+                    ],
+                    "Timestamp": "12000573",
+                    "Blocknum": "22001355"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "12001134",
+                "Blocknum": "22001586"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "withdraw"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "2",
+                    "Function": "getfreebie",
+                    "Params": [],
+                    "Timestamp": "12001156",
+                    "Blocknum": "22001606"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "3",
+                    "Function": "command",
+                    "Params": [
+                        [
+                            "0x000000000000000000000000000000000000ocument1",
+                            "0x000000000000000000000000000000000000020"
+                        ],
+                        [
+                            "3",
+                            "7"
+                        ]
+                    ],
+                    "Timestamp": "12001182",
+                    "Blocknum": "22001621"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "fallback",
+                    "Params": [
+                        "0x000000000000000000000000000000000000003"
+                    ],
+                    "Timestamp": "12001197",
+                    "Blocknum": "22001636"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "2",
+                    "Function": "getfreebie return(0x000000000000000000000000000000000000003);",
+                    "Params": [],
+                    "Timestamp": "12001207",
+                    "Blocknum": "22001646"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "12001816",
+                "Blocknum": "22002064"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "owner"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "4",
+                    "Function": "command",
+                    "Params": [
+                        [
+                            "0x000000000000000000000000000000000000008",
+                            "0x000000000000000000000000000000000000023"
+                        ],
+                        [
+                            "4",
+                            "6"
+                        ]
+                    ],
+                    "Timestamp": "12001839",
+                    "Blocknum": "22002085"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "fallback return(0x000000000000000000000000000000000000004 DRW(X));",
+                    "Params": [],
+                    "Timestamp": "12001854",
+                    "Blocknum": "22002108"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "3",
+                    "Function": "command 0x00000000000000000000000000000000000004feree4;)",
+                    "Params": [
+                        [
+                            "0x000000000000000000000000000000000000008",
+                            "0x000000000000000000000000000000000000025"
+                        ],
+                        [
+                            "3",
+                            "8"
+                        ]
+                    ],
+                    "Timestamp": "12001875",
+                    "Blocknum": "22002145"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "2",
+                    "Function": "/reset owner(0x00000000000000000000000000000000000027, 1w);",
+                    "Params": [],
+                    "Timestamp": "12001894",
+                    "Blocknum": "22002161"
+                }
+            ]
+        }
+    }
+]

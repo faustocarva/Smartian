@@ -1,0 +1,193 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000000",
+                "Blocknum": "20000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "callFirstTarget",
+                    "Params": [
+                        1,
+                        2
+                    ],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000198"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "callSecondTarget",
+                    "Params": [
+                        3,
+                        4
+                    ],
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000144"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "setSeed",
+                    "Params": [
+                        5,
+                        6
+                    ],
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "DranMe",
+                    "Params": [
+                        "test"
+                    ],
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000156"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "setSecret",
+                    "Params": [
+                        7
+                    ],
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000162"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10001000",
+                "Blocknum": "20001000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "checkSecret",
+                    "Params": [
+                        8
+                    ],
+                    "Timestamp": "10001010",
+                    "Blocknum": "20001010"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "setSeed",
+                    "Params": [
+                        9,
+                        10
+                    ],
+                    "Timestamp": "10001021",
+                    "Blocknum": "20001014"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "manipulateSecret",
+                    "Params": [
+                        [
+                            11,
+                            12
+                        ]
+                    ],
+                    "Timestamp": "10001031",
+                    "Blocknum": "20001018"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "claimPrize",
+                    "Params": [],
+                    "Timestamp": "10001041",
+                    "Blocknum": "20001022"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "3",
+                    "Function": "winPrize",
+                    "Params": [
+                        13
+                    ],
+                    "Timestamp": "10001051",
+                    "Blocknum": "20001026"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10002000",
+                "Blocknum": "20002000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "owner",
+                    "Timestamp": "10002010",
+                    "Blocknum": "20002010"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "seed",
+                    "Params": [
+                        14
+                    ],
+                    "Timestamp": "10002021",
+                    "Blocknum": "20002014"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "secondTarget",
+                    "Timestamp": "10002031",
+                    "Blocknum": "20002018"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "addSeed",
+                    "Params": [
+                        15
+                    ],
+                    "Timestamp": "10002041",
+                    "Blocknum": "20002022"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "3",
+                    "Function": "balance",
+                    "Params": [
+                        16
+                    ],
+                    "Timestamp": "10002051",
+                    "Blocknum": "20002026"
+                }
+            ]
+        }
+    }
+]

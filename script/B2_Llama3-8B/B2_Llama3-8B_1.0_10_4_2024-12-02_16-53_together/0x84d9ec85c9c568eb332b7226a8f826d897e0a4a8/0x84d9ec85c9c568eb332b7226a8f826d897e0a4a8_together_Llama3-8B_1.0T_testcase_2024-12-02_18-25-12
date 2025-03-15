@@ -1,0 +1,155 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000000",
+                "Blocknum": "20000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "owner",
+                    "Timestamp": "10000111",
+                    "Blocknum": "20000112"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "indexdate",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000120"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "acceptOwnership",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "writeIndex",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000001",
+                            "String1"
+                        ]
+                    ],
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000140"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "partnernames",
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "wedaddress",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000001",
+                            "0x0000000000000000000000000000000000000002"
+                        ]
+                    ],
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000160"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "newOwner",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000003"
+                    ],
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000170"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000020",
+                "Blocknum": "20000020"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "wedaddress",
+                    "Timestamp": "10000121",
+                    "Blocknum": "20000120"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "owner",
+                    "Timestamp": "10000131",
+                    "Blocknum": "20000130"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "indexdate",
+                    "Timestamp": "10000141",
+                    "Blocknum": "20000140"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "1",
+                    "Function": "writeIndex",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000002",
+                            "String2"
+                        ]
+                    ],
+                    "Timestamp": "10000151",
+                    "Blocknum": "20000150"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "partnernames",
+                    "Timestamp": "10000161",
+                    "Blocknum": "20000160"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "2",
+                    "Function": "execute",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000001",
+                            "0x0000000000000000000000000000000000000002"
+                        ]
+                    ],
+                    "Timestamp": "10000171",
+                    "Blocknum": "20000170"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "displaymultisig",
+                    "Timestamp": "10000181",
+                    "Blocknum": "20000180"
+                }
+            ]
+        }
+    },
+    ... (and 7 more similar test cases)

@@ -1,0 +1,121 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "initialize",
+                "Params": [],
+                "Timestamp": "10000000",
+                "Blocknum": "20000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "2",
+                    "Function": "setMinSum",
+                    "Params": [
+                        "1"
+                    ],
+                    "Timestamp": "10000101",
+                    "Blocknum": "20001003"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "balances",
+                    "Params": ["SmartianAgent1"],
+                    "Timestamp": "10001011",
+                    "Blocknum": "20001012"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "initialize",
+                    "Timestamp": "10001021",
+                    "Blocknum": "20001017"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "Collect",
+                    "Params": ["0x00000000000010001"],
+                    "Timestamp": "10001031",
+                    "Blocknum": "20001020"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "3",
+                    "Function": "fallback",
+                    "Params": [],
+                    "Timestamp": "10001041",
+                    "Blocknum": "20001030"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "SetLogFile",
+                    "Params": ["0x00000000000000002"],
+                    "Timestamp": "10001052",
+                    "Blocknum": "20001045"
+                }
+            ]
+        }
+    }, rivalry -->
+.        
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "initialize",
+                "Params": [],
+                "Timestamp": "10000100",
+                "Blocknum": "2000100"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "Collect",
+                    "Params": ["0x00000000000000002"],
+                    "Timestamp": "10001011",
+                    "Blocknum": "20001013"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "SetLogFile",
+                    "Params": ["0x00000000000000003"],
+                    "Timestamp": "10001022",
+                    "Blocknum": "20001019"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "3",
+                    "Function": "SetMinSum",
+                    "Params": ["2.0"],
+                    "Timestamp": "10001033",
+                    "Blocknum": "20001033"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "fallback",
+                    "Params": ,
+                    "Timestamp": "10001044",
+                    "Blocknum": "20001040"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "2",
+                    "Function": "balances",
+                    "Params": ["SmartianAgent3"],
+                    "Timestamp": "10001054",
+                    "Blocknum": "20001053"
+                }
+            ]
+        }
+    }, <
+                                      .
+.ToolStripItem.

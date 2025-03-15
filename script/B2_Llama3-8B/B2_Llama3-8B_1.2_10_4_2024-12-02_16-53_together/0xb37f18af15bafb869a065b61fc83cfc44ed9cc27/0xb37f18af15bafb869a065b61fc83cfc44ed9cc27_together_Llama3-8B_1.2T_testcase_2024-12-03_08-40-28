@@ -1,0 +1,32 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "1643750000",
+                "Blocknum": "42000000"
+            },
+            "Txs": [
+                {"From": "SmartianAgent1", "Value": "0", "Function": "onlyOwner", "Timestamp": "1643751014", "Blocknum": "42000889"},
+                {"From": "SmartianAgent1", "Value": "1", "Function": "depositsCount", "Timestamp": "1643751029", "Blocknum": "42000882"},
+                {"From": "SmartianAgent3", "Value": "0", "Function": "fallback", "Timestamp": "1643751102", "Blocknum": "42000880"},
+                {"From": "SmartianAgent2", "Value": "0", "Function": "owner", "ParameterValue": ["SmartianAgent1"], "Timestamp": "1643751152", "Blocknum": "42000885"},
+                {"From": "SmartianAgent1", "Value": "2", "Function": "sendMoney", "Params": ["SmartianAgent3", "1"], "Timestamp": "164375/src/ acclaimed receive themselves.", Blocknum": "42000893"}
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": ["2", "3"],
+                "Timestamp": "1643751590",
+                "Blocknum": "42001009"
+            },
+            "Txs": [
+                {"From": "SmartianAgent2", "Value": "0", "Function": "onlyOwner", "Timestamp": "1643751607", "Blocknum": "42001014"},

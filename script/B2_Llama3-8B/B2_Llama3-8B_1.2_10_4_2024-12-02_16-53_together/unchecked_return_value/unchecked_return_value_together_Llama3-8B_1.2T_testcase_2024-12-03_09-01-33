@@ -1,0 +1,192 @@
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000000",
+                "Blocknum": "20000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "callchecked",
+                    "Params": ["SmartianAgent2"],
+                    "Timestamp": "10000118",
+                    "Blocknum": "20000128"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "1",
+                    "Function": "callchecked",
+                    "Params": ["SmartianAgent3"],
+                    "Timestamp": "10000128",
+                    "Blocknum": "20000132"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "callnotchecked",
+                    "Timestamp": "10000138",
+                    "Blocknum": "20000138"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "callnotchecked",
+                    "Timestamp": "10000148",
+                    "Blocknum": "20000142"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "2",
+                    "Function": "transfer",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000001",
+                            "0x0000000000000000000000000000000000000002"
+                        ],
+                        [
+                            "2",
+                            "3"
+                        ]
+                    ],
+                    "Timestamp": "10000158",
+                    "Blocknum": "20000152"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10001000",
+                "Blocknum": "20001000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "callchecked",
+                    "Params": ["SmartianAgent1"],
+                    "Timestamp": "10001018",
+                    "Blocknum": "20001018"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "callchecked",
+                    "Params": ["SmartianAgent2"],
+                    "Timestamp": "10001028",
+                    "Blocknum": "20001028"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "callnotchecked",
+                    "Timestamp": "10001038",
+                    "Blocknum": "20001038"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "from",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000003"
+                    ],
+                    "Timestamp": "10001048",
+                    "Blocknum": "20001042"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "3",
+                    "Function": "transfer",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000003",
+                            "0x0000000000000000000000000000000000000004"
+                        ],
+                        [
+                            "3",
+                            "4"
+                        ]
+                    ],
+                    "Timestamp": "10001058",
+                    "Blocknum": "20001052"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10002000",
+                "Blocknum": "20002000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "callchecked",
+                    "Params": ["SmartianAgent3"],
+                    "Timestamp": "10002018",
+                    "Blocknum": "20002018"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "2",
+                    "Function": "callchecked",
+                    "Params": ["SmartianAgent1"],
+                    "Timestamp": "10002028",
+                    "Blocknum": "20002028"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "1",
+                    "Function": "callnotchecked",
+                    "Timestamp": "10002038",
+                    "Blocknum": "20002038"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "from",
+                    "Params": [
+                        "0x0000000000000000000000000000000000000004"
+                    ],
+                    "Timestamp": "10002048",
+                    "Blocknum": "20002042"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "4",
+                    "Function": "transfer",
+                    "Params": [
+                        [
+                            "0x0000000000000000000000000000000000000001",
+                            "0x0000000000000000000000000000000000000004"
+                        ],
+                        [
+                            "4",
+                            "5"
+                        ]
+                    ],
+                    "Timestamp": "10002058",
+                    "Blocknum": "20002052"
+                }
+            ]
+        }
+    },
+    ...
+]
