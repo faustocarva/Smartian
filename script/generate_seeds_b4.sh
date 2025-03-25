@@ -8,7 +8,7 @@ DEFAULT_MODEL="Llama3-70B"
 DEFAULT_NUM_SEEDS=10
 DEFAULT_NUM_TXS=4
 DEFAULT_BACKEND="together"
-TEMPERATURES=(0.0 0.2 0.4 0.6)
+TEMPERATURES=(0.6)
 
 # Input parameters with defaults
 MODEL=${1:-$DEFAULT_MODEL}
@@ -17,7 +17,7 @@ NUM_SEEDS=${3:-$DEFAULT_NUM_SEEDS}
 NUM_TXS=${4:-$DEFAULT_NUM_TXS}
 
 # Define the dataset base directory
-BASE_DIR="./B4_orig_2"
+BASE_DIR="./B4_orig"
 
 # Function to confirm continuation
 confirm_continue() {

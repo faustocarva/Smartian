@@ -1,0 +1,484 @@
+```json
+[
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000000",
+                "Blocknum": "20000000"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "regUser",
+                    "Params": [
+                        "1"
+                    ],
+                    "Timestamp": "10000100",
+                    "Blocknum": "20000001"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0.5",
+                    "Function": "buyPool1",
+                    "Timestamp": "10000110",
+                    "Blocknum": "20000002"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "pool1currUserID",
+                    "Timestamp": "10000120",
+                    "Blocknum": "20000003"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "pool1userList",
+                    "Params": [
+                        "0"
+                    ],
+                    "Timestamp": "10000130",
+                    "Blocknum": "20000004"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "totalEarned",
+                    "Timestamp": "10000140",
+                    "Blocknum": "20000005"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000001",
+                "Blocknum": "20000006"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "buyPool2",
+                    "Timestamp": "10000150",
+                    "Blocknum": "20000007"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0.1",
+                    "Function": "regUser",
+                    "Params": [
+                        "2"
+                    ],
+                    "Timestamp": "10000160",
+                    "Blocknum": "20000008"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "pool2activeUserID",
+                    "Timestamp": "10000170",
+                    "Blocknum": "20000009"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "pool2userList",
+                    "Params": [
+                        "0"
+                    ],
+                    "Timestamp": "10000180",
+                    "Blocknum": "20000010"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "getEthBalance",
+                    "Timestamp": "10000190",
+                    "Blocknum": "20000011"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000002",
+                "Blocknum": "20000012"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0.2",
+                    "Function": "buyPool3",
+                    "Timestamp": "10000200",
+                    "Blocknum": "20000013"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "pool3currUserID",
+                    "Timestamp": "10000210",
+                    "Blocknum": "20000014"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "pool3userList",
+                    "Params": [
+                        "0"
+                    ],
+                    "Timestamp": "10000220",
+                    "Blocknum": "20000015"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "pool3activeUserID",
+                    "Timestamp": "10000230",
+                    "Blocknum": "20000016"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "totalEarned",
+                    "Timestamp": "10000240",
+                    "Blocknum": "20000017"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000003",
+                "Blocknum": "20000018"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0.3",
+                    "Function": "buyPool4",
+                    "Timestamp": "10000300",
+                    "Blocknum": "20000019"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "pool4currUserID",
+                    "Timestamp": "10000310",
+                    "Blocknum": "20000020"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "pool4userList",
+                    "Params": [
+                        "0"
+                    ],
+                    "Timestamp": "10000320",
+                    "Blocknum": "20000021"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "pool4activeUserID",
+                    "Timestamp": "10000330",
+                    "Blocknum": "20000022"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "totalEarned",
+                    "Timestamp": "10000340",
+                    "Blocknum": "20000023"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000004",
+                "Blocknum": "20000024"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0.4",
+                    "Function": "buyPool5",
+                    "Timestamp": "10000400",
+                    "Blocknum": "20000025"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "pool5currUserID",
+                    "Timestamp": "10000410",
+                    "Blocknum": "20000026"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "pool5userList",
+                    "Params": [
+                        "0"
+                    ],
+                    "Timestamp": "10000420",
+                    "Blocknum": "20000027"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "pool5activeUserID",
+                    "Timestamp": "10000430",
+                    "Blocknum": "20000028"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "totalEarned",
+                    "Timestamp": "10000440",
+                    "Blocknum": "20000029"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent2",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000005",
+                "Blocknum": "20000030"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0.5",
+                    "Function": "buyPool6",
+                    "Timestamp": "10000500",
+                    "Blocknum": "20000031"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "pool6currUserID",
+                    "Timestamp": "10000510",
+                    "Blocknum": "20000032"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "pool6userList",
+                    "Params": [
+                        "0"
+                    ],
+                    "Timestamp": "10000520",
+                    "Blocknum": "20000033"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "pool6activeUserID",
+                    "Timestamp": "10000530",
+                    "Blocknum": "20000034"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "totalEarned",
+                    "Timestamp": "10000540",
+                    "Blocknum": "20000035"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent3",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000006",
+                "Blocknum": "20000036"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0.6",
+                    "Function": "buyPool1",
+                    "Timestamp": "10000600",
+                    "Blocknum": "20000037"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "pool1activeUserID",
+                    "Timestamp": "10000610",
+                    "Blocknum": "20000038"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "pool1users",
+                    "Params": [
+                        "SmartianAgent3"
+                    ],
+                    "Timestamp": "10000620",
+                    "Blocknum": "20000039"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "currUserID",
+                    "Timestamp": "10000630",
+                    "Blocknum": "20000040"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "totalEarned",
+                    "Timestamp": "10000640",
+                    "Blocknum": "20000041"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent4",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000007",
+                "Blocknum": "20000042"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0.7",
+                    "Function": "buyPool2",
+                    "Timestamp": "10000700",
+                    "Blocknum": "20000043"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "pool2activeUserID",
+                    "Timestamp": "10000710",
+                    "Blocknum": "20000044"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "pool2users",
+                    "Params": [
+                        "SmartianAgent4"
+                    ],
+                    "Timestamp": "10000720",
+                    "Blocknum": "20000045"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "pool2userList",
+                    "Params": [
+                        "0"
+                    ],
+                    "Timestamp": "10000730",
+                    "Blocknum": "20000046"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "totalEarned",
+                    "Timestamp": "10000740",
+                    "Blocknum": "20000047"
+                }
+            ]
+        }
+    },
+    {
+        "TestCase": {
+            "DeployTx": {
+                "From": "SmartianAgent1",
+                "Value": "0",
+                "Function": "constructor",
+                "Params": [],
+                "Timestamp": "10000008",
+                "Blocknum": "20000048"
+            },
+            "Txs": [
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0.8",
+                    "Function": "buyPool3",
+                    "Timestamp": "10000800",
+                    "Blocknum": "20000049"
+                },
+                {
+                    "From": "SmartianAgent2",
+                    "Value": "0",
+                    "Function": "pool3activeUserID",
+                    "Timestamp": "10000810",
+                    "Blocknum": "20000050"
+                },
+                {
+                    "From": "SmartianAgent3",
+                    "Value": "0",
+                    "Function": "pool3users",
+                    "Params": [
+                        "SmartianAgent1"
+                    ],
+                    "Timestamp": "10000820",
+                    "Blocknum": "20000051"
+                },
+                {
+                    "From": "SmartianAgent4",
+                    "Value": "0",
+                    "Function": "pool3userList",
+                    "Params": [
+                        "0"
+                    ],
+                    "Timestamp": "10000830",
+                    "Blocknum": "20000052"
+                },
+                {
+                    "From": "SmartianAgent1",
+                    "Value": "0",
+                    "Function": "totalEarned",
+                    "Timestamp": "10000840",
+                    "Blocknum": "20000053"
+                }
+            ]
+        }
+    }
+]
+```
