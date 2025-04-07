@@ -1,4 +1,5 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.21;
+
 contract owned {
     address public owner;
 

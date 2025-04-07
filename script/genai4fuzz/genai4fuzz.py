@@ -301,7 +301,196 @@ class Genai4fuzz():
         ]
         
         return prompt
-  
+    
+    def _create_prompt_V5_usefullcode_claude(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
+        # Read SOL file
+        with open(contract_sol, "r") as f:
+            sol_content = f.read()
+                
+        functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
+
+        functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
+        if functions_with_modifiers is not None:
+            functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
+        else:
+            functions_descs_str = '\n'.join([function for function in functions_descs])
+                
+        prompt =  [
+            {
+                'role': 'system',
+                'content':  """
+                    You are an expert assistant specializing in Solidity fuzzing with a deep understanding of SWC and DASP vulnerabilities. 
+                    Your objective is to generate a diverse set of transactions and inputs targeting the main EVM/Solidity vulnerabilities.
+                    Respond strictly in JSON format, following the provided instructions without any additional text.
+                """
+            },
+            {
+                'role': 'user',
+                'content':'\n\n### Generate JSON test cases to fuzz the following Solidity contract \n\n' + self._sast_service.remove_comments_from_contract(sol_content)
+            },            
+            {
+                'role': 'user',
+                'content':"""
+                Focus on these potential vulnerabilities:
+                1. Integer overflow/underflow in arithmetic operations
+                2. Reentrancy attacks on state-changing functions
+                3. Improper access controls
+                4. Race conditions in approve/transferFrom patterns
+                5. Division by zero and precision loss
+                6. Boundary conditions for internal logic
+                7. Function order dependency
+
+                For each vulnerability type, create dedicated test cases that:
+                - Include realistic transaction values that target edge cases
+                - Test function parameters at extremes (MAX_UINT, 0, 1)
+                - Chain multiple transactions to exploit state changes
+                - Bypass validation checks where possible                
+                """
+            },            
+            {
+                'role': 'user',            
+                'content': '\n### You have only four sender/agent contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. Use their names in the parameters that need an address and in From fields as needed.'
+            },            
+            {
+                'role': 'user',
+                'content': """
+                    ### JSON Grammar for EVM Test Case
+
+                    #### Root
+                    - An array of `TestCase` objects.
+
+                    #### TestCase
+                    - **DeployTx**: An object representing the deployment transaction, using the constructor function.
+                    - **Txs**: An array of transaction (`Tx`) objects.
+
+                    #### DeployTx
+                    - **From**: A string representing the deployer's name or address.
+                    - **Value**: A UInt256 representing the amount of Ether sent with the deployment transaction (in Wei, use "0" if no Ether is sent).                                        
+                    - **Function**: A string representing the constructor function name being called.                    
+                    - **Params** (optional): The parameters passed to the constructor.
+                        -   Parameters can be nested arrays if the function requires it.                                        
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+
+                    #### Tx (Transaction)
+                    - **From**: A string representing the sender's name.
+                    - **Value**: A UInt256 representing the amount of Ether sent with the transaction (in Wei, use "0" if no Ether is sent or the function is not payable).                                        
+                    - **Function**: A string representing the function name being called.
+                    - **Params** (optional): An array representing the parameters passed to the function.
+                    - Parameters can be nested arrays.
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+                """
+            },
+            {
+                'role': 'user',
+                'content': '\n### Example \n' + testcase[0]
+            },
+            {
+                'role': 'user',
+                'content': f'''
+                    ### Notes
+                    - Each `TestCase` contains a `DeployTx` object and an array of `Tx` objects.
+                    - Each transaction (`Tx`) includes details such as sender (`From`), value (`Value`), function name (`Function`), optional parameters (`Params`), timestamp (`Timestamp`), and block number (`Blocknum`).
+                    - Parameters (`Params`) can be nested arrays to accommodate functions requiring multiple lists of parameters.
+                
+                    ### Objective
+                    Create {total_tests} new test case objects, each containing more than {total_txs} transactions that might uncover bugs in the contract. 
+                    Ensure the transactions use raw values and respect the data types in the function signatures and consider functions modifiers in your transactions.
+                    Consider the contract's state and how transactions might change it when designing test cases.                    
+                    Provide the response as RFC8259 compliant JSON without explanations.
+                '''
+            }
+            
+        ]
+        return prompt
+        
+    def _create_prompt_V6_fullcode_with_V1_text(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
+        # Read SOL file
+        with open(contract_sol, "r") as f:
+            sol_content = f.read()
+
+        functions_descs = self._sast_service.get_functions_from_ABI(contract_abi)        
+
+        functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
+        if functions_with_modifiers is not None:
+            functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
+        else:
+            functions_descs_str = '\n'.join([function for function in functions_descs])
+        
+        prompt =  [
+            {
+                'role': 'system',
+                'content':  """
+                    You are an expert assistant specializing in Solidity fuzzing with a deep understanding of SWC and DASP vulnerabilities. 
+                    Your objective is to generate a diverse set of transactions and inputs targeting the main EVM/Solidity vulnerabilities.
+                    Respond strictly in JSON format, following the provided instructions without any additional text.
+                """
+            },
+            {
+                'role': 'user',            
+                'content': '\n### You have four sender contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. Use their names in the parameters that need an address and in From fields as needed.'
+            },
+            {
+                'role': 'user',
+                'content':'\n\n### You have the following Solidity Contract code for Test Case Generation: \n\n' + self._sast_service.remove_comments_from_contract(sol_content)
+            },
+            {
+                'role': 'user',
+                'content':'\n### You have the following Solidity Contract Functions for Test Case Generation: \n' + functions_descs_str
+            },            
+            {
+                'role': 'user',
+                'content': """
+                    ### JSON Grammar for EVM Test Case
+
+                    #### Root
+                    - An array of `TestCase` objects.
+
+                    #### TestCase
+                    - **DeployTx**: An object representing the deployment transaction, using the constructor function.
+                    - **Txs**: An array of transaction (`Tx`) objects.
+
+                    #### DeployTx
+                    - **From**: A string representing the deployer's name or address.
+                    - **Value**: A string representing the amount of Ether sent with the transaction.
+                    - **Function**: A string representing the constructor function name being called.                    
+                    - **Params** (optional): An array representing the parameters passed to the constructor, if it exists.                    
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+
+                    #### Tx (Transaction)
+                    - **From**: A string representing the sender's name.
+                    - **Value**: A string representing the amount of Ether sent with the transaction, if function is payable.
+                    - **Function**: A string representing the function name being called.
+                    - **Params** (optional): An array representing the parameters passed to the function.
+                    - Parameters can be nested arrays.
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+                """
+            },
+            {
+                'role': 'user',
+                'content': '\n### Example \n' + testcase[0]
+            },
+            {
+                'role': 'user',
+                'content': f'''
+                    ### Notes
+                    - Each `TestCase` contains a `DeployTx` object and an array of `Tx` objects.
+                    - Each transaction (`Tx`) includes details such as sender (`From`), value (`Value`), function name (`Function`), optional parameters (`Params`), timestamp (`Timestamp`), and block number (`Blocknum`).
+                    - Parameters (`Params`) can be nested arrays to accommodate functions requiring multiple lists of parameters.
+                
+                    ### Objective
+                    Create {total_tests} new test case objects, each containing more than {total_txs} transactions that might uncover bugs in the contract. 
+                    Ensure the transactions use raw values and respect the data types in the function signatures and consider functions modifiers in your transactions.
+                    Provide the response as RFC8259 compliant JSON without explanations.
+                '''
+            }
+        ]
+        
+        return prompt
+
     def _create_prompt_V1_until_10122024(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
         
         #functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
@@ -382,8 +571,136 @@ class Genai4fuzz():
         
         return prompt
   
+    def _create_cot_prompt(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list:
+        # Read SOL file
+        with open(contract_sol, "r") as f:
+            sol_content = f.read()
+                
+        functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
+
+        functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
+        if functions_with_modifiers is not None:
+            functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
+        else:
+            functions_descs_str = '\n'.join([function for function in functions_descs])
+                                
+        prompt = [
+            {
+                'role': 'system',
+                'content': """
+                    You are an expert assistant specializing in Solidity fuzzing with a deep understanding of SWC and DASP vulnerabilities.
+                    Your objective is to generate high-quality fuzzing initial seeds that can uncover smart contract vulnerabilities.
+                    Your final response must be RFC8259 compliant JSON without any additional text.
+                """
+            },
+            {
+                'role': 'user',
+                'content': f"""
+                    Is this contract vulnerable to any of Block State Dependency, Integer Bug, Mishandled Exception, Reentrancy? Only these vulnerabilities should be considered. \n\n
+                    {self._sast_service.clean_solidity_code(sol_content)}
+                """
+            },
+            {
+                'role': 'user',
+                'content': f"""
+                    ### Instructions
+
+                    1. Based on your analysis, generate {total_tests} test cases
+                    2. Each test case should have at least 8 transactions
+                    3. You only can use the functions in " Available Contract Functions".                    
+                    4. IMPORTANT: After your analysis, provide ONLY the JSON array of test cases without any explanation text
+                """
+            },            
+            {
+                'role': 'user',
+                'content': '\n### Available Contract Functions: \n\n' + functions_descs_str
+            },
+            {
+                'role': 'user',
+                'content': '\n### Available Agent Addresses: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4'
+            },
+            # {
+            #     'role': 'user',
+            #     'content': """
+            #         Before generating seeds, think step by step through the following:
+
+            #         1) State Variables Analysis:
+            #         - Identify key state variables that control contract behavior
+            #         - Note how these variables are modified and which functions impact them
+            #         - Identify potential invariants that should never be violated
+
+            #         2) Access Control Analysis:
+            #         - Identify privileged roles (owner, admin, etc.)
+            #         - Note which functions have access restrictions
+            #         - Consider ways unauthorized users might bypass restrictions
+
+            #         3) Value Flow Analysis:
+            #         - Track how Ether and tokens move through the contract
+            #         - Identify functions that transfer value
+            #         - Look for reentrancy opportunities
+
+            #         4) Arithmetic Operations:
+            #         - Find calculations that might overflow/underflow
+            #         - Identify division operations that might divide by zero
+            #         - Note calculations that could lead to precision loss
+
+            #         5) External Calls:
+            #         - Find calls to external contracts
+            #         - Identify potential callback scenarios
+            #         - Note functions that might be manipulated by external input
+
+            #         For each vulnerability class, identify functions and parameters that could be manipulated to trigger bugs.
+            #         Think about unexpected sequences of function calls that might leave the contract in an unintended state.
+            #     """
+            # },
+            {
+                'role': 'user',
+                'content': """
+                    ### Test Case JSON Schema
+
+                    Your final response must be RFC8259 compliant JSON with an array of test case objects:
+
+                    ```
+                    [
+                    {
+                        "DeployTx": {
+                        "From": "SmartianAgent1", // Deployer address
+                        "Value": "0", // Wei amount (string)
+                        "Function": "constructor",
+                        "Params": [], // Optional constructor parameters
+                        "Timestamp": "10000000",
+                        "Blocknum": "20000000"
+                        },
+                        "Txs": [
+                        {
+                            "From": "SmartianAgent2", // Sender address
+                            "Value": "1000000000000000000", // Wei amount (string)
+                            "Function": "deposit", // Function name
+                            "Params": [], // Function parameters
+                            "Timestamp": "10000100",
+                            "Blocknum": "20000100"
+                        }
+                        // More transactions...
+                        ]
+                    }
+                    // More test cases...
+                    ]
+                    ```
+                """
+            },
+            {
+                'role': 'user',
+                'content': '\n### Example \n' + testcase[0]
+            }
+        ]
+        
+        return prompt  
+
     def run_smartian(self, program: str, testcase: str):
-        fsharp_executable = '../build/Smartian.dll'
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        fsharp_executable = os.path.join(base_dir, '../../', 'build/Smartian.dll')  # Adjust path as needed
+        
+        #fsharp_executable = '../build/Smartian.dll'
         parameters = [f'replay --csvout  -p {program} -i {testcase}']
         cmd = " ".join(['dotnet', fsharp_executable] + parameters)
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
@@ -420,6 +737,12 @@ class Genai4fuzz():
             messages = self._create_prompt_V2(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
         elif prompt == "V4":
             messages = self._create_prompt_V4_usefullcode(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
+        elif prompt == "V5":
+            messages = self._create_prompt_V5_usefullcode_claude(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
+        elif prompt == "V6":
+            messages = self._create_prompt_V6_fullcode_with_V1_text(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
+        elif prompt == "V7":
+            messages = self._create_cot_prompt(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
 
         
         logger.info(f"Requesting test cases for contract {base_contract_name}")
@@ -441,6 +764,8 @@ class Genai4fuzz():
             chat_completion = self._chat_service.query_google(messages, model, temperature)
         elif llm == "hyperbolic":
             chat_completion = self._chat_service.query_hyperbolic(messages, model, temperature)            
+        elif llm == "sambanova":
+            chat_completion = self._chat_service.query_sambanova(messages, model, temperature)                        
 
         if (chat_completion is not None):
             logger.info(f"New {llm} test case generated!")

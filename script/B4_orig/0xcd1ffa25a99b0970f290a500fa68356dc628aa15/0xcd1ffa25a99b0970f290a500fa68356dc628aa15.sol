@@ -21,13 +21,13 @@ library SafeMath {
   }
 
   function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-    assert(b <= a);
+    //assert(b <= a);
     return a - b;
   }
 
   function add(uint256 a, uint256 b) internal pure returns (uint256) {
     uint256 c = a + b;
-    assert(c >= a);
+    //assert(c >= a);
     return c;
   }
 }
@@ -278,7 +278,7 @@ library EnumerableSet {
  * functions, this simplifies the implementation of "user permissions".
  */
 contract Ownable {
-  address payable public owner;
+  address public owner;
 
 
   event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
@@ -306,7 +306,7 @@ contract Ownable {
    * @dev Allows the current owner to transfer control of the contract to a newOwner.
    * @param newOwner The address to transfer ownership to.
    */
-  function transferOwnership(address payable newOwner) onlyOwner public {
+  function transferOwnership(address newOwner) onlyOwner public {
     require(newOwner != address(0));
     emit OwnershipTransferred(owner, newOwner);
     owner = newOwner;
@@ -319,23 +319,21 @@ interface Token {
     function transfer(address, uint) external returns (bool);
 }
 
-contract xSTAKEfinance is Ownable {
+contract StakingLP is Ownable {
     using SafeMath for uint;
     using EnumerableSet for EnumerableSet.AddressSet;
     
     event RewardsTransferred(address holder, uint amount);
     
     // staking token contract address
-    address public constant tokenAddress = 0xb6aa337C9005FBf3a10Edde47DDde3541adb79Cb;
+    address public stakingTokenAddress;
+    address public rewardTokenAddress; 
     
-    // reward rate 220.00% per year
-    uint public constant rewardRate = 22000;
-    uint public constant rewardInterval = 365 days;
-    
-    uint public constant fee = 1e16;
-    
-    // unstaking possible after 7 days
-    uint public constant cliffTime = 7 days;
+    constructor(address tokenAddress, address pairAddress) public {
+        rewardTokenAddress = tokenAddress;
+        stakingTokenAddress = pairAddress;
+    }
+
     
     uint public totalClaimedRewards = 0;
     
@@ -345,30 +343,36 @@ contract xSTAKEfinance is Ownable {
     mapping (address => uint) public stakingTime;
     mapping (address => uint) public lastClaimedTime;
     mapping (address => uint) public totalEarnedTokens;
+    mapping (address => uint) public lastDivPoints;
+    
+    uint public totalDivPoints = 0;
+    uint public totalTokens = 0;
+    uint public fee = 3e16;
+    uint internal pointMultiplier = 1e18;
+    
+    
     
     function updateAccount(address account) private {
         uint pendingDivs = getPendingDivs(account);
         if (pendingDivs > 0) {
-            require(Token(tokenAddress).transfer(account, pendingDivs), "Could not transfer tokens.");
+            require(Token(rewardTokenAddress).transfer(account, pendingDivs), "Could not transfer tokens.");
             totalEarnedTokens[account] = totalEarnedTokens[account].add(pendingDivs);
             totalClaimedRewards = totalClaimedRewards.add(pendingDivs);
             emit RewardsTransferred(account, pendingDivs);
         }
         lastClaimedTime[account] = now;
+        lastDivPoints[account] = totalDivPoints;
     }
     
     function getPendingDivs(address _holder) public view returns (uint) {
         if (!holders.contains(_holder)) return 0;
         if (depositedTokens[_holder] == 0) return 0;
+        
+        uint newDivPoints = totalDivPoints.sub(lastDivPoints[_holder]);
 
-        uint timeDiff = now.sub(lastClaimedTime[_holder]);
         uint stakedAmount = depositedTokens[_holder];
         
-        uint pendingDivs = stakedAmount
-                            .mul(rewardRate)
-                            .mul(timeDiff)
-                            .div(rewardInterval)
-                            .div(1e4);
+        uint pendingDivs = stakedAmount.mul(newDivPoints).div(pointMultiplier);
             
         return pendingDivs;
     }
@@ -378,16 +382,22 @@ contract xSTAKEfinance is Ownable {
     }
     
     
-    function stake(uint amountToStake) payable public {
-        require(msg.value >= fee, "Insufficient fee deposited.");
-        owner.transfer(msg.value);
+    function stake(uint amountToStake) public payable {
+        require(msg.value >= fee, "Insufficient Fee Submitted");
+        
+        address payable _owner = address(uint160(owner));
+        _owner.transfer(fee);
         
         require(amountToStake > 0, "Cannot deposit 0 Tokens");
-        require(Token(tokenAddress).transferFrom(msg.sender, address(this), amountToStake), "Insufficient Token Allowance");
         
         updateAccount(msg.sender);
         
-        depositedTokens[msg.sender] = depositedTokens[msg.sender].add(amountToStake);
+        require(Token(stakingTokenAddress).transferFrom(msg.sender, address(this), amountToStake), "Insufficient Token Allowance");
+        
+        depositedTokens[msg.sender] = depositedTokens[msg.sender].add(amountToStake);	//injected INTEGER OVERFLOW OR UNDERFLOW
+
+        totalTokens = totalTokens.add(amountToStake);	//injected INTEGER OVERFLOW OR UNDERFLOW
+
         
         if (!holders.contains(msg.sender)) {
             holders.add(msg.sender);
@@ -395,19 +405,21 @@ contract xSTAKEfinance is Ownable {
         }
     }
     
-    function unstake(uint amountToWithdraw) payable public {
-        require(msg.value >= fee, "Insufficient fee deposited.");
-        owner.transfer(msg.value);
+    function unstake(uint amountToWithdraw) public payable {
+        require(msg.value >= fee, "Insufficient Fee Submitted");
+        
+        address payable _owner = address(uint160(owner));
+        _owner.transfer(fee);
+        
         require(depositedTokens[msg.sender] >= amountToWithdraw, "Invalid amount to withdraw");
-        
-        require(now.sub(stakingTime[msg.sender]) > cliffTime, "You recently staked, please wait before withdrawing.");
-        
+
         updateAccount(msg.sender);
 
-        require(Token(tokenAddress).transfer(msg.sender, amountToWithdraw), "Could not transfer tokens.");
+        require(Token(stakingTokenAddress).transfer(msg.sender, amountToWithdraw), "Could not transfer tokens.");
         
-        msg.sender.call.value(1)("");	//injected REENTRANCY
-depositedTokens[msg.sender] = depositedTokens[msg.sender].sub(amountToWithdraw);
+        depositedTokens[msg.sender] = depositedTokens[msg.sender].sub(amountToWithdraw);
+        totalTokens = totalTokens.sub(amountToWithdraw);	//injected INTEGER OVERFLOW OR UNDERFLOW
+
         
         if (holders.contains(msg.sender) && depositedTokens[msg.sender] == 0) {
             holders.remove(msg.sender);
@@ -418,21 +430,20 @@ depositedTokens[msg.sender] = depositedTokens[msg.sender].sub(amountToWithdraw);
         updateAccount(msg.sender);
     }
     
-    uint private constant stakingTokens = 680000e18;
-    
-    function getStakingAmount() public view returns (uint) {
-        if (totalClaimedRewards >= stakingTokens) {
-            return 0;
-        }
-        uint remaining = stakingTokens.sub(totalClaimedRewards);
-        return remaining;
+    function distributeDivs(uint amount) private {
+        if (totalTokens == 0) return;
+        totalDivPoints = totalDivPoints.add(amount.mul(pointMultiplier).div(totalTokens));
     }
     
+    function receiveTokens(address _from, uint256 _value, bytes memory _extraData) public {
+        require(msg.sender == rewardTokenAddress);
+        distributeDivs(_value);
+    }
+    
+
     // function to allow owner to claim *other* ERC20 tokens sent to this contract
     function transferAnyERC20Tokens(address _tokenAddr, address _to, uint _amount) public onlyOwner {
-        if (_tokenAddr == tokenAddress) {
-                revert();
-        }
+        require(_tokenAddr != rewardTokenAddress && _tokenAddr != stakingTokenAddress, "Cannot send out reward tokens or staking tokens!");
         Token(_tokenAddr).transfer(_to, _amount);
     }
 }

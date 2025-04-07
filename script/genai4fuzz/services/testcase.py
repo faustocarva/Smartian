@@ -259,6 +259,10 @@ class TestCase(object):
         
     def _process_transaction(self, tx: dict, contract_abi, with_args):
         function_name = tx['Function']
+        if function_name == "" or len(function_name) == 0:
+            function_name = "fallback"
+            logger.info(f"converting emppty function to fallback")
+        
         func_selector = self._sast_service.get_function_selector(contract_abi, function_name)
         if func_selector is None:
             logger.warning(f"Invalid function name ({function_name}), skipping transaction")
@@ -266,9 +270,7 @@ class TestCase(object):
             return None
         self._total_functions += 1        
         
-        if function_name == "fallback" or function_name == "fallback()":
-            function_name = f"{tx['Function']}"
-        else:
+        if function_name != "fallback":
             function_name = f"{tx['Function']}({func_selector})"
 
         data = func_selector # If no arguments, keep calling the function

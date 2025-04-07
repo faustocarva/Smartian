@@ -2,6 +2,7 @@
 /* SunContract Token Smart Contract v1.0 */   
 //
 
+pragma solidity ^0.4.21;
 contract owned {
 
   address public owner;

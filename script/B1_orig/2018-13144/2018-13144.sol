@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.21;
 contract Token{
     // token总量，默认会为public变量生成一个getter函数接口，名称为totalSupply().
     uint256 public totalSupply;

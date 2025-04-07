@@ -9,17 +9,25 @@ from datetime import datetime
 
 from genai4fuzz.utils.singleton import SingletonMeta
 from genai4fuzz.config import Config
+import genai4fuzz.utils.datafile as datafile
 
 class ChatService(metaclass=SingletonMeta):
 
     def __init__(self) -> None:
         self._config = Config()
         self._providers = configparser.ConfigParser()
-        with open('providers.ini', 'r') as f:
+
+        config_path = datafile.load_data_file("providers.ini")
+        
+        if not os.path.isfile(config_path):
+            raise FileNotFoundError(f"Configuration file not found: {config_path}")
+
+        with open(config_path, 'r') as f:
             file_content = f.read()
             file_content_with_section = "[default]\n" + file_content
-        self._providers.read_string(file_content_with_section)
 
+        self._providers.read_string(file_content_with_section)
+        
     def _query_providers(self, key):
         section = 'default'
         if self._providers.has_option(section, key):
@@ -311,6 +319,13 @@ class ChatService(metaclass=SingletonMeta):
             logger.error(f"Model {model} not found.")
             exit(0)
 
+        limit = self._query_providers(f"gpt.model.{model}.limit")
+        if limit is None:
+            limit = 8192
+            logger.info(f"Model limit  not found.")
+        
+        
+        max_tokens = int(int(limit) - int(self.count_tokens(prompt_msgs, model))*1.3)
         logger.info(f"Invoke GPT {model} with max_tokens={max_tokens}")
         t_start = time.time()
 
@@ -404,4 +419,42 @@ class ChatService(metaclass=SingletonMeta):
             return response.choices[0].message.content
         return None
 
+    
+    def query_sambanova(self, prompt_msgs: list, model: str, temperature=1) -> str:
+
+        if "SAMBANOVA_API_KEY" not in os.environ:
+            logger.error("SAMBANOVA_API_KEY is not set.")
+            exit(0)
+    
+        model_string = self._query_providers(f"sambanova.model.{model}")
+        if model_string is None:
+            logger.error(f"Model {model} not found.")
+            exit(0)
+
+        provider_url = self._query_providers(f"sambanova.url")
+        if provider_url is None:
+            logger.error(f"Provider url not found.")
+            exit(0)
+
+        limit = self._query_providers(f"sambanova.model.{model}.limit")
+        if limit is None:
+            limit = 8192
+            logger.info(f"Model limit  not found.")
+
+        max_tokens = int(int(limit) - (self.count_tokens(prompt_msgs, model)*1.5))
+        logger.info(f"Invoke sambanova with max_tokens={max_tokens} and model {model_string}")
+
+        client = OpenAI(
+            base_url = provider_url,
+            api_key = os.environ["SAMBANOVA_API_KEY"]
+        )
+        
+        t_start = time.time()
+        response = self.fetch_chat_completion(client, prompt_msgs, model_string, max_tokens, temperature)
+        g_time = time.time() - t_start
+        logger.info(f"sambanova response time: {g_time}")
+        if (response is not None):
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")
+            return response.choices[0].message.content
+        return None
     

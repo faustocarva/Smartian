@@ -241,6 +241,26 @@ class SastService(metaclass=SingletonMeta):
                 
         return selector
     
+    def clean_solidity_code(self, code: str) -> str:
+        # Remove comments
+        code = self.remove_comments_from_contract(code)
+        
+        # Remove blank lines
+        code = self.remove_blank_lines(code)
+        
+        # Remove unnecessary whitespace
+        code = re.sub(r'\s+', ' ', code)
+        
+        # Remove leading and trailing whitespace from each line
+        code = '\n'.join(line.strip() for line in code.splitlines())
+        
+        return code    
+    
+    def remove_blank_lines(self, code: str) -> str:
+        lines = code.splitlines()
+        non_blank_lines = [line for line in lines if line.strip()]
+        return '\n'.join(non_blank_lines)
+    
     def remove_comments_from_contract(self, contract):
         # Remove single-line comments
         no_single_line_comments = re.sub(r'//.*$', '', contract, flags=re.MULTILINE)
