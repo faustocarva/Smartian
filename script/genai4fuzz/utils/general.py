@@ -1,5 +1,6 @@
 import re
 import json
+from decimal import Decimal
 
 def flatten_list(nested_list):
     result = []
@@ -63,3 +64,53 @@ def discard_fields(data, fields_to_discard):
         return [discard_fields(item, fields_to_discard) for item in data]
     else:
         return data
+    
+def convert_to_wei(value) -> int:
+    units = {
+        "wei": Decimal("1"),
+        "kwei": Decimal("1e3"),
+        "babbage": Decimal("1e3"),
+        "femtoether": Decimal("1e3"),
+        "mwei": Decimal("1e6"),
+        "lovelace": Decimal("1e6"),
+        "picoether": Decimal("1e6"),
+        "gwei": Decimal("1e9"),
+        "shannon": Decimal("1e9"),
+        "nanoether": Decimal("1e9"),
+        "nano": Decimal("1e9"),
+        "szabo": Decimal("1e12"),
+        "microether": Decimal("1e12"),
+        "micro": Decimal("1e12"),
+        "finney": Decimal("1e15"),
+        "milliether": Decimal("1e15"),
+        "milli": Decimal("1e15"),
+        "ether": Decimal("1e18"),
+        "eth": Decimal("1e18"),
+    }
+
+    if isinstance(value, (int, float)):
+        # Integers are assumed to be in wei
+        return int(value)
+
+    value = value.strip().lower()
+
+    parts = value.split()
+
+    if len(parts) == 1:
+        try:
+            # Try interpreting as an integer — assume wei
+            return int(parts[0])
+        except ValueError:
+            # Try interpreting as a float — assume ETH
+            number = Decimal(parts[0])
+            return int(number * Decimal("1e18"))
+    elif len(parts) == 2:
+        number = Decimal(parts[0])
+        unit = parts[1]
+        if unit not in units:
+            raise ValueError(f"Unknown unit: {unit}")
+        multiplier = units[unit]
+        return int(number * multiplier)
+    else:
+        raise ValueError("Invalid input format")
+    

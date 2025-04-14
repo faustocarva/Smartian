@@ -39,6 +39,11 @@ class ChatService(metaclass=SingletonMeta):
         final_prompt = '\n'.join([message["content"].strip() for message in prompt_msgs])
         return int(tokencost.count_string_tokens(final_prompt, model))
 
+    def count_message_tokens(self, prompt_msgs: list, model: str):
+        final_prompt = '\n'.join([message["content"].strip() for message in prompt_msgs])
+        return int(tokencost.count_message_tokens(final_prompt, model))
+
+
     def dump_save_prompt(self, prompt_msgs: list, prompt_filename: str):
         final_prompt = self.dump_prompt(prompt_msgs)
         self.save_to_seeds(prompt_filename, final_prompt)
@@ -73,6 +78,30 @@ class ChatService(metaclass=SingletonMeta):
             time.sleep(wait_time)
         
         return None
+
+    def fetch_chat_completion_anthropic(self, client, prompt_msgs, system, model_string, max_tokens, temperature, max_retries=5, backoff_factor=2):
+        retries = 0
+        
+        while retries < max_retries:
+            try:
+                response = client.chat.completions.create(
+                    messages=prompt_msgs,
+                    model=model_string,
+                    #system=system,
+                    max_tokens=max_tokens,
+                    temperature=temperature)
+                return response
+            
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+            
+            retries += 1
+            wait_time = backoff_factor ** retries
+            logger.info(f"Retrying in {wait_time} seconds...")
+            time.sleep(wait_time)
+        
+        return None
+
 
     def query_ollama(self, prompt_msgs: list, model: str, temperature=1) -> str:
         max_tokens = 8192
@@ -455,6 +484,51 @@ class ChatService(metaclass=SingletonMeta):
         logger.info(f"sambanova response time: {g_time}")
         if (response is not None):
             logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")
+            return response.choices[0].message.content
+        return None
+    
+    
+    def query_anthropic(self, prompt_msgs: list, model: str, temperature=1) -> str:
+        max_tokens = 8192
+
+        if "ANTHROPIC_API_KEY" not in os.environ:
+            logger.error("ANTHROPIC_API_KEY is not set.")
+            exit(0)
+
+        provider_url = self._query_providers(f"anthropic.url")
+        if provider_url is None:
+            logger.error(f"Provider url not found.")
+            exit(0)
+
+        model_string = self._query_providers(f"anthropic.model.{model}")
+        if model_string is None: 
+            logger.error(f"Model {model} not found.")
+            exit(0)
+
+        limit = self._query_providers(f"anthropic.model.{model}.limit")
+        if limit is None:
+            logger.info(f"Model limit  not found.")
+                        
+        if prompt_msgs and prompt_msgs[0]["role"] == "system":
+            system = prompt_msgs.pop(0)["content"]
+        else:
+            system = ""                
+        
+        max_tokens = 16384
+        logger.info(f"Invoke anthropic {model} with max_tokens={max_tokens}")
+        t_start = time.time()
+
+        client = OpenAI(
+            api_key=os.environ["ANTHROPIC_API_KEY"],
+            base_url=provider_url
+        )
+
+        t_start = time.time()
+        response = self.fetch_chat_completion_anthropic(client, prompt_msgs, system, model_string, max_tokens, temperature)
+        g_time = time.time() - t_start
+        logger.info(f"anthropic {model} response time: {g_time}")        
+        if (response is not None):
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")        
             return response.choices[0].message.content
         return None
     

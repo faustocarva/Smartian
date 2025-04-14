@@ -1,5 +1,6 @@
 # Standard library imports
 import itertools
+import os
 
 # Third-party library imports
 import matplotlib.cm as cm
@@ -12,14 +13,9 @@ from matplotlib.colors import to_rgba
 from scipy import stats
 from scipy.stats import f_oneway
 import matplotlib.gridspec as gridspec
+import genai4fuzz.utils.datafile as datafile
 
-class DataCollect():
-    LLAMA3_70_COLOR = '#1f77b4'
-    LLAMA3_8_COLOR = '#ff7f0e'
-    GPTOMINI_COLOR = '#d62728'
-    MIXTRAL_8X7B_COLOR = '#9467bd'
-    GEMINI_FLASH_COLOR = '#2ca02c'
-    
+class DataCollect():    
     METRICS_HEADER = 'model,temperature,file,total_files,total_files_with_invalid_json,total_seeds,total_duplicate_seeds,total_seeds_with_invalid_struct,total_args_in_seeds,total_invalid_args_in_seeds,total_functions_in_seeds,total_invalid_function_in_seeds'.split(',')
     COVERAGE_HEADER = 'contract,temperature,transaction_index,model,seed_file,totalExecutions,deployFailCount,coveredEdges,coveredInstructions,coveredDefUseChains,bugsFound'.split(',')
     B1_TOTAL_COV_HEADER = 'contract,totalInstructions,totalEdges'.split(',')
@@ -105,11 +101,12 @@ class DataCollect():
         return result
         
     def load_coverage_data(self, csv):
-        df = pd.read_csv(csv, header=None, names=self.B1_TOTAL_COV_HEADER)
+        ins_file = datafile.load_data_file(csv)          
+        df = pd.read_csv(ins_file, header=None, names=self.B1_TOTAL_COV_HEADER)
         return df
     
     def build_coverage_data(self, csv):
-        executions_df = pd.read_csv(csv, header=None, names=self.COVERAGE_HEADER)    
+        executions_df = pd.read_csv(csv, header=None, names=self.COVERAGE_HEADER)        
         totals_df = self.load_coverage_data("B1-ins.csv")
         
         executions_df = self.fill_missing_experiments(executions_df)

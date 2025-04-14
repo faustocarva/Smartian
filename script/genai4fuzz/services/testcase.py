@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from typing import List, Any, Dict
 
 from genai4fuzz.model.testcase import TestCaseModel
-from genai4fuzz.utils.general import flatten_list, discard_fields
+from genai4fuzz.utils.general import flatten_list, discard_fields, convert_to_wei
 from genai4fuzz.config import Config
 from genai4fuzz.services.sast import SastService
 
@@ -126,8 +126,7 @@ class TestCase(object):
             for i, (type_, arg) in enumerate(zip(types, args)):
                 # Integer types
                 if type_ in INT_TYPES:
-                    _args.append(int(arg))
-
+                    _args.append(int(eval(arg)) if isinstance(arg, str) else int(arg))
                 # String and address types
                 elif type_ in STR_TYPES:
                     if type_ == "address":
@@ -185,8 +184,7 @@ class TestCase(object):
                 elif type_ in INT_ARRAY_TYPES:
                     if not isinstance(arg, list):
                         raise ValueError(f"Expected list for {type_}, got {type(arg)}")
-                    _args.append([int(item) for item in arg])
-
+                    _args.append([int(eval(item)) if isinstance(item, str) else int(item) for item in arg])
                 else:
                     raise ValueError(f"Unsupported type: {type_}")
 
@@ -249,7 +247,7 @@ class TestCase(object):
             "DeployTx": {{
                 "From":"{str(self._get_agent(deployTx['From']) or deployTx['From'])}",
                 "To":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
-                "Value":"{deployTx['Value']}",
+                "Value":"{convert_to_wei(deployTx['Value'])}",
                 "Data":"{data}",
                 "Timestamp":"{deployTx['Timestamp']}",
                 "Blocknum":"{deployTx['Blocknum']}",
@@ -281,7 +279,7 @@ class TestCase(object):
         return json.loads((f'''{{
             "From":"{str(self._get_agent(tx['From']) or tx['From'])}",
             "To":"0x6b773032d99fb9aad6fc267651c446fa7f9301af",
-            "Value":"{tx['Value']}",
+            "Value":"{convert_to_wei(tx['Value'])}",
             "Data":"{data}",
             "Timestamp":"{tx['Timestamp']}",
             "Blocknum":"{tx['Blocknum'] if tx.get('Blocknum') else "20000944"}",

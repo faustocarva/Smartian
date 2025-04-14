@@ -410,7 +410,7 @@ class Genai4fuzz():
         with open(contract_sol, "r") as f:
             sol_content = f.read()
 
-        functions_descs = self._sast_service.get_functions_from_ABI(contract_abi)        
+        functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
 
         functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
         if functions_with_modifiers is not None:
@@ -428,16 +428,25 @@ class Genai4fuzz():
                 """
             },
             {
+                'role': 'user',
+                'content': f"""
+                    ### Is this contract vulnerable to any of Block State Dependency, Integer Bug, Mishandled Exception, Reentrancy? 
+                    (Think step-by-step, analyze what this contract does and any potential edge cases or vulnerabilities.)
+                    {self._sast_service.clean_solidity_code(sol_content)}                    
+                """
+            },            
+            {
                 'role': 'user',            
-                'content': '\n### You have four sender contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. Use their names in the parameters that need an address and in From fields as needed.'
-            },
+                'content': f"""
+                    ### You have four sender contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. Use their names in the parameters that need an address and in From fields as needed.'                
+                """
+            },            
             {
                 'role': 'user',
-                'content':'\n\n### You have the following Solidity Contract code for Test Case Generation: \n\n' + self._sast_service.remove_comments_from_contract(sol_content)
-            },
-            {
-                'role': 'user',
-                'content':'\n### You have the following Solidity Contract Functions for Test Case Generation: \n' + functions_descs_str
+                'content': f"""
+                    ### Available Contract Functions (You can only use the functions in this list for Test Case Generation): \n\n
+                    {functions_descs_str}
+                """
             },            
             {
                 'role': 'user',
@@ -596,7 +605,8 @@ class Genai4fuzz():
             {
                 'role': 'user',
                 'content': f"""
-                    Is this contract vulnerable to any of Block State Dependency, Integer Bug, Mishandled Exception, Reentrancy? Only these vulnerabilities should be considered. \n\n
+                    Is this contract vulnerable to any of Block State Dependency, Integer Bug, Mishandled Exception, Reentrancy? 
+                    Think step-by-step amd only these vulnerabilities should be considered. \n\n
                     {self._sast_service.clean_solidity_code(sol_content)}
                 """
             },
@@ -605,10 +615,10 @@ class Genai4fuzz():
                 'content': f"""
                     ### Instructions
 
-                    1. Based on your analysis, generate {total_tests} test cases
+                    1. Based on your analysis, generate {total_tests} seeds for fuzzing this contract 
                     2. Each test case should have at least 8 transactions
-                    3. You only can use the functions in " Available Contract Functions".                    
-                    4. IMPORTANT: After your analysis, provide ONLY the JSON array of test cases without any explanation text
+                    3. You only can use the functions in "Available Contract Functions".                    
+                    4. IMPORTANT: After your analysis, provide ONLY the JSON array of seeds without any explanation text
                 """
             },            
             {
@@ -619,46 +629,12 @@ class Genai4fuzz():
                 'role': 'user',
                 'content': '\n### Available Agent Addresses: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4'
             },
-            # {
-            #     'role': 'user',
-            #     'content': """
-            #         Before generating seeds, think step by step through the following:
-
-            #         1) State Variables Analysis:
-            #         - Identify key state variables that control contract behavior
-            #         - Note how these variables are modified and which functions impact them
-            #         - Identify potential invariants that should never be violated
-
-            #         2) Access Control Analysis:
-            #         - Identify privileged roles (owner, admin, etc.)
-            #         - Note which functions have access restrictions
-            #         - Consider ways unauthorized users might bypass restrictions
-
-            #         3) Value Flow Analysis:
-            #         - Track how Ether and tokens move through the contract
-            #         - Identify functions that transfer value
-            #         - Look for reentrancy opportunities
-
-            #         4) Arithmetic Operations:
-            #         - Find calculations that might overflow/underflow
-            #         - Identify division operations that might divide by zero
-            #         - Note calculations that could lead to precision loss
-
-            #         5) External Calls:
-            #         - Find calls to external contracts
-            #         - Identify potential callback scenarios
-            #         - Note functions that might be manipulated by external input
-
-            #         For each vulnerability class, identify functions and parameters that could be manipulated to trigger bugs.
-            #         Think about unexpected sequences of function calls that might leave the contract in an unintended state.
-            #     """
-            # },
             {
                 'role': 'user',
                 'content': """
-                    ### Test Case JSON Schema
+                    ### Fuzzing seed JSON Schema
 
-                    Your final response must be RFC8259 compliant JSON with an array of test case objects:
+                    Your final response must be RFC8259 compliant JSON with an array of Fuzzing seed objects:
 
                     ```
                     [
@@ -683,7 +659,7 @@ class Genai4fuzz():
                         // More transactions...
                         ]
                     }
-                    // More test cases...
+                    // More fuzzing seeds...
                     ]
                     ```
                 """
@@ -765,7 +741,10 @@ class Genai4fuzz():
         elif llm == "hyperbolic":
             chat_completion = self._chat_service.query_hyperbolic(messages, model, temperature)            
         elif llm == "sambanova":
-            chat_completion = self._chat_service.query_sambanova(messages, model, temperature)                        
+            chat_completion = self._chat_service.query_sambanova(messages, model, temperature)
+        elif llm == "anthropic":
+            chat_completion = self._chat_service.query_anthropic(messages, model, temperature)
+
 
         if (chat_completion is not None):
             logger.info(f"New {llm} test case generated!")
