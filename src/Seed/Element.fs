@@ -33,7 +33,11 @@ module Element =
     | Address ->  toBytesFromStr LE (bytes.ToString()) |> Array.map ByteVal.newByteVal
     | Byte -> (bytes :?> byte[]) |> Array.map ByteVal.newByteVal    
     | Bool -> convertBoolToObjectArray bytes
-    | String -> strToBytes (bytes :?> string) |> Array.map ByteVal.newByteVal
+    | String -> 
+        let bytes = strToBytes (bytes :?> string)
+        match bytes with
+        | [||] -> [| ByteVal.newByteVal 0uy |]  // Return single zero byte when empty
+        | _ -> bytes |> Array.map ByteVal.newByteVal
     | Array _ -> failwithf "Array type not allowed for an element"
 
   let private decideLen = function

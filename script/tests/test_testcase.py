@@ -177,18 +177,22 @@ def test_get_agent():
     "test"
 ])
 
-def test_convert_bytes(value):
+def test_convert_bytes(value, type_name=None):
     tc = TestCase({})
-    result = tc._convert_bytes(value)
-    if value.startswith("0x"):
-        # For hex values, check it contains the hex value
-        padded_hex = value[2:].ljust(32, '0')[:32]
-        expected = to_bytes(hexstr=padded_hex)
-        assert result == expected
+    result = tc._convert_bytes(value, type_name)
+
+    if isinstance(value, str) and value.startswith("0x"):
+        hex_value = value[2:]
+        if type_name and type_name.startswith("bytes") and type_name != "bytes":
+            size = int(type_name[5:])
+            padded_hex = hex_value.ljust(size * 2, '0')[:size * 2]
+            expected = to_bytes(hexstr=padded_hex)
+        else:
+            expected = to_bytes(hexstr=hex_value)
     else:
-        # For string values, check it contains the string as bytes
         expected = bytes(value, 'utf-8')
-        assert result == expected
+
+    assert result == expected
 
 @patch('genai4fuzz.services.sast.SastService')
 def test_process_testcase(mock_sast, valid_testcase, sample_contract_abi):
@@ -246,14 +250,15 @@ def test_validation_totals(valid_testcase, sample_contract_abi):
 def test_encode_args_with_various_types():
     tc = TestCase({})
     tc.interfaces = {
-        "test_selector": ("test_function", ["uint256", "address", "bool", "bytes32"])
+        "test_selector": ("test_function", ["uint256", "address", "bool", "bytes32", "bytes32[]"])
     }
     
     args = [
         "1000",
         "0x1234567890123456789012345678901234567890",
         "true",
-        "0x1234567890123456789012345678901234567890123456789012345678901234"
+        "0x1234567890123456789012345678901234567890123456789012345678901234",
+        ["0x1234567890abcdef"]        
     ]
     
     result = tc._encode_args("test_selector", args)
@@ -262,18 +267,58 @@ def test_encode_args_with_various_types():
     assert not result.startswith("0x")  # The method returns hex without 0x prefix
 
 
+def test_encode_args_with_mixed_types():
+    tc = TestCase({})
+    tc.interfaces = {
+        "request_selector": (
+            "request",
+            ["uint8", "address", "bytes4", "uint256", "bytes32[]"]
+        )
+    }
+
+    args = [
+        1, 
+        "0x0000000000000000000000000000000000000013", 
+        "0x12345678", 
+        1643723400, 
+        ["0x1234567890abcdef"]
+    ]
+
+    result = tc._encode_args("request_selector", args)
+
+    assert result is not None
+    assert isinstance(result, str)
+    assert not result.startswith("0x")  # The method returns hex without 0x prefix
+
+
+def test_encode_bytes():
+    tc = TestCase({})
+    tc.interfaces = {
+        "test_selector": ("test_function", ["address", "uint256", "bytes"])
+    }
+    args = [
+        "0x000000000000000000000000000000000000001a",        
+        "2200",
+        '0x'
+    ]
+    result = tc._encode_args("test_selector", args)
+    assert result  == '000000000000000000000000000000000000000000000000000000000000001a0000000000000000000000000000000000000000000000000000000000000898000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000'
+    assert isinstance(result, str)
+
+
 def test_encode_args_with_various_types():
     tc = TestCase({})
     
     # Original test case
     tc.interfaces = {
-        "test_selector": ("test_function", ["uint256", "address", "bool", "bytes32"])
+        "test_selector": ("test_function", ["uint256", "address", "bool", "bytes32", "bytes"])
     }
     args = [
         "1000",
         "0x1234567890123456789012345678901234567890",
         "true",
-        "0x1234567890123456789012345678901234567890123456789012345678901234"
+        "0x1234567890123456789012345678901234567890123456789012345678901234",
+        '0x'
     ]
     result = tc._encode_args("test_selector", args)
     assert result is not None
@@ -387,3 +432,25 @@ def test_encode_args_address():
     assert result is not None
     assert isinstance(result, str)
         
+        
+def test_encode_args_with_eval():
+    tc = TestCase({})
+    tc.interfaces = {
+        "set": ("set", ['address[]', 'uint256[]']),        
+        "set2": ("set2", ['address[]', 'uint256[]', 'address', 'uint16']),
+        "set3": ("set", ['uint256']),        
+    }
+
+    # Arithmetic expressions in uint256[] args
+    result = tc._encode_args("set", [[['SmartianAgent1', 'SmartianAgent2'], ['10 * 10**3', '5 * 10**2']]])
+    assert result is not None
+    assert isinstance(result, str)
+
+    # Mixed evaluated uint and plain address
+    result = tc._encode_args("set2", [[['SmartianAgent1', 'SmartianAgent2'], ['2**5', '2**6'], 'SmartianAgent3', '2**4']])
+    assert result is not None
+    assert isinstance(result, str)
+
+    result = tc._encode_args("set3", [[2]])
+    assert result is not None
+    assert isinstance(result, str)

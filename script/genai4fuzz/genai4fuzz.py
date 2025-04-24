@@ -430,24 +430,27 @@ class Genai4fuzz():
             {
                 'role': 'user',
                 'content': f"""
-                    ### Is this contract vulnerable to any of Block State Dependency, Integer Bug, Mishandled Exception, Reentrancy? 
-                    (Think step-by-step, analyze what this contract does and any potential edge cases or vulnerabilities.)
-                    {self._sast_service.clean_solidity_code(sol_content)}                    
+                
+                    ### Is this contract vulnerable to any of Block State Dependency, Integer Bug, Mishandled Exception, Reentrancy?
+                        (Think step-by-step, write seeds that demonstrates the actual attack vector against this contract and only use contract ABI functions)
+                        Do not call private/internal functions directly, when ETH is sent to the contract, use fallback functions that handle incoming funds.                
+                        
+                        {self._sast_service.clean_solidity_code(sol_content)}                        
                 """
-            },            
+            },
             {
-                'role': 'user',            
-                'content': f"""
-                    ### You have four sender contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. Use their names in the parameters that need an address and in From fields as needed.'                
+                'role': 'user',
+                'content': """
+                    ### You have four sender contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. Use their names in the parameters that need an address and in From fields as needed.
                 """
             },            
             {
                 'role': 'user',
                 'content': f"""
-                    ### Available Contract Functions (You can only use the functions in this list for Test Case Generation): \n\n
+                    ### Available Contract Functions (You must only use the functions in this list for Test Case Generation):\n
                     {functions_descs_str}
                 """
-            },            
+            },
             {
                 'role': 'user',
                 'content': """
@@ -463,8 +466,8 @@ class Genai4fuzz():
                     #### DeployTx
                     - **From**: A string representing the deployer's name or address.
                     - **Value**: A string representing the amount of Ether sent with the transaction.
-                    - **Function**: A string representing the constructor function name being called.                    
-                    - **Params** (optional): An array representing the parameters passed to the constructor, if it exists.                    
+                    - **Function**: A string representing the constructor function name being called.
+                    - **Params** (optional): An array representing the parameters passed to the constructor, if it exists.
                     - **Timestamp**: A string representing the timestamp of the transaction.
                     - **Blocknum**: A string representing the block number when the transaction was included.
 
@@ -484,17 +487,286 @@ class Genai4fuzz():
             },
             {
                 'role': 'user',
+                'content': f'''                
+                    ### Notes
+                    - Each `TestCase` contains a `DeployTx` object and an array of `Tx` objects.
+                    - Each transaction (`Tx`) includes details such as sender (`From`), value (`Value`), function name (`Function`), optional parameters (`Params`), timestamp (`Timestamp`), and block number (`Blocknum`).
+                    - Parameters (`Params`) can be nested arrays to accommodate functions requiring multiple lists of parameters.
+                    - Do not call internal functions directly.
+                    
+                    ### Objective
+                    Create {total_tests} new test case objects, each containing more than {total_txs} transactions that might uncover bugs in the contract.
+                    Ensure the transactions use raw values and respect the data types in the function signatures and consider functions modifiers in your transactions.
+                    Provide the response as RFC8259 compliant JSON without explanations.
+                '''
+            },
+            
+        ]
+        
+        return prompt    
+    
+    def _create_prompt_LLaMA3_fuzzing(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=8) -> list:
+        # Read Solidity file content
+        with open(contract_sol, "r") as f:
+            sol_content = f.read()
+
+        # Extract function descriptions and modifiers
+        functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
+        functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
+
+        if functions_with_modifiers:
+            functions_descs_str = '\n'.join(functions_with_modifiers)
+        else:
+            functions_descs_str = '\n'.join(functions_descs)
+
+        prompt = [
+            {
+                "role": "system",
+                "content": (
+                    "You are an expert assistant specializing in Solidity fuzzing and vulnerability research.\n"
+                    "You will create RFC8259-compliant JSON EVM test cases that simulate attack vectors against smart contracts.\n"
+                    "Do not include any commentary—only the JSON response is allowed."
+                )
+            },
+            {
+                "role": "user",
+                "content": (
+                    "### EVM Accounts\n"
+                    "- SmartianAgent1\n"
+                    "- SmartianAgent2\n"
+                    "- SmartianAgent3\n"
+                    "- SmartianAgent4\n\n"
+                    "These are the only valid sender identities for transactions. Use them as the `From` field or address-type parameters."
+                )
+            },
+            {
+                "role": "user",
+                "content": f"""### Contract Functions (use these for testing only):\n{functions_descs_str}"""
+            },
+            {
+                "role": "user",
+                "content": (
+                    "### Contract Source Code\n"
+                    "(Use this to reason about vulnerabilities such as Block State Dependency, Reentrancy, Integer Overflow/Underflow, Mishandled Exceptions)\n\n"
+                    f"{self._sast_service.clean_solidity_code(sol_content)}"
+                )
+            },
+            {
+                "role": "user",
+                "content": (
+                    "### Chain-of-Thought Reasoning\n"
+                    "- First, analyze the Solidity source code and function modifiers to identify possible vulnerability entry points.\n"
+                    "- Consider how each vulnerability type might be exploited through sequences of function calls.\n"
+                    "- Construct transaction sequences that demonstrate realistic exploit attempts based only on exposed ABI functions.\n"
+                    "- Emphasize triggers for state manipulation, malicious recursion, arithmetic misbehavior, and logic inconsistencies.\n"
+                    "- Think step-by-step about how an attacker would orchestrate the sequence."
+                )
+            },            
+            {
+                "role": "user",
+                "content": (
+                    "### Output Format (JSON only)\n"
+                    "- Root: an array of TestCase objects\n"
+                    "- TestCase:\n"
+                    "    - DeployTx: the deployment transaction object\n"
+                    "    - Txs: an array of at least 8 transaction objects\n"
+                    "- DeployTx:\n"
+                    "    - From: string\n"
+                    "    - Value: string\n"
+                    "    - Function: constructor function name\n"
+                    "    - Params (optional): array\n"
+                    "    - Timestamp: string\n"
+                    "    - Blocknum: string\n"
+                    "- Tx:\n"
+                    "    - From: string\n"
+                    "    - Value: string\n"
+                    "    - Function: function name\n"
+                    "    - Params (optional): array\n"
+                    "    - Timestamp: string\n"
+                    "    - Blocknum: string\n"
+                    "    - Params may be nested arrays"
+                )
+            },
+            {
+                "role": "user",
+                "content": f"### Example\n{testcase[0]}"
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"### Instructions\n"
+                    f"- Generate {total_tests} test cases.\n"
+                    f"- Each test case must contain more than {total_txs} transactions.\n"
+                    f"- Transactions must strictly follow the function signatures.\n"
+                    f"- Include realistic raw values.\n"
+                    f"- Consider function modifiers.\n"
+                    f"- Do not use internal/private functions directly.\n"
+                    f"- If ETH is to be sent, use fallback logic where applicable.\n"
+                    f"- Return only RFC8259-compliant JSON with no other content."
+                )
+            }
+        ]
+
+        return prompt
+    
+    def _create_prompt_V6_fullcode_with_V1_chainCoT(self, contract_abi: str, contract_sol: str, testcase: list, analysis: str, total_tests=10, total_txs=4) -> list: 
+        functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
+
+        functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
+        if functions_with_modifiers is not None:
+            functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
+        else:
+            functions_descs_str = '\n'.join([function for function in functions_descs])
+        
+        prompt =  [
+            {
+                'role': 'system',
+                'content':  """
+                    You are an expert assistant specializing in Solidity fuzzing with a deep understanding of SWC and DASP vulnerabilities. 
+                    Your objective is to generate a diverse set of transactions and inputs targeting the main EVM/Solidity vulnerabilities.
+                    Respond strictly in JSON format, following the provided instructions without any additional text.
+                """
+            },
+            {
+                'role': 'user',
                 'content': f'''
+                    {analysis}
+                                    
+                    ### Objective
+                    Create {total_tests} new test case objects, each containing more than {total_txs} transactions that might uncover bugs in the contract.
+                    Ensure the transactions use raw values and respect the data types in the function signatures and consider functions modifiers in your transactions.
+                    Provide the response as RFC8259 compliant JSON without explanations.
+                    
                     ### Notes
                     - Each `TestCase` contains a `DeployTx` object and an array of `Tx` objects.
                     - Each transaction (`Tx`) includes details such as sender (`From`), value (`Value`), function name (`Function`), optional parameters (`Params`), timestamp (`Timestamp`), and block number (`Blocknum`).
                     - Parameters (`Params`) can be nested arrays to accommodate functions requiring multiple lists of parameters.
                 
+                '''
+            },
+            {
+                'role': 'user',
+                'content': """
+                    ### You have four sender contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. 
+                    Use their names in the parameters that need an address and in From fields as needed.
+                """
+            },            
+            {
+                'role': 'user',
+                'content': f"""
+                    ### Available Contract Functions (You must only use the functions in this list for Test Case Generation):\n                                        
+                    
+                    {functions_descs_str}                                        
+                """
+            },
+            {
+                'role': 'user',
+                'content': """
+                    ### JSON Grammar for EVM Test Case
+
+                    #### Root
+                    - An array of `TestCase` objects.
+
+                    #### TestCase
+                    - **DeployTx**: An object representing the deployment transaction, using the constructor function.
+                    - **Txs**: An array of transaction (`Tx`) objects.
+
+                    #### DeployTx
+                    - **From**: A string representing the deployer's name or address.
+                    - **Value**: A string representing the amount of Ether sent with the transaction.
+                    - **Function**: A string representing the constructor function name being called.
+                    - **Params** (optional): An array representing the parameters passed to the constructor, if it exists.
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+
+                    #### Tx (Transaction)
+                    - **From**: A string representing the sender's name.
+                    - **Value**: A string representing the amount of Ether sent with the transaction, if function is payable.
+                    - **Function**: A string representing the function name being called.
+                    - **Params** (optional): An array representing the parameters passed to the function.
+                    - Parameters can be nested arrays.
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+                """
+            },
+            {
+                'role': 'user',
+                'content': '\n### Example \n' + testcase[0]
+            }
+        ]
+        
+        return prompt
+
+    def _create_prompt_V6_fullcode_with_V1_convCoT(self, contract_abi: str, contract_sol: str, testcase: list, total_tests=10, total_txs=4) -> list: 
+        functions_descs = self._sast_service.get_functions_from_ABI_2(contract_abi)
+
+        functions_with_modifiers = self._sast_service.get_function_modifiers(contract_sol, functions_descs)
+        if functions_with_modifiers is not None:
+            functions_descs_str = '\n'.join([function for function in functions_with_modifiers])
+        else:
+            functions_descs_str = '\n'.join([function for function in functions_descs])
+        
+        prompt =  [
+            {
+                'role': 'user',
+                'content': f'''
                     ### Objective
-                    Create {total_tests} new test case objects, each containing more than {total_txs} transactions that might uncover bugs in the contract. 
+                    Create {total_tests} new test case objects, each containing more than {total_txs} transactions that might uncover bugs in the contract.
                     Ensure the transactions use raw values and respect the data types in the function signatures and consider functions modifiers in your transactions.
                     Provide the response as RFC8259 compliant JSON without explanations.
+                    
+                    ### Notes
+                    - Each `TestCase` contains a `DeployTx` object and an array of `Tx` objects.
+                    - Each transaction (`Tx`) includes details such as sender (`From`), value (`Value`), function name (`Function`), optional parameters (`Params`), timestamp (`Timestamp`), and block number (`Blocknum`).
+                    - Parameters (`Params`) can be nested arrays to accommodate functions requiring multiple lists of parameters.                
                 '''
+            },            
+            {
+                'role': 'user',
+                'content': """
+                    ### You have four sender contracts: SmartianAgent1, SmartianAgent2, SmartianAgent3, and SmartianAgent4. Use their names in the parameters that need an address and in From fields as needed.
+                """
+            },
+            {
+                'role': 'user',
+                'content': f"""
+                    ### Available Contract Functions (You must only use the functions in this list for Test Case Generation):\n                                        
+                    {functions_descs_str}                                        
+                """
+            },
+            {
+                'role': 'user',
+                'content': """
+                    ### JSON Grammar for EVM Test Case
+
+                    #### Root
+                    - An array of `TestCase` objects.
+
+                    #### TestCase
+                    - **DeployTx**: An object representing the deployment transaction, using the constructor function.
+                    - **Txs**: An array of transaction (`Tx`) objects.
+
+                    #### DeployTx
+                    - **From**: A string representing the deployer's name or address.
+                    - **Value**: A string representing the amount of Ether sent with the transaction.
+                    - **Function**: A string representing the constructor function name being called.
+                    - **Params** (optional): An array representing the parameters passed to the constructor, if it exists.
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+
+                    #### Tx (Transaction)
+                    - **From**: A string representing the sender's name.
+                    - **Value**: A string representing the amount of Ether sent with the transaction, if function is payable.
+                    - **Function**: A string representing the function name being called.
+                    - **Params** (optional): An array representing the parameters passed to the function.
+                    - Parameters can be nested arrays.
+                    - **Timestamp**: A string representing the timestamp of the transaction.
+                    - **Blocknum**: A string representing the block number when the transaction was included.
+                """
+            },
+            {
+                'role': 'user',
+                'content': '\n### Example \n' + testcase[0]
             }
         ]
         
@@ -699,6 +971,160 @@ class Genai4fuzz():
         messages = self._create_prompt_V4_usefullcode(contract_abi, contract_sol, [testcase], total_tests, total_txs)
         print (self._chat_service.dump_prompt(messages))
         
+    def run_llm_with_cot(self, contact_dir: str, llm: str, model: str, temperature: float, total_tests=10, total_txs=4):
+        if not os.path.exists(contact_dir):
+            raise ValueError(f"Contract directory not found: {contact_dir}")
+        
+        # Read contract files
+        _, contract_abi, base_contract_name, contract_sol = self._read_contract_files(contact_dir)
+        testcase = open('example.json', "r").read()
+        
+        # Read contract content
+        with open(contract_sol, "r") as f:
+            sol_content = f.read()
+            
+        analysis_prompt = [
+            {'role': 'system', 'content': f"""
+                    You are an expert assistant specializing in Solidity fuzzing with a deep understanding of SWC and DASP vulnerabilities. 
+                    Your objective is to generate a diverse set of transactions and inputs targeting the main EVM/Solidity vulnerabilities.
+             """},
+            {'role': 'user', 'content': f"""
+                Is this contract vulnerable to any of Block State Dependency, Integer Overflow/Underflow, Mishandled Exception, Reentrancy?
+                Think step-by-step about each potential vulnerability type.
+                
+                {self._sast_service.clean_solidity_code(sol_content)}            
+                
+            """}
+        ]
+        
+        logger.info(f"Requesting vulnerability analysis for contract {base_contract_name}")
+        # Query appropriate model based on llm parameter
+        analysis = None
+        if llm == "gpt":
+            analysis = self._chat_service.query_gpt4(analysis_prompt, model, temperature)
+        elif llm == "sambanova":
+            analysis = self._chat_service.query_sambanova(analysis_prompt, model, temperature)
+        elif llm == "hyperbolic":
+            analysis = self._chat_service.query_hyperbolic(analysis_prompt, model, temperature)            
+            
+
+        if not analysis:
+            logger.error("Failed to get vulnerability analysis")
+            return
+            
+        # Step 2: Generate test cases based on analysis
+        messages = self._create_prompt_V6_fullcode_with_V1_chainCoT(contract_abi, contract_sol, [testcase], analysis, total_tests, total_txs) 
+                    
+        logger.info(f"Requesting test cases for contract {base_contract_name}")
+        chat_completion = None
+        if llm == "gpt":
+            chat_completion = self._chat_service.query_gpt4(messages, model, temperature)
+        elif llm == "sambanova":
+            chat_completion = self._chat_service.query_sambanova(messages, model, temperature)            
+        elif llm == "hyperbolic":
+            chat_completion = self._chat_service.query_hyperbolic(messages, model, temperature)
+            
+        
+        if chat_completion is not None:
+            logger.info(f"New {llm} test case generated!")
+            logger.info(f"Is a valid JSON? {is_valid_json(chat_completion)}")
+                    
+            current_datetime = datetime.now()
+            formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
+            
+            testcase_file_name = f"{base_contract_name}_{llm}_{model}_{temperature}T_testcase_{formatted_datetime}"
+            with open(os.path.join(contact_dir, testcase_file_name), "w") as f:
+                f.write(chat_completion)
+            
+            # Save prompt info
+            prompt_file_name = os.path.join(contact_dir, f"{base_contract_name}_{llm}_{model}_{temperature}T_prompt_{formatted_datetime}")
+            
+            self._chat_service.dump_save_prompt(messages, prompt_file_name)
+                
+            logger.info(f"Saved test case {testcase_file_name} and prompt {prompt_file_name}!")
+
+    def run_llm_with_cov(self, contact_dir: str, llm: str, model: str, temperature: float, total_tests=10, total_txs=4):
+        if not os.path.exists(contact_dir):
+            raise ValueError(f"Contract directory not found: {contact_dir}")
+        
+        # Read contract files
+        _, contract_abi, base_contract_name, contract_sol = self._read_contract_files(contact_dir)
+        testcase = open('example.json', "r").read()
+        
+        # Read contract content
+        with open(contract_sol, "r") as f:
+            sol_content = f.read()
+        
+        chat_completion = None
+        analysis = None
+        
+        messages = [        
+            {'role': 'system', 'content': f"""
+                    You are an expert assistant specializing in Solidity fuzzing with a deep understanding of SWC and DASP vulnerabilities. 
+                    Your objective is to generate a diverse set of transactions and inputs targeting the main EVM/Solidity vulnerabilities.
+             """},
+
+        ]        
+        
+        messages.append(
+            {'role': 'user', 'content': f"""
+                Is this contract vulnerable to any of Block State Dependency, Integer Overflow/Underflow, Mishandled Exception, Reentrancy?
+                Think step-by-step about each potential vulnerability type.
+                
+                {self._sast_service.clean_solidity_code(sol_content)}
+            """}
+        )
+        
+        logger.info(f"Requesting vulnerability analysis for contract {base_contract_name}")
+
+        analysis = None
+        if llm == "gpt":
+            analysis = self._chat_service.query_gpt4(messages, model, temperature)
+        elif llm == "sambanova":
+            analysis = self._chat_service.query_sambanova(messages, model, temperature)
+        elif llm == "hyperbolic":
+            analysis = self._chat_service.query_hyperbolic(messages, model, temperature)
+            
+
+        if not analysis:
+            logger.error("Failed to get vulnerability analysis")
+            return
+            
+            
+        # Add model's response to chat history
+        messages.append({'role': 'assistant', 'content': analysis})
+                    
+        # Step 2: Generate test cases based on analysis
+        messages += self._create_prompt_V6_fullcode_with_V1_convCoT(contract_abi, contract_sol, [testcase], total_tests, total_txs)
+                    
+        logger.info(f"Requesting test cases for contract {base_contract_name}")
+        chat_completion = None
+        if llm == "gpt":
+            chat_completion = self._chat_service.query_gpt4(messages, model, temperature)
+        elif llm == "anthropic":
+            chat_completion = self._chat_service.query_anthropic(messages, model, temperature)
+        elif llm == "hyperbolic":
+            chat_completion = self._chat_service.query_hyperbolic(messages, model, temperature)
+
+        
+        if chat_completion is not None:
+            logger.info(f"New {llm} test case generated!")
+            logger.info(f"Is a valid JSON? {is_valid_json(chat_completion)}")
+                    
+            current_datetime = datetime.now()
+            formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
+            
+            testcase_file_name = f"{base_contract_name}_{llm}_{model}_{temperature}T_testcase_{formatted_datetime}"
+            with open(os.path.join(contact_dir, testcase_file_name), "w") as f:
+                f.write(chat_completion)
+            
+            # Save prompt info
+            prompt_file_name = os.path.join(contact_dir, f"{base_contract_name}_{llm}_{model}_{temperature}T_prompt_{formatted_datetime}")
+            
+            self._chat_service.dump_save_prompt(messages, prompt_file_name)
+                
+            logger.info(f"Saved test case {testcase_file_name} and prompt {prompt_file_name}!")
+        
     def run_llm(self, contact_dir: str, llm: str, model: str, temperature: float, total_tests=10, total_txs=4, prompt="V1"):
         
         if not os.path.exists(contact_dir):
@@ -719,6 +1145,8 @@ class Genai4fuzz():
             messages = self._create_prompt_V6_fullcode_with_V1_text(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
         elif prompt == "V7":
             messages = self._create_cot_prompt(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
+        elif prompt == "V8":
+            messages = self._create_prompt_LLaMA3_fuzzing(contract_abi, contract_sol, [testcase], total_tests, total_txs) 
 
         
         logger.info(f"Requesting test cases for contract {base_contract_name}")

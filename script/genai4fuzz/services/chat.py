@@ -408,8 +408,7 @@ class ChatService(metaclass=SingletonMeta):
             logger.info(f"Prompt tokens: {response.usage}")        
             return response.choices[0].message.content
         return None
-    
-    
+        
     def query_hyperbolic(self, prompt_msgs: list, model: str, temperature=1) -> str:
 
         if "HYPERBOLIC_API_KEY" not in os.environ:
@@ -447,7 +446,6 @@ class ChatService(metaclass=SingletonMeta):
             logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")
             return response.choices[0].message.content
         return None
-
     
     def query_sambanova(self, prompt_msgs: list, model: str, temperature=1) -> str:
 
@@ -486,8 +484,7 @@ class ChatService(metaclass=SingletonMeta):
             logger.info(f"Prompt tokens: {response.usage.prompt_tokens}, Completition tokens {response.usage.completion_tokens}")
             return response.choices[0].message.content
         return None
-    
-    
+        
     def query_anthropic(self, prompt_msgs: list, model: str, temperature=1) -> str:
         max_tokens = 8192
 
@@ -514,7 +511,7 @@ class ChatService(metaclass=SingletonMeta):
         else:
             system = ""                
         
-        max_tokens = 16384
+        max_tokens = 64000
         logger.info(f"Invoke anthropic {model} with max_tokens={max_tokens}")
         t_start = time.time()
 
@@ -523,6 +520,9 @@ class ChatService(metaclass=SingletonMeta):
             base_url=provider_url
         )
 
+        # add json output for claude
+        prompt_msgs.append({"role": "assistant", "content": "Here is the JSON requested:"})
+        
         t_start = time.time()
         response = self.fetch_chat_completion_anthropic(client, prompt_msgs, system, model_string, max_tokens, temperature)
         g_time = time.time() - t_start
