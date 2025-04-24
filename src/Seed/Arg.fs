@@ -37,7 +37,7 @@ module Arg =
       | t -> [| Element.init t |]
     { Spec = argSpec; Elems = elems; ElemCursor = 0 }
 
-  //TODO: arrays of bools and bytes
+  //TODO: arrays of bytes
   let private buildArgs len argKind (bytes: obj) =
     match argKind with
     | UInt width | Int width ->  (bytes :?> bigint[]) |> Array.mapi (fun _ v -> Element.initWithValues argKind v)
@@ -47,7 +47,8 @@ module Arg =
           // let typeInfo = bytes.GetType();
           // printfn "Type Name INTERNO ARRAY: %s" typeInfo.Name;
           Array.init len (fun _ -> Element.init argKind)
-    | Bool -> Array.init len (fun _ -> Element.init argKind)
+    | Bool -> 
+        (bytes :?> bool[]) |> Array.mapi (fun i v -> Element.initWithValues argKind v)    
     | String -> (bytes :?> string[]) |>  Array.mapi (fun _ v -> Element.initWithValues argKind v)
     | Array _ -> failwithf "Array type not allowed for an element"
 
@@ -71,6 +72,8 @@ module Arg =
       | Array (size, elemTyp) ->
         // let typeInfo = value.GetType()
         // printfn "Type Name INTERNO ARRAY: %s" typeInfo.Name
+        // printfn "Value: %A" value
+        // printfn "elemTyp: %A" elemTyp        
         buildArgs (SizeType.decideLen size) elemTyp value
       // Singleton type.
       | t -> 
