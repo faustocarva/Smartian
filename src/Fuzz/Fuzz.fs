@@ -156,10 +156,10 @@ let loadTestCases opt =
       let tcStr = System.IO.File.ReadAllText file
       let tc = TestCase.fromJson tcStr
       log "Processing file: %s" file
-      try 
-        initSeeds <- initSeeds @ [ (loadTcsToSeeds contSpec tc) ] 
-      with _ -> 
-        log "Skiping file %s, malformed seed" file
+      // try 
+      initSeeds <- initSeeds @ [ (loadTcsToSeeds contSpec tc) ] 
+      // with _ -> 
+      //   log "Skiping file %s, malformed seed" file
 
     (contSpec, initSeeds)
 
@@ -203,7 +203,7 @@ let run args =
         log "Static DFA seeds"      
         initializeWithDFA opt
       elif not opt.StaticDFA && opt.UseLLLMSeeds then
-        log "LLM seeds"            
+        log "LLM seeds"        
         loadTestCases opt
       else
         log "Random seeds"                  

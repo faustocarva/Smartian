@@ -56,6 +56,29 @@ class ChatService(metaclass=SingletonMeta):
         f.write(final_prompt)
         f.close()
 
+
+    def fetch_chat_completion_ogpt(self, client, prompt_msgs, model_string, max_tokens, temperature, max_retries=5, backoff_factor=2):
+        retries = 0
+        
+        while retries < max_retries:
+            try:
+                response = client.chat.completions.create(
+                    messages=prompt_msgs,
+                    model=model_string,
+                    #response_format = {"type": "json_object"},
+                    max_completion_tokens=max_tokens)
+                return response
+            
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+            
+            retries += 1
+            wait_time = backoff_factor ** retries
+            logger.info(f"Retrying in {wait_time} seconds...")
+            time.sleep(wait_time)
+        
+        return None
+
     def fetch_chat_completion(self, client, prompt_msgs, model_string, max_tokens, temperature, max_retries=5, backoff_factor=2):
         retries = 0
         
@@ -363,7 +386,10 @@ class ChatService(metaclass=SingletonMeta):
         )
 
         t_start = time.time()
-        response = self.fetch_chat_completion(client, prompt_msgs, model_string, max_tokens, temperature)
+        if model == "o3-mini" or model == "o4-mini":
+            response = self.fetch_chat_completion_ogpt(client, prompt_msgs, model_string, max_tokens, temperature)
+        else:
+            response = self.fetch_chat_completion(client, prompt_msgs, model_string, max_tokens, temperature)
         g_time = time.time() - t_start
         logger.info(f"GPT {model} response time: {g_time}")        
         if (response is not None):

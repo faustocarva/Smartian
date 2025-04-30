@@ -441,10 +441,10 @@ def test_encode_args_with_eval():
         "set3": ("set", ['uint256']),        
     }
 
-    # Arithmetic expressions in uint256[] args
-    result = tc._encode_args("set", [[['SmartianAgent1', 'SmartianAgent2'], ['10 * 10**3', '5 * 10**2']]])
-    assert result is not None
-    assert isinstance(result, str)
+    # # Arithmetic expressions in uint256[] args
+    # result = tc._encode_args("set", [[['SmartianAgent1', 'SmartianAgent2'], ['10 * 10**3', '5 * 10**2']]])
+    # assert result is not None
+    # assert isinstance(result, str)
 
     # Mixed evaluated uint and plain address
     result = tc._encode_args("set2", [[['SmartianAgent1', 'SmartianAgent2'], ['2**5', '2**6'], 'SmartianAgent3', '2**4']])

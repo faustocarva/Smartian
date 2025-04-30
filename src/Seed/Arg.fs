@@ -40,12 +40,25 @@ module Arg =
   //TODO: arrays of bytes
   let private buildArgs len argKind (bytes: obj) =
     match argKind with
-    | UInt width | Int width ->  (bytes :?> bigint[]) |> Array.mapi (fun _ v -> Element.initWithValues argKind v)
-    | Address -> (bytes :?> Address[]) |>  Array.mapi (fun _ v -> Element.initWithValues argKind v)
+    | UInt width | Int width -> 
+        match bytes with
+        | null -> Array.init len (fun _ -> Element.init argKind)  // Create empty array if null
+        | _ -> 
+            let numArray = bytes :?> bigint[]
+            if numArray.Length = 0 then
+                Array.init len (fun _ -> Element.init argKind)  // Create empty array if empty
+            else
+                numArray |> Array.mapi (fun _ v -> Element.initWithValues argKind v)    
+    | Address -> 
+        match bytes with
+        | null -> Array.init len (fun _ -> Element.init argKind)  // Create empty array if null
+        | _ -> 
+            let addressArray = bytes :?> Address[]
+            if addressArray.Length = 0 then
+                Array.init len (fun _ -> Element.init argKind)  // Create empty array if empty
+            else
+                addressArray |> Array.mapi (fun _ v -> Element.initWithValues argKind v)    
     | Byte -> 
-          // printfn "%A" bytes;  
-          // let typeInfo = bytes.GetType();
-          // printfn "Type Name INTERNO ARRAY: %s" typeInfo.Name;
           Array.init len (fun _ -> Element.init argKind)
     | Bool -> 
         (bytes :?> bool[]) |> Array.mapi (fun i v -> Element.initWithValues argKind v)    

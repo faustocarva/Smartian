@@ -126,7 +126,12 @@ class TestCase(object):
 
                 # Integer types
                 if type_ in INT_TYPES:
-                    _args.append(int(eval(arg)) if isinstance(arg, str) else int(arg))
+                    try:
+                        # First try to use convert_to_wei
+                        _args.append(convert_to_wei(arg))
+                    except Exception as e:
+                        # If that fails, fall back to direct evaluation
+                        _args.append(int(eval(arg)) if isinstance(arg, str) else int(arg))                        
                 
                 # String and address types
                 elif type_ in STR_TYPES:
