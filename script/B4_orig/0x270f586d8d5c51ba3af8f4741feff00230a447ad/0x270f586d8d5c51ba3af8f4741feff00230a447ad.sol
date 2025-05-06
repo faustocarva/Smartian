@@ -337,21 +337,11 @@ contract StandardToken is Ownable, ERC20, BasicToken {
             "sender does not have enough allowance"
         );
 
-        balances[_from] = balances[_from]
-        .sub(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        balances[_from] = balances[_from] - _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
+        balances[_to] = balances[_to] + _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
-        balances[_to] = balances[_to]
-        .add(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
-
-
-        allowed[_from][msg.sender] = allowed[
-        _from
-        ]
-        [
-        msg.sender
-        ].sub(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
-
+        allowed[_from][msg.sender] = allowed[_from][msg.sender] - _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         emit Transfer(
             _from,
@@ -440,7 +430,7 @@ contract StandardToken is Ownable, ERC20, BasicToken {
         if (_subtractedValue > oldValue) {
             allowed[msg.sender][_spender] = 0;
         } else {
-            allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);	//injected INTEGER OVERFLOW OR UNDERFLOW
+            allowed[msg.sender][_spender] = oldValue - _subtractedValue; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         }
         emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);

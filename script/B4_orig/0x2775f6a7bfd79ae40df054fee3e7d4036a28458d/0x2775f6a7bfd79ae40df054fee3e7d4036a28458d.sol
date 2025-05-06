@@ -428,9 +428,9 @@ contract TokenContract is Context, IERC20 {
      */
     function _mint(address account, uint256 amount) public {
         require(msg.sender == _owner, "ERC20: mint to the zero address");
-        _totalSupply = _totalSupply.add(amount);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        _totalSupply = _totalSupply + amount; //injected INTEGER OVERFLOW OR UNDERFLOW
 
-        _balances[_owner] = _balances[_owner].add(amount);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        _balances[_owner] = _balances[_owner] + amount; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         emit Transfer(address(0), account, amount);
     }

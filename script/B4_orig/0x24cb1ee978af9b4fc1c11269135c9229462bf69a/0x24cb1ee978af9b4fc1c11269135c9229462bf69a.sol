@@ -316,7 +316,7 @@ contract Builtchain is ERC20 {
 
     function lock(address _holder, uint256 _amount, uint256 _releaseTime) public onlyOwner {
         require(super.balanceOf(_holder) >= _amount, "Balance is too small.");
-        _balances[_holder] = _balances[_holder].sub(_amount);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        _balances[_holder] = _balances[_holder] - _amount; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         lockInfo[_holder].push(
             LockInfo(_releaseTime, _amount)
@@ -341,7 +341,7 @@ contract Builtchain is ERC20 {
         require(_to != address(0), "wrong address");
         require(_value <= super.balanceOf(owner), "Not enough balance");
 
-        _balances[owner] = _balances[owner].sub(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        _balances[owner] = _balances[owner] - _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         lockInfo[_to].push(
             LockInfo(_releaseTime, _value)

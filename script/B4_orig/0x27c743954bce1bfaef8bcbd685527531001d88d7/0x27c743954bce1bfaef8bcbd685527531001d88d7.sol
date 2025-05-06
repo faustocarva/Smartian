@@ -411,7 +411,7 @@ contract ERC20 is IERC20 {
         require(_allowances[msg.sender][spender] > 0, "ERC20: current allowance must not be 0");
         uint256 allowanceToSet;
         if (subtractedValue < _allowances[msg.sender][spender]) {
-            allowanceToSet = _allowances[msg.sender][spender].sub(subtractedValue);	//injected INTEGER OVERFLOW OR UNDERFLOW
+            allowanceToSet = _allowances[msg.sender][spender] - subtractedValue; //injected INTEGER OVERFLOW OR UNDERFLOW            
 
         } else {
             allowanceToSet = 0;
@@ -762,7 +762,7 @@ contract SafeUpgradeableTokenERC20 is ERC20Pausable, ERC20Detailed, Ownable, Upg
 
         // Take tokens out from circulation
         _burn(msg.sender, value);
-        totalUpgraded = totalUpgraded.add(value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        totalUpgraded = totalUpgraded + value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         emit LogUpgrade(msg.sender, address(upgradeAgent), value);
 

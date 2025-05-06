@@ -16,7 +16,7 @@ def json_from_text(text: str):
     if not match:
         return None
     try:
-        return match.group(0)
+        return fix_json_with_expressions(match.group(0))
     except json.JSONDecodeError:
         return None
 
@@ -113,4 +113,35 @@ def convert_to_wei(value) -> int:
         return int(number * multiplier)
     else:
         raise ValueError("Invalid input format")
+        
+def fix_json_with_expressions(json_str):
+    # Find array content with simple expressions like 2**255 or 2**8-3
+    pattern = r'(\[)([^"\[\]]*?\d+\s*\*\*\s*\d+[^"\[\]]*?)(\])'
     
+    # Check if pattern exists in the string
+    if not re.search(pattern, json_str) and "uint256_max" not in json_str:
+        return json_str  # Return original if no expressions or uint256_max found
+    
+    # Replace with quoted expressions
+    def replacer(match):
+        open_bracket = match.group(1)
+        content = match.group(2)
+        close_bracket = match.group(3)
+        
+        # Quote any expression containing **
+        new_content = re.sub(r'(\d+\s*\*\*\s*\d+[^,]*)', r'"\1"', content)
+        return open_bracket + new_content + close_bracket
+    
+    # Fix the JSON string for ** expressions
+    fixed_json = re.sub(pattern, replacer, json_str)
+    
+    # Also replace uint256_max with "2**256 - 1"
+    fixed_json = fixed_json.replace("uint256_max", '"2**256 - 1"')
+    
+    # Verify it's valid
+    try:
+        json.loads(fixed_json)
+        return fixed_json
+    except:
+        return json_str  # Return original if something went wrong
+            

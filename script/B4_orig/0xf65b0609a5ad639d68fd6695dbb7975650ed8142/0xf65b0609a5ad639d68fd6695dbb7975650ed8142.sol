@@ -148,9 +148,9 @@ contract BasicToken is ERC20Basic {
     _value == 0, ""); require(
     _to != address(0)); require(
     _value <= balances[msg.sender]);
-    balances[msg.sender] = balances[msg.sender].sub(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    balances[msg.sender] = balances[msg.sender] - _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
-    balances[_to] = balances[_to].add(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    balances[_to] = balances[_to] + _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
     emit Transfer(msg.sender, _to, _value);
     return true;
@@ -221,11 +221,11 @@ contract StandardERC20 is ERC20, BasicToken {
     _to != address(0)); require(
     _value <= balances[_from]); require(
     _value <= allowed[_from][msg.sender]);
-    balances[_from] = balances[_from].sub(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    balances[_from] = balances[_from] - _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
-    balances[_to] = balances[_to].add(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    balances[_to] = balances[_to] + _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
-    allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    allowed[_from][msg.sender] = allowed[_from][msg.sender] - _value; //injected INTEGER OVERFLOW OR UNDERFLOW    
 
     emit Transfer(_from, _to, _value);
     return true;
@@ -263,7 +263,7 @@ contract StandardERC20 is ERC20, BasicToken {
     if (_subtractedValue > oldValue) {
       allowed[msg.sender][_spender] = 0;
     } else {
-      allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);	//injected INTEGER OVERFLOW OR UNDERFLOW
+      allowed[msg.sender][_spender] = oldValue - _subtractedValue; //injected INTEGER OVERFLOW OR UNDERFLOW
 
     }
     emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);

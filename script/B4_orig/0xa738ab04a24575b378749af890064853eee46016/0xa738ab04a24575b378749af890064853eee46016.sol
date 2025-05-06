@@ -120,7 +120,7 @@ contract CuraAnnonae {
   function updateVaultData(string memory vault, address who, address user, uint256 value) public {
     require(msg.sender == who);
     require(value > 0);
-    vaults_data[vault][user] = vaults_data[vault][user].add(value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    vaults_data[vault][user] = vaults_data[vault][user] + value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
   }
 
@@ -138,7 +138,7 @@ contract CuraAnnonae {
   function stake(string memory _vault, address _receiver, uint256 _amount, address vault) public returns (bool) {
     require(msg.sender == vault); // require that the vault is calling the contract.
     // update mapping.
-    vaults_data[_vault][_receiver] = vaults_data[_vault][_receiver].add(_amount);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    vaults_data[_vault][_receiver] = vaults_data[_vault][_receiver] + _amount; //injected INTEGER OVERFLOW OR UNDERFLOW
 
     return true;
   }

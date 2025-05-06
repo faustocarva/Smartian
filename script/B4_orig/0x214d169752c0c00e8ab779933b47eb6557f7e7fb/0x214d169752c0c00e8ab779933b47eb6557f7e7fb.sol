@@ -117,9 +117,9 @@ contract BasicToken is ERC20Basic, Ownable {
         require(_value <= balanceOf(msg.sender));
 
         // SafeMath.sub will throw if there is not enough balance.
-        balances[msg.sender] = balances[msg.sender].sub(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        balances[msg.sender] = balances[msg.sender] - _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
-        balances[_to] = balances[_to].add(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        balances[_to] = balances[_to] + _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         emit Transfer(msg.sender, _to, _value);
         return true;
@@ -159,7 +159,7 @@ contract StandardToken is ERC20, BasicToken {
         require(allowed[_from][msg.sender] >= _value);
         require(balanceOf(_from) >= _value);
         require(balances[_to].add(_value) > balances[_to]); // Check for overflows
-        balances[_from] = balances[_from].sub(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        balances[_from] = balances[_from] - _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         balances[_to] = balances[_to].add(_value);
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
@@ -200,7 +200,7 @@ contract StandardToken is ERC20, BasicToken {
     * From MonolithDAO Token.sol
     */
     function increaseApproval (address _spender, uint _addedValue) public returns (bool success) {
-        allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_addedValue);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        allowed[msg.sender][_spender] = allowed[msg.sender][_spender] + _addedValue; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         return true;
@@ -211,7 +211,7 @@ contract StandardToken is ERC20, BasicToken {
         if (_subtractedValue > oldValue) {
             allowed[msg.sender][_spender] = 0;
         } else {
-            allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);	//injected INTEGER OVERFLOW OR UNDERFLOW
+            allowed[msg.sender][_spender] = oldValue - _subtractedValue; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         }
         emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
@@ -372,9 +372,9 @@ contract ECC is PausableToken {
     */
     function burnTokens(uint256 _tokens) public onlyOwner {
         require(balanceOf(msg.sender) >= _tokens);
-        balances[msg.sender] = balances[msg.sender].sub(_tokens);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        balances[msg.sender] = balances[msg.sender] - _tokens; //injected INTEGER OVERFLOW OR UNDERFLOW
 
-        totalSupply = totalSupply.sub(_tokens);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        totalSupply = totalSupply - _tokens; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         emit TokensBurned(msg.sender, _tokens);
     }

@@ -238,7 +238,7 @@ contract Private is IERC20 {
     require(to != address(0));
 
     balances[msg.sender] = balances[msg.sender].sub(value);
-    balances[to] = balances[to].add(value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    balances[to] = balances[to] + value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
 
     emit Transfer(msg.sender, to, value);
@@ -271,7 +271,7 @@ contract Private is IERC20 {
     require(to != address(0));
     
     balances[from] = balances[from].sub(value);
-    balances[to] = balances[to].add(value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    balances[to] = balances[to] + value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
     
     allowed[from][msg.sender] = allowed[from][msg.sender].sub(value);
@@ -282,7 +282,7 @@ contract Private is IERC20 {
 
   function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
     require(spender != address(0));
-    allowed[msg.sender][spender] = allowed[msg.sender][spender].add(addedValue);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    allowed[msg.sender][spender] = allowed[msg.sender][spender] + addedValue; //injected INTEGER OVERFLOW OR UNDERFLOW
 
     emit Approval(msg.sender, spender, allowed[msg.sender][spender]);
     return true;
@@ -290,7 +290,7 @@ contract Private is IERC20 {
 
   function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
     require(spender != address(0));
-    allowed[msg.sender][spender] = allowed[msg.sender][spender].sub(subtractedValue);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    allowed[msg.sender][spender] = allowed[msg.sender][spender] - subtractedValue; //injected INTEGER OVERFLOW OR UNDERFLOW
 
     emit Approval(msg.sender, spender, allowed[msg.sender][spender]);
     return true;
@@ -299,7 +299,7 @@ contract Private is IERC20 {
   function burn(uint256 amount) external {
     require(amount != 0);
     require(amount <= balances[msg.sender]);
-    _totalSupply = _totalSupply.sub(amount);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    _totalSupply = _totalSupply - amount; //injected INTEGER OVERFLOW OR UNDERFLOW
 
     balances[msg.sender] = balances[msg.sender].sub(amount);
     emit Transfer(msg.sender, address(0), amount);

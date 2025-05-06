@@ -26,7 +26,8 @@ class DataCollect():
     @staticmethod
     def format_model_name(name):
         model_name_map = {
-            'llama3-70b': 'Llama3-70B',
+            'llama3.3-70B': 'Llama3.3-70B',
+            'llama3-70b': 'Llama3-70B',            
             'gpt4-0mini': 'GPT-4o-Mini',
             'gpt4omini': 'GPT-4o-Mini',         
             'llama3-8b': 'Llama3-8B',
@@ -518,7 +519,7 @@ class DataCollect():
         
         """Process the raw metrics data to calculate performance metrics."""
         # Define the desired order of models
-        model_order = ["Llama3-70B", "gemini-1.5-flash", "mixtral-8x7b", "gpt4omini", "Llama3-8B"]
+        model_order = ["Llama3.3-70B", "Llama3-70B", "gemini-1.5-flash", "mixtral-8x7b", "gpt4omini", "Llama3-8B"]
         
         # Find the maximum possible seeds across all models
         max_seeds = df.groupby('model')['total_seeds'].max().max()
@@ -646,7 +647,7 @@ class DataCollect():
         df['model'] = df['model'].apply(self.format_model_name)
         
         # Define the desired order of models
-        model_order = ["Llama3-70B", "Gemini-1.5-Flash", "Mixtral-8x7B", "GPT-4o-Mini", "Llama3-8B"]
+        model_order = ["Llama3.3-70B", "Llama3-70B", "gemini-1.5-flash", "mixtral-8x7b", "gpt4omini", "Llama3-8B"]        
 
         # Group by model and temperature
         grouped = df.groupby(['model', 'temperature']).agg({
@@ -694,6 +695,7 @@ class DataCollect():
             
             # Define distinct markers and colors to match the style
             model_styles = {
+                "Llama3.3-70B": {"marker": "+", "color": "#bcbd22"},                
                 "Llama3-70B": {"marker": "o", "color": "#1f77b4"},
                 "Gemini-1.5-Flash": {"marker": "^", "color": "#2ca02c"},
                 "Mixtral-8x7B": {"marker": "x", "color": "#9467bd"},
@@ -795,7 +797,7 @@ class DataCollect():
         
         # Create plot for total seeds
         models = grouped_df['model'].unique()
-        markers = ['o', 's', '^', 'D', 'x']  # Different markers for each model
+        markers = ['+','o', 'D', 's', '^', 'v']  # More distinct markers        
         
         # Define color palette
         color_palette = sns.color_palette("tab10", len(models))  # Use seaborn's tab10 palette
@@ -899,7 +901,7 @@ class DataCollect():
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
         
         models = grouped_df['model'].unique()
-        markers = ['o', 'D', 's', '^', 'v']  # More distinct markers
+        markers = ['+','o', 'D', 's', '^', 'v']  # More distinct markers
         color_palette = sns.color_palette("tab10", len(models))  # Original color palette
         
         # First plot: Valid Seeds
@@ -1008,7 +1010,7 @@ class DataCollect():
 
         grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
         models = grouped_df['model'].unique()
-        markers = ['o', 'D', 's', '^', 'v']  # More distinct markers
+        markers = ['+','o', 'D', 's', '^', 'v']  # More distinct markers
         color_palette = sns.color_palette("tab10", len(models))
 
         # Plot for valid seeds
@@ -1089,7 +1091,7 @@ class DataCollect():
 
         grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
         models = grouped_df['model'].unique()
-        markers = ['o', 's', '^', 'D', 'v']  # Distinct markers for models
+        markers = ['+','o', 'D', 's', '^', 'v']  # More distinct markers        
         colors = sns.color_palette("deep", len(models))  # Deep color palette for better contrast
 
         # Plot setup
@@ -1194,7 +1196,7 @@ class DataCollect():
 
         grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
         models = grouped_df['model'].unique()
-        markers = ['o', 's', '^', 'D', 'v']  # Distinct markers for models
+        markers = ['+','o', 'D', 's', '^', 'v']  # More distinct markers
         colors = sns.color_palette("deep", len(models))  # Deep color palette for better contrast
 
         # Create side-by-side plots

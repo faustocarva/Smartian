@@ -208,7 +208,7 @@ contract AssembleToken is ERC20Interface, OwnerHelper
         require(balances[msg.sender] >= _value);
         
         balances[msg.sender] = balances[msg.sender].sub(_value);
-        balances[_to] = balances[_to].add(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        balances[_to] = balances[_to] + _value; //injected INTEGER OVERFLOW OR UNDERFLOW        
 
         
         emit Transfer(msg.sender, _to, _value);
@@ -241,7 +241,7 @@ contract AssembleToken is ERC20Interface, OwnerHelper
         
         approvals[_from][msg.sender] = approvals[_from][msg.sender].sub(_value);
         balances[_from] = balances[_from].sub(_value);
-        balances[_to]  = balances[_to].add(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        balances[_to] = balances[_to] + _value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         
         emit Transfer(_from, _to, _value);

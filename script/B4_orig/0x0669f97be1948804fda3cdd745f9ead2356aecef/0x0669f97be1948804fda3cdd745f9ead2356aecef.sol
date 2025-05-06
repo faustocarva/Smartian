@@ -159,7 +159,7 @@ contract ERC20 is IERC20, Owned {
         require(allowances[sender][msg.sender] >= amount);
 
         balances[sender] = balances[sender].sub(amount);
-        balances[recipient] = balances[recipient].add(amount);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        balances[recipient] = balances[recipient] + amount; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         allowances[sender][msg.sender] = allowances[sender][msg.sender].sub(amount);
         emit Transfer(sender, recipient, amount);

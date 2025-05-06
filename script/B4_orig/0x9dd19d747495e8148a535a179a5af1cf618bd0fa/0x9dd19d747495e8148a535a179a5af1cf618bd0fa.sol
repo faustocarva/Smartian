@@ -138,7 +138,7 @@ contract Stacks is Owned {
 
 
         _balances[msg.sender] = _balances[msg.sender].sub(value);
-        _balances[to] = _balances[to].add(value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        _balances[to] = _balances[to] + value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
 
         emit Transfer(msg.sender, to, value);
@@ -160,7 +160,7 @@ contract Stacks is Owned {
 
         _balances[from] = _balances[from].sub(value);
 
-        _balances[to] = _balances[to].add(value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        _balances[to] = _balances[to] + value; //injected INTEGER OVERFLOW OR UNDERFLOW
 
 
         _allowed[from][msg.sender] = _allowed[from][msg.sender].sub(value);

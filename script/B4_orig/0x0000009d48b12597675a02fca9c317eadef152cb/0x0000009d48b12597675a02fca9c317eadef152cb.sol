@@ -110,7 +110,7 @@ contract BasicToken is ERC20Basic {
     require(_value <= balances[msg.sender], "Error"); 
     // SafeMath.sub will throw if there is not enough balance. 
     balances[msg.sender] = balances[msg.sender].sub(_value); 
-    balances[_to] = balances[_to].add(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    balances[_to] = balances[_to] + _value; //injected INTEGER OVERFLOW OR UNDERFLOW
  
     emit Transfer(msg.sender, _to, _value); 
     return true; 
@@ -148,7 +148,7 @@ contract StandardToken is ERC20, BasicToken {
     require(_value <= balances[_from]);
     require(_value <= allowed[_from][msg.sender]); 
     balances[_from] = balances[_from].sub(_value); 
-    balances[_to] = balances[_to].add(_value);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    balances[_to] = balances[_to] + _value; //injected INTEGER OVERFLOW OR UNDERFLOW
  
     allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value); 
     emit Transfer(_from, _to, _value); 
@@ -187,7 +187,7 @@ contract StandardToken is ERC20, BasicToken {
   * the first transaction is mined) * From MonolithDAO Token.sol 
   */ 
   function increaseApproval (address _spender, uint _addedValue) public returns (bool success) {
-    allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_addedValue);	//injected INTEGER OVERFLOW OR UNDERFLOW
+    allowed[msg.sender][_spender] = allowed[msg.sender][_spender] + _addedValue; //injected INTEGER OVERFLOW OR UNDERFLOW
 
     emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]); 
     return true; 
@@ -198,7 +198,7 @@ contract StandardToken is ERC20, BasicToken {
     if (_subtractedValue > oldValue) {
       allowed[msg.sender][_spender] = 0;
     } else {
-      allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);	//injected INTEGER OVERFLOW OR UNDERFLOW
+      allowed[msg.sender][_spender] = oldValue - _subtractedValue; //injected INTEGER OVERFLOW OR UNDERFLOW
 
     }
     emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);

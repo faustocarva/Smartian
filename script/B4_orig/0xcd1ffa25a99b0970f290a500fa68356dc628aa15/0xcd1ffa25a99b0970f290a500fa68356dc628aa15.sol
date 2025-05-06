@@ -394,9 +394,9 @@ contract StakingLP is Ownable {
         
         require(Token(stakingTokenAddress).transferFrom(msg.sender, address(this), amountToStake), "Insufficient Token Allowance");
         
-        depositedTokens[msg.sender] = depositedTokens[msg.sender].add(amountToStake);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        depositedTokens[msg.sender] = depositedTokens[msg.sender] + amountToStake; //injected INTEGER OVERFLOW OR UNDERFLOW
 
-        totalTokens = totalTokens.add(amountToStake);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        totalTokens = totalTokens + amountToStake; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         
         if (!holders.contains(msg.sender)) {
@@ -418,7 +418,7 @@ contract StakingLP is Ownable {
         require(Token(stakingTokenAddress).transfer(msg.sender, amountToWithdraw), "Could not transfer tokens.");
         
         depositedTokens[msg.sender] = depositedTokens[msg.sender].sub(amountToWithdraw);
-        totalTokens = totalTokens.sub(amountToWithdraw);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        totalTokens = totalTokens - amountToWithdraw; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         
         if (holders.contains(msg.sender) && depositedTokens[msg.sender] == 0) {

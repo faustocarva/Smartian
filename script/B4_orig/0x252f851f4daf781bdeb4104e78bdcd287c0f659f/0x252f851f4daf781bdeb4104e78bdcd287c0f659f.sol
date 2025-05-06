@@ -327,7 +327,7 @@ contract PumpkinVault is ERC20, ERC20Detailed, Ownable {
 
         uint256 _amountInVaultShares = _totalVaultBalanceAfter.sub(_totalVaultBalanceBefore);
 
-        balancesToken[msg.sender] = balancesToken[msg.sender].add(_amount);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        balancesToken[msg.sender] = balancesToken[msg.sender] + _amount; //injected INTEGER OVERFLOW OR UNDERFLOW
 
         balancesVault[msg.sender] = balancesVault[msg.sender].add(_amountInVaultShares);
 
@@ -357,7 +357,7 @@ contract PumpkinVault is ERC20, ERC20Detailed, Ownable {
         }
 
         balancesToken[msg.sender] = balancesToken[msg.sender].sub(_tokensToUser);
-        balancesVault[msg.sender] = balancesVault[msg.sender].sub(_shares);	//injected INTEGER OVERFLOW OR UNDERFLOW
+        balancesVault[msg.sender] = balancesVault[msg.sender] - _shares; //injected INTEGER OVERFLOW OR UNDERFLOW
 
 
         token.safeTransfer(msg.sender, _tokensToUser);
@@ -372,10 +372,9 @@ contract PumpkinVault is ERC20, ERC20Detailed, Ownable {
         if(msg.sender != pool) {
             uint256 _amountInToken = _amount.mul(balancesToken[_sender]).div(balancesVault[_sender]);
 
-            balancesVault[_sender] = balancesVault[_sender].sub(_amount, "Vault: transfer amount exceeds balance");	//injected INTEGER OVERFLOW OR UNDERFLOW
+            balancesVault[_sender] = balancesVault[_sender] - _amount; //injected INTEGER OVERFLOW OR UNDERFLOW            
 
-            balancesVault[_recipient] = balancesVault[_recipient].add(_amount);	//injected INTEGER OVERFLOW OR UNDERFLOW
-
+            balancesVault[_recipient] = balancesVault[_recipient] + _amount; //injected INTEGER OVERFLOW OR UNDERFLOW
 
             balancesToken[_sender] = balancesToken[_sender].sub(_amountInToken, "Vault: transfer amount exceeds balance");
             balancesToken[_recipient] = balancesToken[_recipient].add(_amountInToken);

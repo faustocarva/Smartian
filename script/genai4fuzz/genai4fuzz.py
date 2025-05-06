@@ -431,7 +431,7 @@ class Genai4fuzz():
                 'role': 'user',
                 'content': f"""
                 
-                    ### Is this contract vulnerable to any of Block State Dependency, Integer Bug, Mishandled Exception, Reentrancy?
+                    ### Is this contract vulnerable to any of Ether Leak, Block State Dependency, Integer underflow/overflow, Mishandled Exception, Reentrancy?
                         (Think step-by-step, write seeds that demonstrates the actual attack vector against this contract and only use contract ABI functions)
                         Do not call private/internal functions directly, when ETH is sent to the contract, use fallback functions that handle incoming funds.                
                         
