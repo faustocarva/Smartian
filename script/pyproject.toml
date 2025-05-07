@@ -4,7 +4,10 @@ version = "0.1.0"
 description = ""
 authors = ["Fausto Carvalho <faustocarva@gmail.com>"]
 readme = "README.md"
-packages = [{ include = "genai4fuzz" }]
+packages = [
+    { include = "genai4fuzz" },
+    { include = "datacollect" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"

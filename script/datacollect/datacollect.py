@@ -13,6 +13,7 @@ from matplotlib.colors import to_rgba
 from scipy import stats
 from scipy.stats import f_oneway
 import matplotlib.gridspec as gridspec
+from datacollect.utils.models import get_model_visualization_scheme
 import genai4fuzz.utils.datafile as datafile
 
 class DataCollect():    
@@ -30,6 +31,7 @@ class DataCollect():
             'llama3-70b': 'Llama3-70B',            
             'gpt4-0mini': 'GPT-4o-Mini',
             'gpt4omini': 'GPT-4o-Mini',         
+            'gpt4.1mini': 'GPT-4.1-Mini',                     
             'llama3-8b': 'Llama3-8B',
             'mixtral-8x7b': 'Mixtral-8x7B',
             'gemini-1.5-flash': 'Gemini-1.5-Flash'
@@ -646,8 +648,11 @@ class DataCollect():
         # Format model names
         df['model'] = df['model'].apply(self.format_model_name)
         
-        # Define the desired order of models
-        model_order = ["Llama3.3-70B", "Llama3-70B", "gemini-1.5-flash", "mixtral-8x7b", "gpt4omini", "Llama3-8B"]        
+        # Get the complete model scheme
+        complete_model_scheme = get_model_visualization_scheme()
+        
+        # Extract the model order from the keys of the scheme
+        model_order = list(complete_model_scheme.keys())        
 
         # Group by model and temperature
         grouped = df.groupby(['model', 'temperature']).agg({
@@ -680,6 +685,12 @@ class DataCollect():
         grouped['invalid_functions_per_run'] = grouped['total_invalid_function_in_seeds'] / grouped['file']
 
 
+        # Get unique models from the data that are actually present
+        unique_models = grouped['model'].unique()
+        
+        # Get the visualization scheme using our function
+        model_scheme = get_model_visualization_scheme(unique_models)
+    
         # Create visualizations for each metric
         metrics_to_plot = [
             ('args_error_rate', 'Arguments Error Rate (%)', 'Invalid Functions Arguments (%) By Temperature', 50),
@@ -693,27 +704,25 @@ class DataCollect():
             plt.figure(figsize=figsize)
             ax = plt.gca()
             
-            # Define distinct markers and colors to match the style
-            model_styles = {
-                "Llama3.3-70B": {"marker": "+", "color": "#bcbd22"},                
-                "Llama3-70B": {"marker": "o", "color": "#1f77b4"},
-                "Gemini-1.5-Flash": {"marker": "^", "color": "#2ca02c"},
-                "Mixtral-8x7B": {"marker": "x", "color": "#9467bd"},
-                "GPT-4o-Mini": {"marker": "D", "color": "#d62728"},
-                "Llama3-8B": {"marker": "s", "color": "#ff7f0e"}
-            }
 
-            for model in model_styles:
+            for model in unique_models:
                 model_data = data[data['model'] == model]
-                style = model_styles[model]
+                # Skip if no data for this model
+                if model_data.empty:
+                    continue
+                    
+                # Get the color and marker for this model from our scheme
+                color = model_scheme[model]["color"]
+                marker = model_scheme[model]["marker"]
+            
                 
                 # Main line with markers
                 plt.plot(model_data['temperature'], 
                         model_data[metric], 
-                        marker=style["marker"],
+                        marker=marker,
                         markersize=12,
                         linewidth=3,
-                        color=style["color"],
+                        color=color,
                         label=model,
                         alpha=0.8)
                 
@@ -765,7 +774,7 @@ class DataCollect():
             plot.savefig(f'{metric}.pdf', bbox_inches='tight', dpi=600)
             plt.close()
         
-    def total_seed_and_files(self, csv):
+    def total_files_seeds_by_model_temperature(self, csv):
         # Read and process data
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
         
@@ -875,7 +884,8 @@ class DataCollect():
         # Adjust layout
         plt.tight_layout()
         plt.savefig('plot_total_files_seeds_by_model_temperature.pdf', bbox_inches="tight")             
-        
+                        
+    def total_files_seeds_by_model_side_temperature(self, csv):
         ########################################################################################################
         # Read and process data
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)        
@@ -989,7 +999,8 @@ class DataCollect():
         # Adjust layout
         plt.tight_layout()           
         plt.savefig('plot_total_files_seeds_by_model_side_temperature.pdf',bbox_inches="tight")
-        
+                
+    def valid_seeds(self, csv):
         ######################################
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)        
                 
@@ -1072,6 +1083,7 @@ class DataCollect():
         plt.savefig('plot_valid_seeds.pdf', bbox_inches='tight', dpi=600)
         plt.close()
 
+    def seed_metrics(self, csv):
         ######################################
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
                 
@@ -1091,17 +1103,22 @@ class DataCollect():
 
         grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
         models = grouped_df['model'].unique()
-        markers = ['+','o', 'D', 's', '^', 'v']  # More distinct markers        
-        colors = sns.color_palette("deep", len(models))  # Deep color palette for better contrast
-
+                
+        # Get visualization scheme using our function
+        model_scheme = get_model_visualization_scheme(models)
+            
         # Plot setup
         plt.figure(figsize=(12, 8))
         ax = plt.gca()
-
+        
         # Plot for each model
-        for model, marker, color in zip(models, markers, colors):
+        for model in models:
             model_data = grouped_df[grouped_df['model'] == model]
             temps = model_data['temperature']
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
             
             # Solid line for valid seeds
             plt.plot(temps, model_data['valid_seeds'], 
@@ -1132,16 +1149,16 @@ class DataCollect():
                             zorder=1)
                             
             # Add percentage text for valid seeds
-            for x, y, total, valid in zip(temps, model_data['valid_seeds'], 
-                                        model_data['total_seeds'], model_data['valid_seeds']):
-                percentage = (valid / total * 100) if total > 0 else 0
-                plt.text(x, y - (total * 0.05),  # Position below the point
-                        f'{percentage:.1f}%',
-                        ha='center',
-                        va='top',
-                        fontsize=8,
-                        color=color,
-                        alpha=0.8)
+            # for x, y, total, valid in zip(temps, model_data['valid_seeds'], 
+            #                             model_data['total_seeds'], model_data['valid_seeds']):
+            #     percentage = (valid / total * 100) if total > 0 else 0
+            #     plt.text(x, y - (total * 0.05),  # Position below the point
+            #             f'{percentage:.1f}%',
+            #             ha='center',
+            #             va='top',
+            #             fontsize=8,
+            #             color=color,
+            #             alpha=0.8)
 
         # Styling
         plt.xlabel('Temperature', fontsize=14, fontweight='bold')
@@ -1176,7 +1193,8 @@ class DataCollect():
         plt.tight_layout()
         plt.savefig('plot_seed_metrics.pdf', bbox_inches='tight', dpi=600)
         plt.close()
-
+                
+    def combined_plots(self, csv):
         ######################################
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
                 
@@ -1195,16 +1213,21 @@ class DataCollect():
         grouped_df['valid_seeds'] = grouped_df['total_seeds'] - grouped_df['total_duplicate_seeds'] - grouped_df['total_seeds_with_invalid_struct']
 
         grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
-        models = grouped_df['model'].unique()
-        markers = ['+','o', 'D', 's', '^', 'v']  # More distinct markers
-        colors = sns.color_palette("deep", len(models))  # Deep color palette for better contrast
+        models = grouped_df['model'].unique()        
 
         # Create side-by-side plots
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
         
+        # Get visualization scheme using our function
+        model_scheme = get_model_visualization_scheme(models)
+                
         # Plot 1: Duplicate Seeds
-        for model, marker, color in zip(models, markers, colors):
+        for model in models:
             model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
             
             ax1.plot(model_data['temperature'], 
                     model_data['total_duplicate_seeds'], 
@@ -1230,8 +1253,12 @@ class DataCollect():
         ax1.tick_params(axis='both', which='major', labelsize=12)
 
         # Plot 2: combined_plots.pdf
-        for model, marker, color in zip(models, markers, colors):
+        for model in models:
             model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
             
             ax2.plot(model_data['temperature'], 
                     model_data['total_seeds_with_invalid_struct'], 
@@ -1280,14 +1307,128 @@ class DataCollect():
         plt.tight_layout()
         plt.savefig('combined_plots.pdf', bbox_inches='tight', dpi=600)
         plt.close()
-        
+
+    def valid_files_percentage(self, csv):
         ######################################
+        df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
+                
+        # Calculate means grouped by model and temperature
+        grouped_df = df.groupby(['model', 'temperature']).agg({
+            'total_files': 'mean',
+            'total_files_with_invalid_json': 'mean',
+            'total_seeds': 'mean',
+            'total_duplicate_seeds': 'mean',
+            'total_seeds_with_invalid_struct': 'mean'
+        }).reset_index()
+
+        # Calculate metrics
+        grouped_df['valid_files_mean'] = grouped_df['total_files'] - grouped_df['total_files_with_invalid_json']
+        grouped_df['valid_files_percentage'] = (grouped_df['valid_files_mean'] / grouped_df['total_files']) * 100
+        grouped_df['valid_seeds'] = grouped_df['total_seeds'] - grouped_df['total_duplicate_seeds'] - grouped_df['total_seeds_with_invalid_struct']
+
+        grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
+        models = grouped_df['model'].unique()        
+
+        # Create side-by-side plots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+        
+        # Get visualization scheme using our function
+        model_scheme = get_model_visualization_scheme(models)
+                
+        # Plot for valid files percentage
+        plt.figure(figsize=(12, 8))
+        ax = plt.gca()
+
+        for model in models:
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
+            
+            plt.plot(model_data['temperature'], 
+                    model_data['valid_files_percentage'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            plt.plot(model_data['temperature'], 
+                    model_data['valid_files_percentage'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        plt.xlabel('Temperature', fontsize=14, fontweight='bold')
+        plt.ylabel('Percentage of Valid Outputs (%)', fontsize=14, fontweight='bold')
+        plt.title('Percentage of Valid Outputs vs Temperature', fontweight='bold', fontsize=16, pad=20)
+        plt.grid(True, linestyle='--', alpha=0.7)
+        ax.set_facecolor('#f8f9fa')
+        ax.tick_params(axis='both', which='major', labelsize=12)
+
+        legend = plt.legend(
+            title="Models",
+            title_fontsize=12,
+            fontsize=11,
+            loc='center right',
+            #bbox_to_anchor=(0, 1),
+            bbox_to_anchor=(1, 0.7),
+            frameon=True,
+            fancybox=True,
+            shadow=True,
+            borderpad=1
+        )
+        legend.get_frame().set_facecolor('white')
+        legend.get_frame().set_alpha(0.9)
+
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#cccccc')
+            spine.set_linewidth(1.5)
+
+        plt.tight_layout()
+        plt.savefig('plot_valid_files_percentage.pdf', bbox_inches='tight', dpi=600)
+        plt.close()        
+        
+    def total_seed_and_files(self, csv):
+        ######################################
+        df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
+                
+        # Calculate means grouped by model and temperature
+        grouped_df = df.groupby(['model', 'temperature']).agg({
+            'total_files': 'mean',
+            'total_files_with_invalid_json': 'mean',
+            'total_seeds': 'mean',
+            'total_duplicate_seeds': 'mean',
+            'total_seeds_with_invalid_struct': 'mean'
+        }).reset_index()
+
+        # Calculate metrics
+        grouped_df['valid_files_mean'] = grouped_df['total_files'] - grouped_df['total_files_with_invalid_json']
+        grouped_df['valid_files_percentage'] = (grouped_df['valid_files_mean'] / grouped_df['total_files']) * 100
+        grouped_df['valid_seeds'] = grouped_df['total_seeds'] - grouped_df['total_duplicate_seeds'] - grouped_df['total_seeds_with_invalid_struct']
+
+        grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
+        models = grouped_df['model'].unique()        
+
+        # Create side-by-side plots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+        
+        # Get visualization scheme using our function
+        model_scheme = get_model_visualization_scheme(models)
+                
         # Plot for duplicate seeds
         plt.figure(figsize=(12, 8))
         ax = plt.gca()
 
-        for model, marker, color in zip(models, markers, color_palette):
+        for model in models:
             model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
             
             plt.plot(model_data['temperature'], 
                     model_data['total_duplicate_seeds'], 
@@ -1338,8 +1479,12 @@ class DataCollect():
         plt.figure(figsize=(12, 8))
         ax = plt.gca()
 
-        for model, marker, color in zip(models, markers, color_palette):
+        for model in models:
             model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
             
             plt.plot(model_data['temperature'], 
                     model_data['total_seeds_with_invalid_struct'], 
@@ -1384,60 +1529,6 @@ class DataCollect():
         plt.tight_layout()
         plt.savefig('plot_invalid_structure_seeds.pdf', bbox_inches='tight', dpi=600)
         plt.close()
-        ######################################
-
-        # Plot for valid files percentage
-        plt.figure(figsize=(12, 8))
-        ax = plt.gca()
-
-        for model, marker, color in zip(models, markers, color_palette):
-            model_data = grouped_df[grouped_df['model'] == model]
-            
-            plt.plot(model_data['temperature'], 
-                    model_data['valid_files_percentage'], 
-                    marker=marker,
-                    markersize=12,
-                    linewidth=3,
-                    color=color,
-                    label=model,
-                    alpha=0.8)
-            
-            plt.plot(model_data['temperature'], 
-                    model_data['valid_files_percentage'],
-                    color='gray',
-                    linewidth=4,
-                    alpha=0.2,
-                    zorder=-1)
-
-        plt.xlabel('Temperature', fontsize=14, fontweight='bold')
-        plt.ylabel('Percentage of Valid Outputs (%)', fontsize=14, fontweight='bold')
-        plt.title('Percentage of Valid Outputs vs Temperature', fontweight='bold', fontsize=16, pad=20)
-        plt.grid(True, linestyle='--', alpha=0.7)
-        ax.set_facecolor('#f8f9fa')
-        ax.tick_params(axis='both', which='major', labelsize=12)
-
-        legend = plt.legend(
-            title="Models",
-            title_fontsize=12,
-            fontsize=11,
-            loc='center right',
-            #bbox_to_anchor=(0, 1),
-            bbox_to_anchor=(1, 0.7),
-            frameon=True,
-            fancybox=True,
-            shadow=True,
-            borderpad=1
-        )
-        legend.get_frame().set_facecolor('white')
-        legend.get_frame().set_alpha(0.9)
-
-        for spine in ax.spines.values():
-            spine.set_edgecolor('#cccccc')
-            spine.set_linewidth(1.5)
-
-        plt.tight_layout()
-        plt.savefig('plot_valid_files_percentage.pdf', bbox_inches='tight', dpi=600)
-        plt.close()        
                             
     def performance_score_all_metrics(self, csv):
         df = self.build_perf_score_seeds_args_funcs(csv)
