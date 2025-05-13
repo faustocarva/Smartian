@@ -34,12 +34,35 @@ module Seed =
     let deployTx = Transaction.initFromTXdData cnstrFunc tc.DeployTx |> Transaction.fixForConstructor
     let normalTxs = 
         tc.Txs
-        |> List.map (fun tx -> 
-            let func = List.find (fun name -> FuncSpec.getName name = tx.Function) funcs
-            Transaction.initFromTXdData func tx
+        |> List.collect (fun tx -> 
+            let matchingFuncs = List.filter (fun name -> FuncSpec.getName name = tx.Function) funcs
+            match matchingFuncs with
+            | [] -> 
+                // No matching functions found
+                []
+            | [singleFunc] -> 
+                // Exactly one match found - try to initialize and handle exception
+                try
+                    [Transaction.initFromTXdData singleFunc tx]
+                with
+                | ex -> 
+                    // Handle exception (log, return empty list, or provide default value)
+                    printfn "Error initializing transaction: %s" ex.Message
+                    []
+            | multipleFuncs -> 
+                // Multiple matches found - process each one and handle exceptions
+                multipleFuncs 
+                |> List.choose (fun func -> 
+                    try
+                        Some(Transaction.initFromTXdData func tx)
+                    with
+                    | ex -> 
+                        // Handle exception (log error)
+                        printfn "Error initializing transaction: %s" ex.Message
+                        None
+                )
         )
         |> Array.ofList
-
     let txs = Array.append [| deployTx |] normalTxs
     let idx = try Array.findIndex (not << Transaction.isEmpty) txs with _ -> -1
     { Transactions = txs; TXCursor = idx; SeedOrigin = "" }
