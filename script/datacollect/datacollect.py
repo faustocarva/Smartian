@@ -702,6 +702,10 @@ class DataCollect():
         
         def plot_metric(data, metric, title, ylabel, ylim=0, figsize=(12, 8)):
             plt.figure(figsize=figsize)
+            plt.rcParams.update({
+                'font.family': 'sans-serif',
+                'font.sans-serif': ['Arial']
+            })            
             ax = plt.gca()
             
 
@@ -735,20 +739,20 @@ class DataCollect():
                         zorder=-1)
 
             # Styling
-            plt.xlabel('Temperature', fontsize=14, fontweight='bold')
-            plt.ylabel(ylabel, fontsize=14, fontweight='bold')
-            plt.title(title, fontweight='bold', fontsize=16, pad=20)
+            plt.xlabel('Temperature', fontsize=20)
+            plt.ylabel(ylabel, fontsize=20)
+            #plt.title(title, fontsize=16, pad=20)
 
             # Grid and background
             plt.grid(True, linestyle='--', alpha=0.7)
             ax.set_facecolor('#f8f9fa')
-            ax.tick_params(axis='both', which='major', labelsize=12)
+            ax.tick_params(axis='both', which='major', labelsize=16)
 
             # Enhanced legend
             legend = plt.legend(
                 title="Models",
-                title_fontsize=12,
-                fontsize=11,
+                title_fontsize=16,
+                fontsize=15,
                 loc='best',
                 frameon=True,
                 fancybox=True,
@@ -764,7 +768,7 @@ class DataCollect():
                 spine.set_linewidth(1.5)
 
             if ylim > 0:
-                plt.ylim(0, ylim)
+                plt.ylim(-1, ylim+1)
 
             plt.tight_layout()
             return plt
@@ -1109,6 +1113,10 @@ class DataCollect():
             
         # Plot setup
         plt.figure(figsize=(12, 8))
+        plt.rcParams.update({
+            'font.family': 'sans-serif',
+            'font.sans-serif': ['Arial']
+        })        
         ax = plt.gca()
         
         # Plot for each model
@@ -1161,22 +1169,22 @@ class DataCollect():
             #             alpha=0.8)
 
         # Styling
-        plt.xlabel('Temperature', fontsize=14, fontweight='bold')
-        plt.ylabel('Number of Seeds', fontsize=14, fontweight='bold')
-        plt.title('Seed Generation Quality by Model', fontweight='bold', fontsize=16, pad=20)
+        plt.xlabel('Temperature', fontsize=20)
+        plt.ylabel('Number of Seeds', fontsize=20)
+        #plt.title('Seed Generation Capacity by Model', fontsize=16, pad=20)
 
         # Grid and background
         plt.grid(True, linestyle='--', alpha=0.3)
         ax.set_facecolor('#f8f9fa')
-        ax.tick_params(axis='both', which='major', labelsize=12)
+        ax.tick_params(axis='both', which='major', labelsize=16)
 
         # Legend inside the plot
         legend = plt.legend(
             title="Models",
-            title_fontsize=12,
-            fontsize=11,
+            title_fontsize=16,
+            fontsize=15,
             loc='center right',
-            bbox_to_anchor=(1, 0.6),                        
+            bbox_to_anchor=(1, 0.57),                        
             frameon=True,
             fancybox=True,
             shadow=True,
@@ -1307,7 +1315,402 @@ class DataCollect():
         plt.tight_layout()
         plt.savefig('combined_plots.pdf', bbox_inches='tight', dpi=600)
         plt.close()
+        
 
+    def combined_plots_percent(self, csv):
+        ######################################
+        df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
+                
+        # Calculate means grouped by model and temperature
+        grouped_df = df.groupby(['model', 'temperature']).agg({
+            'total_files': 'mean',
+            'total_files_with_invalid_json': 'mean',
+            'total_seeds': 'mean',
+            'total_duplicate_seeds': 'mean',
+            'total_seeds_with_invalid_struct': 'mean'
+        }).reset_index()
+
+        # Calculate metrics
+        grouped_df['valid_files_mean'] = grouped_df['total_files'] - grouped_df['total_files_with_invalid_json']
+        grouped_df['valid_files_percentage'] = (grouped_df['valid_files_mean'] / grouped_df['total_files']) * 100
+        
+        # Calculate percentages for the plots
+        grouped_df['duplicate_seeds_percentage'] = (grouped_df['total_duplicate_seeds'] / grouped_df['total_seeds']) * 100
+        grouped_df['invalid_struct_percentage'] = (grouped_df['total_seeds_with_invalid_struct'] / grouped_df['total_seeds']) * 100
+
+        grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
+        models = grouped_df['model'].unique()        
+
+        # Create stacked plots (one below the other)
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 16))  # Changed to 2 rows, 1 column
+        plt.rcParams.update({
+            'font.family': 'sans-serif',
+            'font.sans-serif': ['Arial'],
+        })        
+        
+        # Get visualization scheme using our function
+        model_scheme = get_model_visualization_scheme(models)
+                
+        # Plot 1: Duplicate Seeds (as percentage)
+        for model in models:
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
+            
+            ax1.plot(model_data['temperature'], 
+                    model_data['duplicate_seeds_percentage'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            ax1.plot(model_data['temperature'], 
+                    model_data['duplicate_seeds_percentage'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        ax1.set_xlabel('Temperature', fontsize=20)
+        ax1.set_ylabel('Percentage of Duplicate Seeds (%)', fontsize=20)
+        #ax1.set_title('Percentage of Duplicate Seeds vs Temperature', fontsize=16, pad=20)
+        ax1.grid(True, linestyle='--', alpha=0.7)
+        ax1.set_facecolor('#f8f9fa')
+        ax1.tick_params(axis='both', which='major', labelsize=16)
+        ax1.set_ylim(-1, 26)        
+        #ax1.yaxis.set_major_locator(plt.MultipleLocator(2.5))  # Set ticks every 2.5%                        
+
+
+        # Plot 2: Invalid Structure Seeds (as percentage)
+        for i, model in enumerate(models):
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
+            
+            # Create jittered x values
+            jitter = (i - len(models)/2) * 0.01  # Small horizontal offset based on model index
+            jittered_temps = model_data['temperature'] + jitter
+            
+            ax2.plot(jittered_temps, 
+                    model_data['invalid_struct_percentage'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            ax2.plot(jittered_temps, 
+                    model_data['invalid_struct_percentage'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+    
+        ax2.set_xlabel('Temperature', fontsize=20)
+        ax2.set_ylabel('Percentage of Seeds with Invalid Structure (%)', fontsize=20)
+        #ax2.set_title('Percentage of Seeds with Invalid Structure vs Temperature', fontsize=16, pad=20)
+        ax2.grid(True, linestyle='--', alpha=0.7)
+        ax2.set_facecolor('#f8f9fa')
+        ax2.tick_params(axis='both', which='major', labelsize=16)
+        ax2.set_ylim(-1, 26)        
+        #ax2.yaxis.set_major_locator(plt.MultipleLocator(2.5))  # Set ticks every 2.5%        
+
+        # Add separate legends for each plot
+        for ax in [ax1, ax2]:
+            legend = ax.legend(
+                title="Models",
+                title_fontsize=16,
+                fontsize=15,
+                loc='best',
+                frameon=True,
+                fancybox=True,
+                shadow=True,
+                borderpad=1
+            )
+            legend.get_frame().set_facecolor('white')
+            legend.get_frame().set_alpha(0.9)
+
+        # Style spines for both plots
+        for ax in [ax1, ax2]:
+            for spine in ax.spines.values():
+                spine.set_edgecolor('#cccccc')
+                spine.set_linewidth(1.5)
+
+        plt.tight_layout()
+        plt.savefig('combined_plots.pdf', bbox_inches='tight', dpi=600)
+        plt.close()
+            
+    def combined_plots_down(self, csv):
+        ######################################
+        df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
+                
+        # Calculate means grouped by model and temperature
+        grouped_df = df.groupby(['model', 'temperature']).agg({
+            'total_files': 'mean',
+            'total_files_with_invalid_json': 'mean',
+            'total_seeds': 'mean',
+            'total_duplicate_seeds': 'mean',
+            'total_seeds_with_invalid_struct': 'mean'
+        }).reset_index()
+
+        # Calculate metrics
+        grouped_df['valid_files_mean'] = grouped_df['total_files'] - grouped_df['total_files_with_invalid_json']
+        grouped_df['valid_files_percentage'] = (grouped_df['valid_files_mean'] / grouped_df['total_files']) * 100
+        grouped_df['valid_seeds'] = grouped_df['total_seeds'] - grouped_df['total_duplicate_seeds'] - grouped_df['total_seeds_with_invalid_struct']
+
+        grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
+        models = grouped_df['model'].unique()        
+
+        # Create stacked plots (one above another) instead of side-by-side
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 16))
+        
+        # Get visualization scheme using our function
+        model_scheme = get_model_visualization_scheme(models)
+                
+        # Plot 1: Duplicate Seeds
+        for model in models:
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
+            
+            ax1.plot(model_data['temperature'], 
+                    model_data['total_duplicate_seeds'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            ax1.plot(model_data['temperature'], 
+                    model_data['total_duplicate_seeds'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        ax1.set_xlabel('Temperature', fontsize=14, fontweight='bold')
+        ax1.set_ylabel('Number of Duplicate Seeds', fontsize=14, fontweight='bold')
+        ax1.set_title('Duplicate Seeds Generated vs Temperature', fontweight='bold', fontsize=16, pad=20)
+        ax1.grid(True, linestyle='--', alpha=0.7)
+        ax1.set_facecolor('#f8f9fa')
+        ax1.tick_params(axis='both', which='major', labelsize=12)
+
+        # Plot 2: combined_plots.pdf
+        for model in models:
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
+            
+            ax2.plot(model_data['temperature'], 
+                    model_data['total_seeds_with_invalid_struct'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            ax2.plot(model_data['temperature'], 
+                    model_data['total_seeds_with_invalid_struct'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        ax2.set_xlabel('Temperature', fontsize=14, fontweight='bold')
+        ax2.set_ylabel('Number of Invalid Structure Seeds', fontsize=14, fontweight='bold')
+        ax2.set_title('Seeds with Invalid Structure vs Temperature', fontweight='bold', fontsize=16, pad=20)
+        ax2.grid(True, linestyle='--', alpha=0.7)
+        ax2.set_facecolor('#f8f9fa')
+        ax2.tick_params(axis='both', which='major', labelsize=12)
+
+        # Add separate legends for each plot
+        for ax in [ax1, ax2]:
+            legend = ax.legend(
+                title="Models",
+                title_fontsize=12,
+                fontsize=11,
+                loc='best',
+                frameon=True,
+                fancybox=True,
+                shadow=True,
+                borderpad=1
+            )
+            legend.get_frame().set_facecolor('white')
+            legend.get_frame().set_alpha(0.9)
+
+        # Style spines for both plots
+        for ax in [ax1, ax2]:
+            for spine in ax.spines.values():
+                spine.set_edgecolor('#cccccc')
+                spine.set_linewidth(1.5)
+
+        plt.tight_layout()
+        plt.savefig('combined_plots.pdf', bbox_inches='tight', dpi=600)
+        plt.close()        
+
+    def combined_plots_median(self, csv):
+        
+        ######################################
+        df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
+        
+        # Function to determine if data is normally distributed
+        def is_normal(data, alpha=0.05):
+            # Shapiro-Wilk test is recommended for small samples
+            if len(data) < 3:  # Shapiro-Wilk test requires at least 3 data points
+                return True  # Default to assuming normality for very small samples
+                
+            # Check if all values are identical (range zero)
+            if np.all(data == data[0]):
+                return True  # Can't test normality with identical values, assume normal
+                
+            # Apply Shapiro-Wilk test
+            stat, p = stats.shapiro(data)
+            return p > alpha  # If p > alpha, data is likely normal
+        
+        # Function to aggregate based on distribution
+        def agg_based_on_distribution(group, column):
+            data = group[column].values
+            if is_normal(data):
+                return np.mean(data)  # Use mean for normally distributed data
+            else:
+                return np.median(data)  # Use median for non-normal data
+        
+        # Store results in a list to avoid pandas warning about concat with empty dataframes
+        result_rows = []
+        
+        # Group data by model and temperature
+        for (model, temp), group in df.groupby(['model', 'temperature']):
+            row = {
+                'model': model,
+                'temperature': temp
+            }
+            
+            # For each metric, determine the appropriate measure based on normality test
+            for metric in ['total_files', 'total_files_with_invalid_json', 
+                        'total_seeds', 'total_duplicate_seeds', 'total_seeds_with_invalid_struct']:
+                row[metric] = agg_based_on_distribution(group, metric)
+            
+            # Append to results list
+            result_rows.append(row)
+        
+        # Create dataframe from all collected rows at once
+        grouped_df = pd.DataFrame(result_rows)
+        
+        # Calculate metrics
+        grouped_df['valid_files_mean'] = grouped_df['total_files'] - grouped_df['total_files_with_invalid_json']
+        grouped_df['valid_files_percentage'] = (grouped_df['valid_files_mean'] / grouped_df['total_files']) * 100
+        grouped_df['valid_seeds'] = grouped_df['total_seeds'] - grouped_df['total_duplicate_seeds'] - grouped_df['total_seeds_with_invalid_struct']
+
+        grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
+        models = grouped_df['model'].unique()
+
+        # Create side-by-side plots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+        
+        # Get visualization scheme using our function
+        model_scheme = get_model_visualization_scheme(models)
+                
+        # Plot 1: Duplicate Seeds
+        for model in models:
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
+            
+            ax1.plot(model_data['temperature'], 
+                    model_data['total_duplicate_seeds'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            ax1.plot(model_data['temperature'], 
+                    model_data['total_duplicate_seeds'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        ax1.set_xlabel('Temperature', fontsize=14, fontweight='bold')
+        ax1.set_ylabel('Number of Duplicate Seeds', fontsize=14, fontweight='bold')
+        ax1.set_title('Duplicate Seeds Generated vs Temperature', fontweight='bold', fontsize=16, pad=20)
+        ax1.grid(True, linestyle='--', alpha=0.7)
+        ax1.set_facecolor('#f8f9fa')
+        ax1.tick_params(axis='both', which='major', labelsize=12)
+
+        # Plot 2: Seeds with Invalid Structure
+        for model in models:
+            model_data = grouped_df[grouped_df['model'] == model]
+            
+            # Get color and marker for this model
+            color = model_scheme[model]["color"]
+            marker = model_scheme[model]["marker"]
+            
+            ax2.plot(model_data['temperature'], 
+                    model_data['total_seeds_with_invalid_struct'], 
+                    marker=marker,
+                    markersize=12,
+                    linewidth=3,
+                    color=color,
+                    label=model,
+                    alpha=0.8)
+            
+            ax2.plot(model_data['temperature'], 
+                    model_data['total_seeds_with_invalid_struct'],
+                    color='gray',
+                    linewidth=4,
+                    alpha=0.2,
+                    zorder=-1)
+
+        ax2.set_xlabel('Temperature', fontsize=14, fontweight='bold')
+        ax2.set_ylabel('Number of Invalid Structure Seeds', fontsize=14, fontweight='bold')
+        ax2.set_title('Seeds with Invalid Structure vs Temperature', fontweight='bold', fontsize=16, pad=20)
+        ax2.grid(True, linestyle='--', alpha=0.7)
+        ax2.set_facecolor('#f8f9fa')
+        ax2.tick_params(axis='both', which='major', labelsize=12)
+
+        # Add separate legends for each plot
+        for ax in [ax1, ax2]:
+            legend = ax.legend(
+                title="Models",
+                title_fontsize=12,
+                fontsize=11,
+                loc='best',
+                frameon=True,
+                fancybox=True,
+                shadow=True,
+                borderpad=1
+            )
+            legend.get_frame().set_facecolor('white')
+            legend.get_frame().set_alpha(0.9)
+
+        # Style spines for both plots
+        for ax in [ax1, ax2]:
+            for spine in ax.spines.values():
+                spine.set_edgecolor('#cccccc')
+                spine.set_linewidth(1.5)
+
+        plt.tight_layout()
+        plt.savefig('combined_plots.pdf', bbox_inches='tight', dpi=600)
+        plt.close()
+    
+        
     def valid_files_percentage(self, csv):
         ######################################
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
@@ -1362,20 +1765,20 @@ class DataCollect():
                     alpha=0.2,
                     zorder=-1)
 
-        plt.xlabel('Temperature', fontsize=14, fontweight='bold')
-        plt.ylabel('Percentage of Valid Outputs (%)', fontsize=14, fontweight='bold')
-        plt.title('Percentage of Valid Outputs vs Temperature', fontweight='bold', fontsize=16, pad=20)
+        plt.xlabel('Temperature', fontsize=20)
+        plt.ylabel('Percentage of Valid Outputs (%)', fontsize=20)
+        #plt.title('Valid Outputs vs Temperature', fontsize=16, pad=20)
         plt.grid(True, linestyle='--', alpha=0.7)
         ax.set_facecolor('#f8f9fa')
-        ax.tick_params(axis='both', which='major', labelsize=12)
+        ax.tick_params(axis='both', which='major', labelsize=16)
 
         legend = plt.legend(
             title="Models",
-            title_fontsize=12,
-            fontsize=11,
+            title_fontsize=16,
+            fontsize=15,
             loc='center right',
             #bbox_to_anchor=(0, 1),
-            bbox_to_anchor=(1, 0.7),
+            bbox_to_anchor=(1, 0.69),
             frameon=True,
             fancybox=True,
             shadow=True,
@@ -1780,17 +2183,23 @@ class DataCollect():
         plt.xlabel('')
         plt.ylim(0, 100)                
         plt.ylabel('Coverage Percentage')
-        plt.xticks(rotation=45)
+        plt.xticks(rotation=48)
         plt.legend(title='Coverage Metric')
         
         for p in ax1.patches:
+            # Position labels higher above each bar with inclination
             ax1.annotate(f'{p.get_height():.2f}%', 
                         (p.get_x() + p.get_width() / 2., p.get_height()), 
-                        ha='center', va='center', 
-                        fontsize=8, color='black', 
-                        xytext=(0, 13), textcoords='offset points',
-                        rotation=50)
-        plt.tight_layout()            
+                        ha='center',  # Change to left alignment for inclined text
+                        va='bottom',
+                        fontsize=7, color='black', 
+                        xytext=(0, 2),  # Vertical offset
+                        textcoords='offset points',
+                        rotation=63)  # Use 45-degree rotation (less extreme than 70)
+
+        # Increase the top margin to accommodate inclined labels
+        plt.ylim(0, 110)  # More space at the top
+        plt.tight_layout(pad=3.0)  # Increased padding
         plt.savefig('coverage_means.pdf', bbox_inches="tight")
         
         # Plot 2: Temperature Heatmap Instruction
@@ -1878,6 +2287,343 @@ class DataCollect():
         
         # Use order parameter in violinplot with the processed dataframe
         sns.violinplot(data=plot_df, x='model', y='instruction_coverage', ax=ax2, order=model_order)
+        plt.title('Instruction Coverage Distribution by Model')
+        plt.xticks(rotation=45)
+        plt.xlabel('')
+        plt.ylabel('Coverage Percentage')
+        plt.tight_layout()            
+        plt.savefig('violin_inst_cov.pdf', bbox_inches="tight")
+
+
+    def coverage_means_median(self, coverage, metrics):
+
+        df, total_valid_seeds = self.build_coverage_data(coverage)
+        total_valid_seeds['model'] = total_valid_seeds['model'].apply(self.format_model_name)
+        df['model'] = df['model'].apply(self.format_model_name)   
+            
+        
+        df['instruction_coverage'] = (
+            df['coveredInstructions'].div(df['totalInstructions'])
+            .mul(100)
+            .round(2)
+        )
+
+        df['edge_coverage'] = (
+            df['coveredEdges'].div(df['totalEdges'])
+            .mul(100)
+            .round(2)
+        )
+
+        # Test for normality for each model and coverage metric
+        normality_results = pd.DataFrame(columns=['model', 'metric', 'is_normal', 'p_value'])
+        
+        # Function to determine if data is normally distributed
+        def is_normal(data, alpha=0.05):
+            # Skip if less than 8 samples (Shapiro-Wilk needs at least 3)
+            if len(data) < 8:
+                return False, 1.0
+            
+            # Shapiro-Wilk test is good for smaller samples
+            stat, p = stats.shapiro(data)
+            
+            # Return True if we can't reject the null hypothesis (data is normal)
+            return p > alpha, p
+        
+        # Test each model's distribution for normality
+        for model in df['model'].unique():
+            model_data = df[df['model'] == model]
+            
+            # Test instruction coverage
+            instruction_normal, p_inst = is_normal(model_data['instruction_coverage'].dropna())
+            normality_results = pd.concat([normality_results, pd.DataFrame({
+                'model': [model],
+                'metric': ['instruction_coverage'],
+                'is_normal': [instruction_normal],
+                'p_value': [p_inst]
+            })], ignore_index=True)
+            
+            # Test edge coverage
+            edge_normal, p_edge = is_normal(model_data['edge_coverage'].dropna())
+            normality_results = pd.concat([normality_results, pd.DataFrame({
+                'model': [model],
+                'metric': ['edge_coverage'],
+                'is_normal': [edge_normal],
+                'p_value': [p_edge]
+            })], ignore_index=True)
+        
+        print("Normality Test Results:")
+        print(normality_results)
+        
+        # Check for overall normality
+        instruction_normality = normality_results[normality_results['metric'] == 'instruction_coverage']['is_normal'].all()
+        edge_normality = normality_results[normality_results['metric'] == 'edge_coverage']['is_normal'].all()
+        
+        # Decide on aggregation method based on normality test
+        instruction_agg = 'mean' if instruction_normality else 'median'
+        edge_agg = 'mean' if edge_normality else 'median'
+        
+        print(f"Using {instruction_agg} for instruction_coverage and {edge_agg} for edge_coverage based on normality tests")
+        
+        # Calculate both mean and median for comparison
+        coverage_by_model_temp = (
+            df.groupby(['model', 'temperature'])
+            .agg({
+                'instruction_coverage': ['mean', 'median'],
+                'edge_coverage': ['mean', 'median']
+            })
+            .round(2)
+        )
+        
+        # Flatten the column names
+        coverage_by_model_temp.columns = ['_'.join(col).strip() for col in coverage_by_model_temp.columns.values]
+        coverage_by_model_temp = coverage_by_model_temp.reset_index()
+        
+        # Merge with other data
+        coverage_by_model_temp = coverage_by_model_temp.merge(total_valid_seeds, on=['model', 'temperature'])
+        valid_seed = self.get_mean_valid_seeds_per_model(metrics)
+        coverage_by_model_temp = coverage_by_model_temp.merge(valid_seed, on=['model', 'temperature'])
+        print(coverage_by_model_temp)
+
+        # Use appropriate aggregation method for each metric based on normality test
+        coverage_by_model = (
+            coverage_by_model_temp.groupby(['model'])
+            .agg({
+                f'instruction_coverage_{instruction_agg}': 'mean',  # still need mean here as we're aggregating across temperatures
+                f'edge_coverage_{edge_agg}': 'mean',  # still need mean here as we're aggregating across temperatures
+                'mean_valid_seeds': 'mean',
+                'seed_count': 'mean'
+            })
+            .round(2)
+            .reset_index()
+        )
+        
+        # Rename columns to make them more readable
+        coverage_by_model = coverage_by_model.rename(columns={
+            f'instruction_coverage_{instruction_agg}': 'instruction_coverage',
+            f'edge_coverage_{edge_agg}': 'edge_coverage'
+        })
+        
+        coverage_by_model = coverage_by_model.sort_values(
+            ['instruction_coverage', 'edge_coverage'], 
+            ascending=False
+        )
+        
+        print(coverage_by_model)
+        
+        model_order = coverage_by_model['model'].tolist()
+        
+        # Plot 1: Coverage Percentage by Model (using the selected aggregation method)
+        plt.figure(figsize=(14, 8))
+        ax1 = plt.subplot(2, 2, 1)
+        
+        model_graph = coverage_by_model.copy()  # Create a copy to avoid modifying original
+        model_graph.drop(columns=['mean_valid_seeds', 'seed_count']).set_index('model').plot(kind='bar', ax=ax1)
+        
+        title_text = f'Coverage by Model (Instruction: {instruction_agg.capitalize()}, Edge: {edge_agg.capitalize()})'
+        plt.title(title_text)
+        plt.xlabel('')
+        plt.ylim(0, 100)                
+        plt.ylabel('Coverage Percentage')
+        plt.xticks(rotation=48)
+        plt.legend(title='Coverage Metric')
+        
+        for p in ax1.patches:
+            # Position labels higher above each bar with inclination
+            ax1.annotate(f'{p.get_height():.2f}%', 
+                        (p.get_x() + p.get_width() / 2., p.get_height()), 
+                        ha='center',  # Change to left alignment for inclined text
+                        va='bottom',
+                        fontsize=7, color='black', 
+                        xytext=(0, 2),  # Vertical offset
+                        textcoords='offset points',
+                        rotation=63)  # Use 45-degree rotation (less extreme than 70)
+
+        # Increase the top margin to accommodate inclined labels
+        plt.ylim(0, 110)  # More space at the top
+        plt.tight_layout(pad=3.0)  # Increased padding
+        
+        # Save files with appropriate naming
+        plt.savefig(f'coverage_{instruction_agg}_{edge_agg}.pdf', bbox_inches="tight")
+        
+        # Plot 2: Comparison of Mean vs Median
+        plt.figure(figsize=(14, 10))
+        ax2 = plt.subplot(2, 1, 1)
+        
+        # Prepare data for comparison
+        mean_data = coverage_by_model_temp.groupby('model').agg({
+            'instruction_coverage_mean': 'mean',
+            'edge_coverage_mean': 'mean'
+        }).round(2).reset_index()
+        
+        median_data = coverage_by_model_temp.groupby('model').agg({
+            'instruction_coverage_median': 'median',
+            'edge_coverage_median': 'median'
+        }).round(2).reset_index()
+        
+        # Ensure consistent model ordering
+        mean_data['model'] = pd.Categorical(mean_data['model'], categories=model_order, ordered=True)
+        median_data['model'] = pd.Categorical(median_data['model'], categories=model_order, ordered=True)
+        
+        mean_data = mean_data.sort_values('model')
+        median_data = median_data.sort_values('model')
+        
+        # Plot instruction coverage comparison
+        bar_width = 0.35
+        index = np.arange(len(model_order))
+        
+        ax2.bar(index - bar_width/2, mean_data['instruction_coverage_mean'], bar_width, 
+            label='Mean', color='steelblue')
+        ax2.bar(index + bar_width/2, median_data['instruction_coverage_median'], bar_width,
+            label='Median', color='lightsteelblue')
+        
+        ax2.set_title('Comparison of Mean vs Median: Instruction Coverage')
+        ax2.set_xticks(index)
+        ax2.set_xticklabels(model_order, rotation=45)
+        ax2.set_ylabel('Coverage Percentage')
+        ax2.set_ylim(0, 100)
+        ax2.legend()
+        
+        # Annotate bars with values
+        for i, v in enumerate(mean_data['instruction_coverage_mean']):
+            ax2.text(i - bar_width/2, v + 1, f"{v:.2f}%", ha='center', fontsize=7, rotation=45)
+        
+        for i, v in enumerate(median_data['instruction_coverage_median']):
+            ax2.text(i + bar_width/2, v + 1, f"{v:.2f}%", ha='center', fontsize=7, rotation=45)
+        
+        # Plot edge coverage comparison
+        ax3 = plt.subplot(2, 1, 2)
+        
+        ax3.bar(index - bar_width/2, mean_data['edge_coverage_mean'], bar_width,
+            label='Mean', color='darkorange')
+        ax3.bar(index + bar_width/2, median_data['edge_coverage_median'], bar_width,
+            label='Median', color='bisque')
+        
+        ax3.set_title('Comparison of Mean vs Median: Edge Coverage')
+        ax3.set_xticks(index)
+        ax3.set_xticklabels(model_order, rotation=45)
+        ax3.set_ylabel('Coverage Percentage')
+        ax3.set_ylim(0, 100)
+        ax3.legend()
+        
+        # Annotate bars with values
+        for i, v in enumerate(mean_data['edge_coverage_mean']):
+            ax3.text(i - bar_width/2, v + 1, f"{v:.2f}%", ha='center', fontsize=7, rotation=45)
+        
+        for i, v in enumerate(median_data['edge_coverage_median']):
+            ax3.text(i + bar_width/2, v + 1, f"{v:.2f}%", ha='center', fontsize=7, rotation=45)
+        
+        plt.tight_layout(pad=3.0)
+        plt.savefig('coverage_mean_vs_median_comparison.pdf', bbox_inches="tight")
+        
+        # Continue with the rest of your plots (temperature heatmaps, etc.)
+        # Plot 3: Temperature Heatmap Instruction (using selected aggregation)
+        plt.figure(figsize=(14, 8))
+        ax4 = plt.subplot(2, 2, 1)
+        
+        pivot_data = coverage_by_model_temp.pivot_table(
+            values=f'instruction_coverage_{instruction_agg}',
+            index='model',
+            columns='temperature',
+            aggfunc='mean'
+        )
+        pivot_data = pivot_data.reindex(model_order)
+        
+        sns.heatmap(pivot_data, annot=True, fmt='.1f', cmap='YlOrRd', ax=ax4, vmax=100)
+        plt.title(f'Instruction Coverage Heatmap ({instruction_agg.capitalize()})')
+        plt.xlabel('Temperature')
+        plt.ylabel('Model')
+        plt.tight_layout()            
+        plt.savefig(f'instruction_heatmap_{instruction_agg}.pdf', bbox_inches="tight")        
+
+        # Plot 4: Temperature Heatmap Edge (using selected aggregation)
+        plt.figure(figsize=(14, 8))
+        ax5 = plt.subplot(2, 2, 1)
+        
+        pivot_data = coverage_by_model_temp.pivot_table(
+            values=f'edge_coverage_{edge_agg}',
+            index='model',
+            columns='temperature',
+            aggfunc='mean'
+        )
+        pivot_data = pivot_data.reindex(model_order)
+        
+        sns.heatmap(pivot_data, annot=True, fmt='.1f', cmap='Purples', ax=ax5, vmax=100)
+        plt.title(f'Edge Coverage Heatmap ({edge_agg.capitalize()})')
+        plt.xlabel('Temperature')
+        plt.ylabel('Model')
+        plt.tight_layout()            
+        plt.savefig(f'edge_heatmap_{edge_agg}.pdf', bbox_inches="tight")
+        
+        # Plot 5: Distribution plots to visualize normality
+        plt.figure(figsize=(14, 10))
+        
+        for i, model_name in enumerate(model_order):
+            if i >= 6:  # Limit to 6 models to avoid overcrowding
+                break
+                
+            model_data = df[df['model'] == model_name]
+            
+            # Instruction coverage distribution
+            ax6 = plt.subplot(3, 4, i*2+1)
+            sns.histplot(model_data['instruction_coverage'].dropna(), kde=True, ax=ax6)
+            plt.title(f"{model_name}: Instruction Coverage")
+            plt.xlabel("Coverage %")
+            
+            # Edge coverage distribution
+            ax7 = plt.subplot(3, 4, i*2+2)
+            sns.histplot(model_data['edge_coverage'].dropna(), kde=True, ax=ax7)
+            plt.title(f"{model_name}: Edge Coverage")
+            plt.xlabel("Coverage %")
+        
+        plt.tight_layout()
+        plt.savefig('coverage_distributions.pdf', bbox_inches="tight")
+        
+        # Rest of the original plots can continue here...
+        # Plot 6: Temperature Heatmap defusechain
+        plt.figure(figsize=(14, 8))
+        ax8 = plt.subplot(2, 2, 1)        
+        defuse_by_model_temp = df.pivot_table(
+            values='coveredDefUseChains',
+            index='model',
+            columns='temperature',
+            aggfunc='sum'
+        )
+        defuse_by_model_temp = defuse_by_model_temp.reindex(model_order)
+        
+        sns.heatmap(defuse_by_model_temp, annot=True, fmt='.0f', cmap='Greens', ax=ax8)
+        plt.title('Total Coverage of DefUse Chain Found (Model vs Temperature)')
+        plt.xlabel('Temperature')
+        plt.ylabel('Model')
+        plt.tight_layout()            
+        plt.savefig('defuse_heatmap_mode_temp.pdf', bbox_inches="tight")        
+        
+        # Plot 7: Temperature Heatmap bugsfound        
+        plt.figure(figsize=(14, 8))
+        ax9 = plt.subplot(2, 2, 1)        
+        bugs_by_model_temp = df.pivot_table(
+            values='bugsFound',
+            index='model',
+            columns='temperature',
+            aggfunc='sum'
+        )
+        bugs_by_model_temp = bugs_by_model_temp.reindex(model_order)
+        
+        sns.heatmap(bugs_by_model_temp, annot=True, fmt='.0f', cmap="Purples", ax=ax9)
+        plt.title('Total Bugs Found (Model vs Temperature)')
+        plt.xlabel('Temperature')
+        plt.ylabel('Model')
+        plt.tight_layout()            
+        plt.savefig('bugs_heatmap_mode_temp.pdf', bbox_inches="tight")        
+        
+        # Plot 8: Coverage Distribution by Model (violin plot)
+        plt.figure(figsize=(14, 8))
+        ax10 = plt.subplot(2, 2, 1)        
+        
+        # Create a copy of the dataframe and ensure correct column name
+        plot_df = df.copy()
+        
+        # Use order parameter in violinplot with the processed dataframe
+        sns.violinplot(data=plot_df, x='model', y='instruction_coverage', ax=ax10, order=model_order)
         plt.title('Instruction Coverage Distribution by Model')
         plt.xticks(rotation=45)
         plt.xlabel('')
