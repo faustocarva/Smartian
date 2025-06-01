@@ -691,6 +691,22 @@ class DataCollect():
         # Get the visualization scheme using our function
         model_scheme = get_model_visualization_scheme(unique_models)
     
+            # Print values to stdout
+        print("\n===== METRICS VALUES BY MODEL AND TEMPERATURE =====")
+        for model in unique_models:
+            model_data = grouped[grouped['model'] == model]
+            print(f"\nModel: {model}")
+            
+            for _, row in model_data.iterrows():
+                temp = row['temperature']
+                print(f"  Temperature: {temp}")
+                print(f"    Arguments Error Rate: {row['args_error_rate']:.2f}%")
+                print(f"    Functions Error Rate: {row['functions_error_rate']:.2f}%")
+                print(f"    Combined Error Rate: {row['combined_error_rate']:.2f}%")
+                print(f"    Invalid Arguments Per Run: {row['invalid_args_per_run']:.2f}")
+                print(f"    Invalid Functions Per Run: {row['invalid_functions_per_run']:.2f}")
+        print("\n=================================================")
+    
         # Create visualizations for each metric
         metrics_to_plot = [
             ('args_error_rate', 'Arguments Error Rate (%)', 'Invalid Functions Arguments (%) By Temperature', 50),
@@ -744,8 +760,9 @@ class DataCollect():
             #plt.title(title, fontsize=16, pad=20)
 
             # Grid and background
-            plt.grid(True, linestyle='--', alpha=0.7)
-            ax.set_facecolor('#f8f9fa')
+            # plt.grid(True, linestyle='--', alpha=0.7)
+            plt.grid(True, alpha=0.3)            
+            # ax.set_facecolor('#f8f9fa')
             ax.tick_params(axis='both', which='major', labelsize=16)
 
             # Enhanced legend
@@ -762,10 +779,10 @@ class DataCollect():
             legend.get_frame().set_facecolor('white')
             legend.get_frame().set_alpha(0.9)
 
-            # Spines
-            for spine in ax.spines.values():
-                spine.set_edgecolor('#cccccc')
-                spine.set_linewidth(1.5)
+            # # Spines
+            # for spine in ax.spines.values():
+            #     spine.set_edgecolor('#cccccc')
+            #     spine.set_linewidth(1.5)
 
             if ylim > 0:
                 plt.ylim(-1, ylim+1)
@@ -1174,8 +1191,9 @@ class DataCollect():
         #plt.title('Seed Generation Capacity by Model', fontsize=16, pad=20)
 
         # Grid and background
-        plt.grid(True, linestyle='--', alpha=0.3)
-        ax.set_facecolor('#f8f9fa')
+        #plt.grid(True, linestyle='--', alpha=0.3)
+        plt.grid(True, alpha=0.3)        
+        # ax.set_facecolor('#f8f9fa')
         ax.tick_params(axis='both', which='major', labelsize=16)
 
         # Legend inside the plot
@@ -1193,10 +1211,10 @@ class DataCollect():
         legend.get_frame().set_facecolor('white')
         legend.get_frame().set_alpha(0.9)
 
-        # Spines
-        for spine in ax.spines.values():
-            spine.set_edgecolor('#cccccc')
-            spine.set_linewidth(1.5)
+        # # Spines
+        # for spine in ax.spines.values():
+        #     spine.set_edgecolor('#cccccc')
+        #     spine.set_linewidth(1.5)
 
         plt.tight_layout()
         plt.savefig('plot_seed_metrics.pdf', bbox_inches='tight', dpi=600)
@@ -1256,8 +1274,9 @@ class DataCollect():
         ax1.set_xlabel('Temperature', fontsize=14, fontweight='bold')
         ax1.set_ylabel('Number of Duplicate Seeds', fontsize=14, fontweight='bold')
         ax1.set_title('Duplicate Seeds Generated vs Temperature', fontweight='bold', fontsize=16, pad=20)
-        ax1.grid(True, linestyle='--', alpha=0.7)
-        ax1.set_facecolor('#f8f9fa')
+        #ax1.grid(True, linestyle='--', alpha=0.7)
+        ax1.grid(True, alpha=0.3)                
+        #ax1.set_facecolor('#f8f9fa')
         ax1.tick_params(axis='both', which='major', labelsize=12)
 
         # Plot 2: combined_plots.pdf
@@ -1287,8 +1306,9 @@ class DataCollect():
         ax2.set_xlabel('Temperature', fontsize=14, fontweight='bold')
         ax2.set_ylabel('Number of Invalid Structure Seeds', fontsize=14, fontweight='bold')
         ax2.set_title('Seeds with Invalid Structure vs Temperature', fontweight='bold', fontsize=16, pad=20)
-        ax2.grid(True, linestyle='--', alpha=0.7)
-        ax2.set_facecolor('#f8f9fa')
+        #ax2.grid(True, linestyle='--', alpha=0.7)
+        ax2.grid(True, alpha=0.3)                        
+        #ax2.set_facecolor('#f8f9fa')
         ax2.tick_params(axis='both', which='major', labelsize=12)
 
         # Add separate legends for each plot
@@ -1307,16 +1327,17 @@ class DataCollect():
             legend.get_frame().set_alpha(0.9)
 
         # Style spines for both plots
-        for ax in [ax1, ax2]:
-            for spine in ax.spines.values():
-                spine.set_edgecolor('#cccccc')
-                spine.set_linewidth(1.5)
+        # for ax in [ax1, ax2]:
+        #     for spine in ax.spines.values():
+        #         spine.set_edgecolor('#cccccc')
+        #         spine.set_linewidth(1.5)
 
         plt.tight_layout()
         plt.savefig('combined_plots.pdf', bbox_inches='tight', dpi=600)
         plt.close()
         
-
+            
+            
     def combined_plots_percent(self, csv):
         ######################################
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
@@ -1341,8 +1362,7 @@ class DataCollect():
         grouped_df['model'] = grouped_df['model'].apply(self.format_model_name)
         models = grouped_df['model'].unique()        
 
-        # Create stacked plots (one below the other)
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 16))  # Changed to 2 rows, 1 column
+        # Set global font parameters
         plt.rcParams.update({
             'font.family': 'sans-serif',
             'font.sans-serif': ['Arial'],
@@ -1351,7 +1371,11 @@ class DataCollect():
         # Get visualization scheme using our function
         model_scheme = get_model_visualization_scheme(models)
                 
-        # Plot 1: Duplicate Seeds (as percentage)
+        # ================================
+        # PLOT 1: Duplicate Seeds
+        # ================================
+        fig1, ax1 = plt.subplots(1, 1, figsize=(12, 8))
+        
         for model in models:
             model_data = grouped_df[grouped_df['model'] == model]
             
@@ -1377,15 +1401,33 @@ class DataCollect():
 
         ax1.set_xlabel('Temperature', fontsize=20)
         ax1.set_ylabel('Percentage of Duplicate Seeds (%)', fontsize=20)
-        #ax1.set_title('Percentage of Duplicate Seeds vs Temperature', fontsize=16, pad=20)
-        ax1.grid(True, linestyle='--', alpha=0.7)
-        ax1.set_facecolor('#f8f9fa')
+        ax1.grid(True, alpha=0.3)                        
         ax1.tick_params(axis='both', which='major', labelsize=16)
         ax1.set_ylim(-1, 26)        
-        #ax1.yaxis.set_major_locator(plt.MultipleLocator(2.5))  # Set ticks every 2.5%                        
 
+        # Add legend for plot 1
+        legend1 = ax1.legend(
+            title="Models",
+            title_fontsize=16,
+            fontsize=15,
+            loc='best',
+            frameon=True,
+            fancybox=True,
+            shadow=True,
+            borderpad=1
+        )
+        legend1.get_frame().set_facecolor('white')
+        legend1.get_frame().set_alpha(0.9)
 
-        # Plot 2: Invalid Structure Seeds (as percentage)
+        plt.tight_layout()
+        plt.savefig('duplicate_seeds_plot.pdf', bbox_inches='tight', dpi=600)
+        plt.close()
+
+        # ================================
+        # PLOT 2: Invalid Structure Seeds
+        # ================================
+        fig2, ax2 = plt.subplots(1, 1, figsize=(12, 8))
+        
         for i, model in enumerate(models):
             model_data = grouped_df[grouped_df['model'] == model]
             
@@ -1412,41 +1454,31 @@ class DataCollect():
                     linewidth=4,
                     alpha=0.2,
                     zorder=-1)
-    
+
         ax2.set_xlabel('Temperature', fontsize=20)
         ax2.set_ylabel('Percentage of Seeds with Invalid Structure (%)', fontsize=20)
-        #ax2.set_title('Percentage of Seeds with Invalid Structure vs Temperature', fontsize=16, pad=20)
-        ax2.grid(True, linestyle='--', alpha=0.7)
-        ax2.set_facecolor('#f8f9fa')
+        ax2.grid(True, alpha=0.3)                                
         ax2.tick_params(axis='both', which='major', labelsize=16)
         ax2.set_ylim(-1, 26)        
-        #ax2.yaxis.set_major_locator(plt.MultipleLocator(2.5))  # Set ticks every 2.5%        
 
-        # Add separate legends for each plot
-        for ax in [ax1, ax2]:
-            legend = ax.legend(
-                title="Models",
-                title_fontsize=16,
-                fontsize=15,
-                loc='best',
-                frameon=True,
-                fancybox=True,
-                shadow=True,
-                borderpad=1
-            )
-            legend.get_frame().set_facecolor('white')
-            legend.get_frame().set_alpha(0.9)
-
-        # Style spines for both plots
-        for ax in [ax1, ax2]:
-            for spine in ax.spines.values():
-                spine.set_edgecolor('#cccccc')
-                spine.set_linewidth(1.5)
+        # Add legend for plot 2
+        legend2 = ax2.legend(
+            title="Models",
+            title_fontsize=16,
+            fontsize=15,
+            loc='best',
+            frameon=True,
+            fancybox=True,
+            shadow=True,
+            borderpad=1
+        )
+        legend2.get_frame().set_facecolor('white')
+        legend2.get_frame().set_alpha(0.9)
 
         plt.tight_layout()
-        plt.savefig('combined_plots.pdf', bbox_inches='tight', dpi=600)
+        plt.savefig('invalid_structure_seeds_plot.pdf', bbox_inches='tight', dpi=600)
         plt.close()
-            
+                
     def combined_plots_down(self, csv):
         ######################################
         df = pd.read_csv(csv, header=None, names=self.METRICS_HEADER)
@@ -1768,8 +1800,9 @@ class DataCollect():
         plt.xlabel('Temperature', fontsize=20)
         plt.ylabel('Percentage of Valid Outputs (%)', fontsize=20)
         #plt.title('Valid Outputs vs Temperature', fontsize=16, pad=20)
-        plt.grid(True, linestyle='--', alpha=0.7)
-        ax.set_facecolor('#f8f9fa')
+        #plt.grid(True, linestyle='--', alpha=0.7)        
+        plt.grid(True, alpha=0.3)                                
+        #ax.set_facecolor('#f8f9fa')
         ax.tick_params(axis='both', which='major', labelsize=16)
 
         legend = plt.legend(
@@ -1787,9 +1820,9 @@ class DataCollect():
         legend.get_frame().set_facecolor('white')
         legend.get_frame().set_alpha(0.9)
 
-        for spine in ax.spines.values():
-            spine.set_edgecolor('#cccccc')
-            spine.set_linewidth(1.5)
+        # for spine in ax.spines.values():
+        #     spine.set_edgecolor('#cccccc')
+        #     spine.set_linewidth(1.5)
 
         plt.tight_layout()
         plt.savefig('plot_valid_files_percentage.pdf', bbox_inches='tight', dpi=600)
